@@ -1,4 +1,2 @@
-{
-  "keys": {},
-  "fplog": {}
-}
+/data
+  keys.json   // ปล่อยว่างได้ โค้ดจะเติม default ให้
