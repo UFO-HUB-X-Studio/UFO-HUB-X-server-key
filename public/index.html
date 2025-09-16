@@ -9,15 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0b0f13;
-      --card:#10161d;
-      --soft:#0f141a;
-      --text:#e7f4ee;
-      --muted:#9cc6b5;
-      --accent:#00ff8c;
-      --accent-weak:#00d77a;
-      --danger:#ff4d4d;
-      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --bg:#0b0f13; --card:#10161d; --text:#e7f4ee; --muted:#9cc6b5;
+      --accent:#00ff8c; --danger:#ff4d4d;
     }
     *{box-sizing:border-box}
     html,body{margin:0;height:100%}
@@ -33,23 +26,28 @@
     .card{
       background:linear-gradient(180deg, #121a22, #0e151c);
       border:1px solid rgba(0,255,140,.18);
-      border-radius:16px; box-shadow:var(--shadow);
+      border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.45);
     }
     .card-hd{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
-    .badge{display:inline-flex;align-items:center;gap:8px;background:#0c1611;border:1px solid rgba(0,255,140,.3);color:var(--accent);
-      padding:8px 12px;border-radius:999px;font-weight:700}
+    .badge{
+      display:inline-flex;align-items:center;gap:10px;background:#0c1611;
+      border:1px solid rgba(0,255,140,.3); padding:8px 12px;border-radius:999px;
+      font-weight:800
+    }
     .card-bd{padding:18px}
     .center{display:flex;justify-content:center;align-items:center}
+    .logo-wrap{margin-top:14px}
+    .logo-wrap img{width:250px;height:auto;border-radius:12px;box-shadow:0 0 0 2px rgba(0,255,140,.25)}
 
     .progress{height:10px;border-radius:999px;background:#0e1216;border:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden}
     .progress>.bar{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--accent),#a6ffc7);border-radius:999px;transition:width .25s ease;box-shadow:0 0 16px rgba(0,255,140,.35) inset}
 
     .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 18px;border:1px solid rgba(0,255,140,.28);
-      border-radius:12px;font-weight:700;color:#08120e;background:var(--accent);cursor:pointer;transition:.15s;user-select:none
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 18px;
+      border:1px solid rgba(0,255,140,.28); border-radius:12px;font-weight:700;
+      color:#08120e;background:var(--accent);cursor:pointer;transition:.15s;user-select:none
     }
-    .btn:hover{filter:brightness(1.06)}
-    .btn:active{transform:translateY(1px)}
+    .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
     .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25)}
     .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
     .btn.warn{background:var(--danger);border-color:rgba(255,77,77,.3);color:#fff}
@@ -63,39 +61,40 @@
     .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px}
     .pill.active{background:#0e1a14;color:var(--accent);border:1px solid rgba(0,255,140,.35)}
     .muted{color:var(--muted)}
-    .actions-center{ text-align:center; }
-    .actions-center .btn{ margin:0 4px; }
+    .actions-center{text-align:center}
+    .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center} /* เว้นระยะปุ่มให้ห่างกัน */
 
-    .logo-wrap{margin-top:14px}
-    .logo-wrap img{width:250px; height:auto; border-radius:12px; box-shadow:0 0 0 2px rgba(0,255,140,.25)}
-    .topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .title-green{color:var(--accent)} .title-white{color:#fff}
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- โลโก้ตรงกลางด้านบน -->
+    <!-- โลโก้ -->
     <div class="center logo-wrap">
       <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
     </div>
 
     <div class="grid">
-      <!-- LEFT: Progress + Start/Next -->
+      <!-- LEFT -->
       <div class="card">
         <div class="card-hd">
-          <div class="badge">🛰️ UFO Campaign</div>
+          <!-- เปลี่ยนชื่อเป็น UFO HUB X (UFO เขียว / HUB X ขาว) -->
+          <div class="badge">
+            <span class="title-green">UFO</span>
+            <span class="title-white">HUB X</span>
+          </div>
           <button id="startBtn" class="btn small"><span>🟢</span> START</button>
         </div>
         <div class="card-bd">
-          <div class="topline">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div class="muted">Progress: <b id="progText">0/2</b></div>
             <div class="muted" id="timer"></div>
           </div>
           <div class="progress"><div class="bar" id="bar"></div></div>
-          <!-- ไม่มีข้อความ/ปุ่มอื่นตามที่ขอ -->
         </div>
       </div>
 
-      <!-- RIGHT: Keys -->
+      <!-- RIGHT -->
       <div class="card">
         <div class="card-hd">
           <div class="badge" style="background:#111a14;border-color:rgba(0,255,140,.2);color:var(--text)">🔑 Your Keys</div>
@@ -123,8 +122,8 @@
 
     // ---------- STATE ----------
     const state = {
-      step: 0,           // 0 -> START, 1 -> NEXT, 2 -> done
-      cooldownUntil: 0,  // ms (2 นาทีหลังรับคีย์)
+      step: 0,               // 0 -> START, 1 -> NEXT, 2 -> done
+      cooldownUntil: 0,      // ms
       keys: loadKeys()
     };
 
@@ -153,23 +152,16 @@
       return `${h}:${m}:${ss}`;
     }
 
-    // ---------- Start / Next / Timer ----------
-    let runTimer = null, seconds = 0;
+    // ---------- Start / Next ----------
     function refreshTimer(){
-      if(runTimer) clearInterval(runTimer);
-      if(state.step<2){ $('#timer').textContent = ''; return; }
-      // เสร็จขั้นตอนแล้ว ไม่ต้องจับเวลา ณ ส่วนนี้
-      $('#timer').textContent = '✔ Ready';
+      $('#timer').textContent = state.step<2 ? '' : '✔ Ready';
     }
-
     $('#startBtn').addEventListener('click', ()=>{
       if(state.step===0){
-        state.step = 1;
-        setProgress(1);
+        state.step=1; setProgress(1);
         $('#startBtn').innerHTML = '<span>➡️</span> NEXT';
       }else if(state.step===1){
-        state.step = 2;
-        setProgress(2);
+        state.step=2; setProgress(2);
         $('#startBtn').innerHTML = '<span>✅</span> DONE';
         refreshTimer();
       }
@@ -194,53 +186,67 @@
           <td class="muted">${fmtLeft(Math.max(0,left))}</td>
           <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
           <td class="actions-center">
-            <button class="btn small ghost" data-copy="${i}">📋 Copy</button>
-            <button class="btn small" data-plus="${i}">⏩ +24H</button>
+            <div class="btnrow">
+              <button class="btn small ghost" data-copy="${i}">📋 Copy</button>
+              <button class="btn small" data-plus="${i}">⏩ +5H</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
+
+    // ปุ่ม Actions
     $('#keyRows').addEventListener('click', (e)=>{
-      const c = e.target.closest('[data-copy]'); if(c){ const v=state.keys[+c.dataset.copy].value; navigator.clipboard.writeText(v); alert('Copied: '+v); }
-      const p = e.target.closest('[data-plus]'); if(p){ state.keys[+p.dataset.plus].expires += 24*60*60*1000; saveKeys(); paintKeys(); }
+      const copyBtn = e.target.closest('[data-copy]');
+      if(copyBtn){
+        const idx = +copyBtn.dataset.copy;
+        const v = state.keys[idx].value;
+        navigator.clipboard.writeText(v);
+        // แสดงเครื่องหมายถูกชั่วคราว
+        const old = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✅ Copied';
+        setTimeout(()=> copyBtn.innerHTML = old, 1200);
+        return;
+      }
+      const plusBtn = e.target.closest('[data-plus]');
+      if(plusBtn){
+        const idx = +plusBtn.dataset.plus;
+        state.keys[idx].expires += 5*60*60*1000; // +5 ชั่วโมง
+        saveKeys(); paintKeys();
+      }
     });
 
-    // ---------- Get New Key + 2 นาทีคูลดาวน์ ----------
+    // ---------- New Key + Cooldown ----------
     function canClaimNow(){
       const now = Date.now();
       if(now < state.cooldownUntil) return false;
-      return state.step===2; // ทำครบ 2 คลิกแล้ว
+      return state.step===2;
     }
-
     function updateNewKeyButton(){
       const btn = $('#newKey');
       const now = Date.now();
       if(now < state.cooldownUntil){
         const left = state.cooldownUntil - now;
-        btn.classList.add('ghost');
-        btn.disabled = true;
+        btn.classList.add('ghost'); btn.disabled = true;
         btn.innerHTML = '⏳ Wait ' + Math.ceil(left/1000) + 's';
       }else{
-        btn.classList.remove('ghost');
-        btn.disabled = false;
+        btn.classList.remove('ghost'); btn.disabled = false;
         btn.innerHTML = '<span>➕</span> GET A NEW KEY';
       }
     }
-
     $('#newKey').addEventListener('click', ()=>{
       if(!canClaimNow()){
         alert('Finish START → NEXT first, or wait for cooldown.');
         return;
       }
       const v = randKey();
-      const expires = Date.now() + 24*60*60*1000;
+      const expires = Date.now() + 48*60*60*1000; // อายุเริ่มต้น 48 ชั่วโมง
       state.keys.unshift({value:v, expires});
       saveKeys(); paintKeys();
 
-      // ตั้งคูลดาวน์ 2 นาที
+      // Cooldown 2 นาที
       state.cooldownUntil = Date.now() + 2*60*1000;
-      // รีเซ็ตขั้นตอน
       state.step = 0; setProgress(0);
       $('#startBtn').innerHTML = '<span>🟢</span> START';
       $('#timer').textContent = '';
