@@ -1,1 +1,19 @@
-
+{
+  "name": "ufo-hub-x-key",
+  "version": "1.0.0",
+  "description": "UFO HUB X – Key portal (Android-first, responsive)",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "render-build": "echo 'no build step'"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "rate-limiter-flexible": "^2.5.3",
+    "uuid": "^9.0.1"
+  }
+}
