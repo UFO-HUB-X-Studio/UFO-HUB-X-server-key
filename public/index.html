@@ -1,81 +1,67 @@
 <script>
-/* UFO HUB X — Smart iOS Redirect (v2, robust)
- * - Detects iPhone / iPod / iPad (รวม iPadOS 13+ ที่ UA = "Macintosh")
- * - Keeps query & hash when redirecting
- * - ?platform=ios / ?platform=android to override (ทดสอบง่าย)
- * - Avoids loops with sessionStorage flag and path check
- * - Skips redirect on bots, API paths, or when already on ios.html
+/* UFO HUB X — Smart Desktop (PC) Redirect (v2)
+ * - Redirect ผู้ใช้ "เดสก์ท็อป" (Windows / macOS / Linux / ChromeOS) ไป pc.html
+ * - แยกจาก iOS/Android อย่างแม่นยำ (iPadOS 13+ ที่ UA = Macintosh แต่มีจอสัมผัส จะไม่นับเป็น Desktop)
+ * - รองรับ override ด้วย ?platform=pc|ios|android
+ * - คง query และ hash เดิมเมื่อ redirect
+ * - กันลูปด้วย sessionStorage และเช็ค path ปัจจุบัน
+ * - ข้ามบอท/ API path
  */
 (function () {
   try {
-    var loc = window.location;
-    var path = loc.pathname || "/";
-    var search = loc.search || "";
-    var hash = loc.hash || "";
+    var loc    = window.location;
+    var path   = loc.pathname || "/";
+    var search = loc.search   || "";
+    var hash   = loc.hash     || "";
 
-    // ---- 1) อนุญาต override จาก query ----
-    var params = new URLSearchParams(search);
-    var override = (params.get("platform") || "").toLowerCase(); // ios / android / none
+    // 0) อนุญาต override จาก query (?platform=pc|ios|android)
+    var params   = new URLSearchParams(search);
+    var override = (params.get("platform") || "").toLowerCase();
 
-    // ---- 2) กันบอท/เงื่อนไขที่ไม่ควร redirect ----
-    var isBot = /bot|crawler|spider|preview|facebookexternalhit/i.test(navigator.userAgent || "");
-    var isAPI = /^\/api(\/|$)/.test(path); // ถ้าเป็น endpoint API
+    // 1) ข้ามกรณีที่ไม่ควร redirect
+    var ua  = navigator.userAgent || "";
+    var isBot = /bot|crawler|spider|preview|facebookexternalhit/i.test(ua);
+    var isAPI = /^\/api(\/|$)/i.test(path);
     if (isBot || isAPI) return;
 
-    // ---- 3) ตรวจว่าอยู่บนหน้า ios.html อยู่แล้ว และกันลูปด้วย sessionStorage ----
-    var alreadyIOS = /\/ios\.html$/i.test(path);
-    var loopFlagKey = "ufo_ios_redirect_done";
-    var redirectedBefore = sessionStorage.getItem(loopFlagKey) === "1";
+    // 2) ตรวจ iOS อย่างถูกต้อง (รวม iPadOS ที่ UA เป็น Macintosh แต่มีจอสัมผัส)
+    var maxTouch   = navigator.maxTouchPoints || 0;
+    var isiPhone   = /iPhone/i.test(ua);
+    var isiPod     = /iPod/i.test(ua);
+    var isiPadUA   = /iPad/i.test(ua);
+    var isiPadLike = /Macintosh/i.test(ua) && maxTouch > 1; // iPadOS 13+
+    var isiOS      = isiPhone || isiPod || isiPadUA || isiPadLike || (navigator.standalone === true);
 
-    // ---- 4) ตรวจ iOS อย่างแม่นยำ ----
-    var ua = navigator.userAgent || "";
-    var platform = navigator.platform || "";
-    var maxTouch = navigator.maxTouchPoints || 0;
+    // 3) ตรวจ Android
+    var isAndroid = /Android/i.test(ua);
 
-    // iPhone/iPod แบบชัดเจน
-    var isiPhoneOrPod = /iPhone|iPod/i.test(ua);
+    // 4) นิยาม Desktop = ไม่ใช่ iOS และ ไม่ใช่ Android
+    var isDesktop = !isiOS && !isAndroid;
 
-    // iPad แบบเก่า (UA มี iPad)
-    var isiPadUA = /iPad/i.test(ua);
+    // 5) Override จาก query
+    if (override === "pc")      isDesktop = true;
+    if (override === "ios")     isDesktop = false;
+    if (override === "android") isDesktop = false;
 
-    // iPadOS 13+ (UA กลายเป็น "Macintosh" แต่มีจอสัมผัส)
-    var isiPadMacLike = /Macintosh/i.test(ua) && (maxTouch > 1);
+    // 6) กันลูป + อย่า redirect ถ้าอยู่ใน pc.html แล้ว
+    var alreadyPC = /\/pc\.html$/i.test(path);
+    var loopKey   = "ufo_pc_redirect_done";
+    var looped    = sessionStorage.getItem(loopKey) === "1";
+    if (!isDesktop || alreadyPC || looped) return;
 
-    // iOS WebView/Standalone ก็ถือว่า iOS
-    var isStandalone = window.navigator.standalone === true; // PWA on iOS
-
-    var isiOS = isiPhoneOrPod || isiPadUA || isiPadMacLike || isStandalone;
-
-    // ---- 5) เงื่อนไขตัดสินใจ redirect ----
-    // กรณี override
-    if (override === "ios") isiOS = true;
-    if (override === "android") isiOS = false;
-
-    // ไม่ต้อง redirect ถ้า:
-    // - ไม่ใช่ iOS
-    // - อยู่ที่ ios.html อยู่แล้ว
-    // - เคย redirect ไปแล้วใน session นี้ (กันลูปย้อนกลับ)
-    if (!isiOS || alreadyIOS || redirectedBefore) return;
-
-    // ---- 6) คำนวณ URL เป้าหมาย พร้อมคง query/hash เดิม ----
-    var base = path.replace(/\/[^/]*$/, "/"); // โฟลเดอร์ปัจจุบัน
-    var target = base + "ios.html";
-
-    // เก็บ query/hash เดิมไว้ (แต่ลบ platform override ทิ้งเพื่อความเนียน)
-    if (params.has("platform")) {
-      params.delete("platform");
-    }
+    // 7) สร้าง URL เป้าหมาย + เก็บ query/hash เดิม (ลบ platform ทิ้งเพื่อความเนียน)
+    var base   = path.replace(/\/[^/]*$/, "/");
+    var target = base + "pc.html";
+    if (params.has("platform")) params.delete("platform");
     var keepQuery = params.toString();
     if (keepQuery) target += "?" + keepQuery;
-    if (hash) target += hash;
+    if (hash)      target += hash;
 
-    // ---- 7) ตั้งธงกันลูป & redirect ----
-    sessionStorage.setItem(loopFlagKey, "1");
-    // ใช้ location.replace() เพื่อไม่ให้กด back แล้วย้อนลูป
+    // 8) ตั้งธงกันลูป & redirect
+    sessionStorage.setItem(loopKey, "1");
     location.replace(target);
-  } catch (err) {
-    // เงียบไว้ ถ้ามีปัญหา อย่าให้ผู้ใช้เด้งหรือค้าง
-    console.error("[iOS redirect] error:", err);
+  } catch (e) {
+    console.error("[PC redirect] error:", e);
   }
 })();
-    </script>
+</script>
