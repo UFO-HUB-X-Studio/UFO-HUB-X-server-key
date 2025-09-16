@@ -1,66 +1,56 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <!-- iOS SAFE AREAS / PWA -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="format-detection" content="telephone=no">
-  <title>UFO HUB X — iOS Key</title>
-
-  <!-- SF Pro / Kanit -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="./ios.css">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>UFO HUB X — iOS</title>
+  <link rel="stylesheet" href="/styles.css"/>
+  <script type="module" src="/app.js"></script>
 </head>
 <body>
-  <div id="bg"></div>
+  <div class="container">
+    <div class="card">
+      <h1 class="title"><span class="ufo">UFO</span> HUB X</h1>
+      <p class="subtitle">iOS Portal — แนะนำ “เพิ่มลงหน้าจอหลัก” เพื่อใช้งานสะดวก</p>
 
-  <main class="layout">
-    <!-- iOS Nav (fake) -->
-    <header class="nav">
-      <div class="pill"></div>
-      <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
-      <div class="spacer"></div>
-    </header>
-
-    <section class="card">
-      <div class="branding">
-        <img class="logo"
-             src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png"
-             alt="UFO HUB X">
-        <div class="hgroup">
-          <h1><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-          <p class="sub">รับคีย์สำหรับใช้งาน บน iOS</p>
-        </div>
+      <div class="row">
+        <button id="btnGet" class="btn primary">🔑 Get Key</button>
+        <button id="btnExtend" class="btn">+5H</button>
       </div>
 
-      <div class="stack">
-        <button id="btn-get" class="btn btn-primary">รับคีย์ (Get Key)</button>
-
-        <div id="result" class="result hide">
-          <div class="row">
-            <code id="keytext">—</code>
-            <button id="copy" class="btn btn-ghost">คัดลอก</button>
-          </div>
-
-          <div class="row time">
-            <span>หมดอายุใน: <b id="remain">—</b></span>
-            <button id="extend" class="btn btn-ghost">+5H</button>
-          </div>
-
-          <div class="note">จำกัด 1 คน / 1 คีย์</div>
-        </div>
+      <p id="keyBox" class="kpill mono" style="display:none"></p>
+      <div class="stat" id="stat" style="display:none">
+        <span>⌛ เหลือเวลา <b id="remain">—</b></span>
+        <button id="btnCopy" class="btn">Copy</button>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <footer class="dock">
-      <a href="#" id="discord" class="link">Join the Discord</a>
-    </footer>
-  </main>
+  <script type="module">
+    import { apiGetKey, apiCheck, apiExtend, copy } from '/app.js';
+    let k=null, timer=null;
+    const keyBox = document.getElementById('keyBox');
+    const remain = document.getElementById('remain');
+    const stat   = document.getElementById('stat');
 
-  <script src="./ios.js"></script>
+    async function poll(){
+      if(!k) return;
+      const j = await apiCheck(k);
+      if(j.ok){ remain.textContent = j.remainingSeconds+'s'; stat.style.display='flex'; }
+    }
+
+    document.getElementById('btnGet').onclick = async ()=>{
+      const j = await apiGetKey();
+      if(j.ok){ k=j.key; keyBox.textContent=k; keyBox.style.display='inline-flex';
+        clearInterval(timer); timer=setInterval(poll, 3000); poll();
+      }else alert(j.message||'error');
+    };
+    document.getElementById('btnExtend').onclick = async ()=>{
+      if(!k) return alert('ยังไม่มีคีย์');
+      const j = await apiExtend(k);
+      if(j.ok) poll(); else alert(j.message||'extend error');
+    };
+    document.getElementById('btnCopy').onclick = ()=>{ if(k) copy(k); };
+  </script>
 </body>
 </html>
