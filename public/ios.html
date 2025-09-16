@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <!-- iOS SAFE AREAS / PWA -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <title>UFO HUB X — iOS Key</title>
+
+  <!-- SF Pro / Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./ios.css">
+</head>
+<body>
+  <div id="bg"></div>
+
+  <main class="layout">
+    <!-- iOS Nav (fake) -->
+    <header class="nav">
+      <div class="pill"></div>
+      <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
+      <div class="spacer"></div>
+    </header>
+
+    <section class="card">
+      <div class="branding">
+        <img class="logo"
+             src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png"
+             alt="UFO HUB X">
+        <div class="hgroup">
+          <h1><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
+          <p class="sub">รับคีย์สำหรับใช้งาน บน iOS</p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <button id="btn-get" class="btn btn-primary">รับคีย์ (Get Key)</button>
+
+        <div id="result" class="result hide">
+          <div class="row">
+            <code id="keytext">—</code>
+            <button id="copy" class="btn btn-ghost">คัดลอก</button>
+          </div>
+
+          <div class="row time">
+            <span>หมดอายุใน: <b id="remain">—</b></span>
+            <button id="extend" class="btn btn-ghost">+5H</button>
+          </div>
+
+          <div class="note">จำกัด 1 คน / 1 คีย์</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="dock">
+      <a href="#" id="discord" class="link">Join the Discord</a>
+    </footer>
+  </main>
+
+  <script src="./ios.js"></script>
+</body>
+</html>
