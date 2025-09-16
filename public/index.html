@@ -1,71 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>UFO HUB X — Key Portal</title>
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-<body>
-  <!-- พื้นหลังถูกกำหนดใน CSS -->
+<img src="/images/logo.png" alt="UFO HUB X" style="width:160px;">
 
-  <!-- แถบหัว (สีน้ำเงินโค้งมน) -->
-  <header class="topbar">
-    <div class="topbar__pill">
-      <img src="/images/logo.png" class="brand-logo" alt="UFO HUB X" />
-      <span class="brand-text">Luarmor</span>
-    </div>
-    <button class="hamburger" aria-label="menu">
-      <span></span><span></span><span></span>
-    </button>
-  </header>
-
-  <!-- การ์ดแคมเปญ -->
-  <main class="container">
-    <section class="card">
-      <div class="card__head">
-        <div class="left-title">
-          <div>Speed</div>
-          <div>Hub X</div>
-          <div>Linkvertise</div>
-        </div>
-
-        <div class="progress-wrap">
-          <label>Progress:</label>
-          <div class="progress">
-            <div id="progressFill" class="progress__fill"></div>
-          </div>
-          <span id="progressText" class="progress__txt">0/2</span>
-        </div>
-
-        <div class="step-btns">
-          <button id="btnStart" class="btn btn--start">START</button>
-          <button id="btnNext"  class="btn btn--next is-hidden">NEXT</button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- หัวตาราง -->
-      <div class="list-head">
-        <div>YOUR KEYS (0/6)</div>
-        <div>TIME LEFT</div>
-        <div>STATUS</div>
-        <div>ACTIONS</div>
-      </div>
-
-      <!-- รายการคีย์ -->
-      <div id="keyList" class="key-list">
-        <!-- สร้างหลังจบขั้นตอน 2 -->
-      </div>
-
-      <!-- ปุ่ม New Key -->
-      <div class="bottom-actions">
-        <button class="btn btn--ghost" id="btnNewKey">+  GET A NEW KEY</button>
-      </div>
-    </section>
-  </main>
-
-  <script src="/app.js"></script>
-</body>
-</html>
+<style>
+  body {
+    background: url("/images/bg.png") no-repeat center center fixed;
+    background-size: cover;
+  }
+</style>
