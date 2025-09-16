@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
@@ -8,17 +8,16 @@
 </head>
 <body>
   <div class="container">
-    <div class="card center">
-      <h1 class="title"><span class="ufo">UFO</span> HUB X</h1>
-      <p class="subtitle">กำลังตรวจอุปกรณ์ของคุณ…</p>
-      <p class="footer">หากไม่เปลี่ยนหน้าอัตโนมัติ <a href="/pc.html">คลิกที่นี่</a></p>
+    <div class="card">
+      <h1 class="title"><span class="ufo">UFO</span> <span class="hx">HUB X</span></h1>
+      <p class="subtitle">กำลังพาไปหน้าที่เหมาะกับอุปกรณ์ของคุณ…</p>
+      <p class="footer">ถ้าไม่เปลี่ยนหน้าอัตโนมัติ: <a href="/pc.html">เปิด PC</a> • <a href="/m.html">Android</a> • <a href="/ios.html">iOS</a></p>
     </div>
   </div>
-
   <script>
     (function(){
       const ua = navigator.userAgent||'';
-      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || ( /Macintosh/.test(ua) && (navigator.maxTouchPoints||0) > 1 );
       const isAndroid = /Android/.test(ua);
       if (isIOS)      location.replace('/ios.html');
       else if (isAndroid) location.replace('/m.html');
