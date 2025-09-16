@@ -1,28 +1,79 @@
-<!doctype html>
-<html lang="th">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>UFO HUB X — Portal</title>
-  <link rel="stylesheet" href="/styles.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UFO HUB X Key Portal</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1 class="title"><span class="ufo">UFO</span> <span class="hx">HUB X</span></h1>
-      <p class="subtitle">กำลังพาไปหน้าที่เหมาะกับอุปกรณ์ของคุณ…</p>
-      <p class="footer">ถ้าไม่เปลี่ยนหน้าอัตโนมัติ: <a href="/pc.html">เปิด PC</a> • <a href="/m.html">Android</a> • <a href="/ios.html">iOS</a></p>
+  <!-- โลโก้ -->
+  <div class="header">
+    <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png" 
+         alt="UFO HUB X" class="logo">
+  </div>
+
+  <!-- กล่อง Key -->
+  <div class="card">
+    <div class="title">UFO HUB X Campaign</div>
+    <div class="progress-container">
+      <span>Progress:</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+      </div>
+      <span id="progress-text">0/2</span>
+    </div>
+
+    <div class="actions">
+      <button id="startBtn" class="btn start">START</button>
+      <button id="nextBtn" class="btn next hidden">NEXT</button>
+    </div>
+
+    <div class="key-list">
+      <div class="key-header">
+        <span>YOUR KEYS (0/1)</span>
+        <span>TIME LEFT</span>
+        <span>STATUS</span>
+        <span>ACTIONS</span>
+      </div>
+      <div id="key-container"></div>
     </div>
   </div>
+
   <script>
-    (function(){
-      const ua = navigator.userAgent||'';
-      const isIOS = /iPad|iPhone|iPod/.test(ua) || ( /Macintosh/.test(ua) && (navigator.maxTouchPoints||0) > 1 );
-      const isAndroid = /Android/.test(ua);
-      if (isIOS)      location.replace('/ios.html');
-      else if (isAndroid) location.replace('/m.html');
-      else            location.replace('/pc.html');
-    })();
+    let step = 0;
+    const progress = document.getElementById("progress");
+    const progressText = document.getElementById("progress-text");
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const keyContainer = document.getElementById("key-container");
+
+    startBtn.addEventListener("click", () => {
+      step = 1;
+      progress.style.width = "50%";
+      progressText.textContent = "1/2";
+      startBtn.classList.add("hidden");
+      nextBtn.classList.remove("hidden");
+    });
+
+    nextBtn.addEventListener("click", () => {
+      step = 2;
+      progress.style.width = "100%";
+      progressText.textContent = "2/2";
+      nextBtn.classList.add("hidden");
+
+      // สร้าง Key
+      const key = "zZnFp...kwocw";
+      keyContainer.innerHTML = `
+        <div class="key-item">
+          <span class="icon">🔑</span>
+          <span class="key">${key}</span>
+          <span class="time">48:00:00</span>
+          <span class="status active">ACTIVE</span>
+          <button class="btn extend">+5H</button>
+        </div>
+      `;
+    });
   </script>
 </body>
 </html>
