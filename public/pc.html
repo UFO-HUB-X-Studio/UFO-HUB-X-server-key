@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UFO HUB X — Key Portal (PC)</title>
+  <meta name="color-scheme" content="dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg: #080a0a;
+      --panel:#0e1111;
+      --accent:#00ff8c;
+      --muted:#a9b0b0;
+      --stroke: rgba(0,255,140,.2);
+      --stroke-strong: rgba(0,255,140,.35);
+      --danger:#e15252;
+      --ok:#3ad27e;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Montserrat,system-ui,Segoe UI,Roboto,Arial;
+      background:#000 url("./images/bg-desktop.jpg") center/cover fixed no-repeat;
+      color:#fff; display:grid; place-items:center; padding:32px;
+    }
+    .panel{
+      width:min(980px,92vw); background:var(--panel);
+      border-radius:22px; padding:28px 28px 24px; position:relative;
+      box-shadow:0 20px 60px rgba(0,0,0,.55), 0 0 0 2px var(--stroke);
+    }
+    .topbar{display:flex; align-items:center; gap:14px; margin-bottom:10px}
+    .logo{width:38px;height:38px;border-radius:10px;flex:0 0 auto;
+      background:#0c0; background-image:url("./images/ufo-logo.png");
+      background-size:cover;background-position:center;
+      box-shadow:0 0 0 2px var(--stroke-strong), 0 8px 24px rgba(0,255,140,.12);
+    }
+    .brand{font-weight:800; letter-spacing:.4px; font-size:14px; color:var(--accent)}
+    .close{
+      position:absolute; top:14px; right:14px; border:0; width:36px;height:36px;
+      border-radius:12px; background:#d23; color:#fff; font-weight:800; cursor:pointer;
+    }
+
+    .title{margin:8px 2px 22px}
+    .title .a{font-size:36px; font-weight:800; color:#fff; display:block}
+    .title .b{font-size:36px; font-weight:800;}
+    .title .b .ufo{color:var(--accent)}
+    .title .b .hub{color:#fff}
+
+    .row{display:flex; gap:16px; align-items:center; margin:14px 0}
+    .input{
+      flex:1; height:46px; border-radius:12px; border:1.5px solid var(--stroke);
+      background:#141717; color:#fff; font-size:16px; padding:0 14px; outline:none;
+    }
+    .btn{
+      height:50px; padding:0 22px; border-radius:14px; border:0; cursor:pointer;
+      font-weight:800; letter-spacing:.2px; display:inline-flex; align-items:center; gap:10px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+    .btn-submit{background:#d24a4a; color:#fff}
+    .btn-submit.unlocked{background:var(--ok); color:#001b10}
+    .btn-get{background:#121515; color:#fff; border:2px solid var(--stroke-strong)}
+    .btn-get:hover{border-color:var(--accent)}
+
+    .hint{margin:6px 2px 10px; color:var(--muted); font-size:14px}
+    .divider{height:1px; background:linear-gradient(90deg,transparent, var(--stroke-strong), transparent); margin:16px 0}
+    .support{display:flex; justify-content:center; gap:8px; color:var(--muted); font-size:14px}
+    .support a{color:var(--accent); text-decoration:none}
+
+    /* ตาราง key แบบ desktop */
+    .keys{
+      margin-top:18px; background:#0d1010; border-radius:16px; padding:14px;
+      border:1px solid var(--stroke);
+    }
+    .keys .hdr, .keys .row{
+      display:grid; grid-template-columns: 1fr 160px 180px 220px; gap:10px; align-items:center;
+    }
+    .keys .hdr{color:var(--muted); font-size:13px; letter-spacing:.3px; padding:2px 4px 6px}
+    .keys .row{padding:10px 4px}
+    .tag-active{background:#163; color:#9cffd1; border:1px solid var(--stroke-strong);
+      padding:6px 10px; border-radius:999px; text-align:center; font-weight:700; font-size:12px}
+    .actions{display:flex; gap:8px; justify-content:flex-start}
+    .btn-s{height:36px; padding:0 12px; border-radius:10px; border:0; cursor:pointer; font-weight:800}
+    .btn-copy{background:#18201c; color:#9cffd1; border:1px solid var(--stroke)}
+    .btn-extend{background:#181a1a; color:#fff; border:1px solid var(--stroke-strong)}
+  </style>
+</head>
+<body>
+  <section class="panel">
+    <button class="close" onclick="window.close?.()">X</button>
+    <div class="topbar">
+      <div class="logo"></div>
+      <div class="brand">KEY SYSTEM</div>
+    </div>
+
+    <header class="title">
+      <span class="a">Welcome to the,</span>
+      <span class="b"><span class="ufo">UFO</span> <span class="hub">HUB X</span></span>
+    </header>
+
+    <div class="row">
+      <input id="keyInput" class="input" placeholder="insert your key here" autocomplete="off">
+      <button id="btnSubmit" class="btn btn-submit">🔒 Submit Key</button>
+    </div>
+    <div class="row">
+      <button id="btnGet" class="btn btn-get">🔐 Get Key</button>
+    </div>
+
+    <div class="hint">Need support? <a href="#" id="btnDiscord">Join the Discord</a></div>
+    <div class="divider"></div>
+
+    <!-- ตัวอย่างตารางรายการคีย์ของฉัน (desktop) -->
+    <div class="keys">
+      <div class="hdr">
+        <div>YOUR KEYS</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
+      </div>
+      <div class="row">
+        <div id="keyLabel">—</div>
+        <div id="timeLeft">—</div>
+        <div><span class="tag-active" id="statusPill">ACTIVE</span></div>
+        <div class="actions">
+          <button class="btn-s btn-copy" id="btnCopy">Copy</button>
+          <button class="btn-s btn-extend" id="btnExtend">+5H</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // === Hook กับ API backend ของนาย ===
+    const API = {
+      getKey:   '/api/getkey',
+      checkKey: (k)=> `/api/check/${encodeURIComponent(k)}`,
+      extend:   (k)=> `/api/extend/${encodeURIComponent(k)}`
+    };
+
+    const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+
+    const keyInput = document.getElementById('keyInput');
+    const btnSubmit= document.getElementById('btnSubmit');
+    const btnGet   = document.getElementById('btnGet');
+    const btnCopy  = document.getElementById('btnCopy');
+    const btnExtend= document.getElementById('btnExtend');
+    const keyLabel = document.getElementById('keyLabel');
+    const timeLeft = document.getElementById('timeLeft');
+    const statusP  = document.getElementById('statusPill');
+    const btnDiscord = document.getElementById('btnDiscord');
+
+    // Submit ปลดล็อคสีตามที่เราทำใน UI Roblox
+    function refreshSubmitStyle(){
+      const has = keyInput.value.trim().length>0;
+      btnSubmit.classList.toggle('unlocked', has);
+      btnSubmit.textContent = has ? '🔓 Submit Key' : '🔒 Submit Key';
+    }
+    keyInput.addEventListener('input', refreshSubmitStyle);
+    refreshSubmitStyle();
+
+    // Get Key → เรียก API จริง
+    btnGet.addEventListener('click', async ()=>{
+      try{
+        const r = await fetch(API.getKey, {method:'POST'});
+        const j = await r.json();
+        if(!r.ok) throw new Error(j.message||'Get key failed');
+        keyInput.value = j.key || '';
+        keyLabel.textContent = j.key || '—';
+        timeLeft.textContent = formatLeft(j.expiresAt);
+        statusP.textContent = 'ACTIVE';
+        refreshSubmitStyle();
+      }catch(e){
+        alert('Get Key error: '+e.message);
+      }
+    });
+
+    // Submit key → ตรวจบน server
+    btnSubmit.addEventListener('click', async ()=>{
+      const k = (keyInput.value||'').trim();
+      if(!k){ alert('กรอกคีย์ก่อนนะ'); return; }
+      try{
+        const r = await fetch(API.checkKey(k));
+        const j = await r.json();
+        if(!r.ok) throw new Error(j.message||'Invalid key');
+        keyLabel.textContent = k;
+        timeLeft.textContent = formatLeft(j.expiresAt);
+        statusP.textContent = j.active ? 'ACTIVE' : 'EXPIRED';
+        alert('✅ Key verified!');
+      }catch(e){
+        alert('❌ ตรวจคีย์ไม่ผ่าน: '+e.message);
+      }
+    });
+
+    // Copy
+    btnCopy.addEventListener('click', async ()=>{
+      const k = keyLabel.textContent.trim();
+      if(!k || k==='—') return alert('ยังไม่มีคีย์ให้คัดลอก');
+      try{ await navigator.clipboard.writeText(k); btnCopy.textContent='✓ Copied'; setTimeout(()=>btnCopy.textContent='Copy',900); }
+      catch{ alert('คัดลอกไม่สำเร็จ'); }
+    });
+
+    // Extend +5H
+    btnExtend.addEventListener('click', async ()=>{
+      const k = keyLabel.textContent.trim();
+      if(!k || k==='—') return alert('ยังไม่มีคีย์');
+      try{
+        const r = await fetch(API.extend(k), {method:'POST'});
+        const j = await r.json();
+        if(!r.ok) throw new Error(j.message||'Extend failed');
+        timeLeft.textContent = formatLeft(j.expiresAt);
+        alert('เพิ่มเวลาอีก 5 ชม. แล้ว!');
+      }catch(e){
+        alert('ต่อเวลาไม่สำเร็จ: '+e.message);
+      }
+    });
+
+    // Discord link → copy to clipboard (ตามที่ทำใน key UI)
+    btnDiscord.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      try{
+        await navigator.clipboard.writeText('https://discord.gg/your-server');
+        btnDiscord.textContent = 'Link copied!';
+        setTimeout(()=>btnDiscord.textContent='Join the Discord',1200);
+      }catch{}
+    });
+
+    function formatLeft(expiresAt){
+      if(!expiresAt) return '48:00:00';
+      const ms = +new Date(expiresAt) - Date.now();
+      if(ms<=0) return '00:00:00';
+      const h = Math.floor(ms/3600000);
+      const m = Math.floor((ms%3600000)/60000);
+      const s = Math.floor((ms%60000)/1000);
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+  </script>
+</body>
+</html>
