@@ -1,51 +1,81 @@
-<!doctype html>
-<html lang="th">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <title>UFO HUB X — Get Key</title>
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div id="bg"></div>
+<script>
+/* UFO HUB X — Smart iOS Redirect (v2, robust)
+ * - Detects iPhone / iPod / iPad (รวม iPadOS 13+ ที่ UA = "Macintosh")
+ * - Keeps query & hash when redirecting
+ * - ?platform=ios / ?platform=android to override (ทดสอบง่าย)
+ * - Avoids loops with sessionStorage flag and path check
+ * - Skips redirect on bots, API paths, or when already on ios.html
+ */
+(function () {
+  try {
+    var loc = window.location;
+    var path = loc.pathname || "/";
+    var search = loc.search || "";
+    var hash = loc.hash || "";
 
-  <main class="wrap">
-    <section class="card">
-      <div class="brand">
-        <img class="logo"
-             src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png"
-             alt="UFO HUB X" />
-        <h1><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-      </div>
+    // ---- 1) อนุญาต override จาก query ----
+    var params = new URLSearchParams(search);
+    var override = (params.get("platform") || "").toLowerCase(); // ios / android / none
 
-      <div class="desc">กดเพื่อรับคีย์ของคุณ (Android-first)</div>
+    // ---- 2) กันบอท/เงื่อนไขที่ไม่ควร redirect ----
+    var isBot = /bot|crawler|spider|preview|facebookexternalhit/i.test(navigator.userAgent || "");
+    var isAPI = /^\/api(\/|$)/.test(path); // ถ้าเป็น endpoint API
+    if (isBot || isAPI) return;
 
-      <div class="btn-col">
-        <button id="btn-get" class="btn primary">รับคีย์ (Get Key)</button>
-        <div id="result" class="result hide">
-          <div class="keyline">
-            <code id="keytext">—</code>
-            <button id="copy" class="btn ghost">Copy</button>
-          </div>
-          <div class="time">
-            หมดอายุใน: <b><span id="remain">—</span></b>
-            <button id="extend" class="btn ghost">+5H</button>
-          </div>
-          <div class="note">* จำกัด 1 คน / 1 คีย์</div>
-        </div>
-      </div>
-    </section>
+    // ---- 3) ตรวจว่าอยู่บนหน้า ios.html อยู่แล้ว และกันลูปด้วย sessionStorage ----
+    var alreadyIOS = /\/ios\.html$/i.test(path);
+    var loopFlagKey = "ufo_ios_redirect_done";
+    var redirectedBefore = sessionStorage.getItem(loopFlagKey) === "1";
 
-    <footer class="foot">
-      <span>Need support?</span>
-      <a href="#" id="discord">Join the Discord</a>
-    </footer>
-  </main>
+    // ---- 4) ตรวจ iOS อย่างแม่นยำ ----
+    var ua = navigator.userAgent || "";
+    var platform = navigator.platform || "";
+    var maxTouch = navigator.maxTouchPoints || 0;
 
-  <script src="./app.js"></script>
-</body>
-</html>
+    // iPhone/iPod แบบชัดเจน
+    var isiPhoneOrPod = /iPhone|iPod/i.test(ua);
+
+    // iPad แบบเก่า (UA มี iPad)
+    var isiPadUA = /iPad/i.test(ua);
+
+    // iPadOS 13+ (UA กลายเป็น "Macintosh" แต่มีจอสัมผัส)
+    var isiPadMacLike = /Macintosh/i.test(ua) && (maxTouch > 1);
+
+    // iOS WebView/Standalone ก็ถือว่า iOS
+    var isStandalone = window.navigator.standalone === true; // PWA on iOS
+
+    var isiOS = isiPhoneOrPod || isiPadUA || isiPadMacLike || isStandalone;
+
+    // ---- 5) เงื่อนไขตัดสินใจ redirect ----
+    // กรณี override
+    if (override === "ios") isiOS = true;
+    if (override === "android") isiOS = false;
+
+    // ไม่ต้อง redirect ถ้า:
+    // - ไม่ใช่ iOS
+    // - อยู่ที่ ios.html อยู่แล้ว
+    // - เคย redirect ไปแล้วใน session นี้ (กันลูปย้อนกลับ)
+    if (!isiOS || alreadyIOS || redirectedBefore) return;
+
+    // ---- 6) คำนวณ URL เป้าหมาย พร้อมคง query/hash เดิม ----
+    var base = path.replace(/\/[^/]*$/, "/"); // โฟลเดอร์ปัจจุบัน
+    var target = base + "ios.html";
+
+    // เก็บ query/hash เดิมไว้ (แต่ลบ platform override ทิ้งเพื่อความเนียน)
+    if (params.has("platform")) {
+      params.delete("platform");
+    }
+    var keepQuery = params.toString();
+    if (keepQuery) target += "?" + keepQuery;
+    if (hash) target += hash;
+
+    // ---- 7) ตั้งธงกันลูป & redirect ----
+    sessionStorage.setItem(loopFlagKey, "1");
+    // ใช้ location.replace() เพื่อไม่ให้กด back แล้วย้อนลูป
+    location.replace(target);
+  } catch (err) {
+    // เงียบไว้ ถ้ามีปัญหา อย่าให้ผู้ใช้เด้งหรือค้าง
+    console.error("[iOS redirect] error:", err);
+  }
+})();
+    </script>
