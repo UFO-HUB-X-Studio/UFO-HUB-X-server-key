@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>UFO HUB X — Android</title>
+  <link rel="stylesheet" href="/styles.css"/>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1 class="title"><span class="ufo">UFO</span> HUB X</h1>
+      <p class="subtitle">Android Portal — 1 คนได้ 1 Key / วัน</p>
+
+      <div class="row">
+        <button id="btnGet" class="btn primary">🔑 Get Key</button>
+        <button id="btnExtend" class="btn">+5H</button>
+      </div>
+
+      <p id="keyBox" class="kpill mono" style="display:none"></p>
+      <div class="stat" id="stat" style="display:none">
+        <span>⌛ เหลือเวลา <b id="remain">—</b></span>
+        <button id="btnCopy" class="btn">Copy</button>
+      </div>
+
+      <p class="footer">หากค้าง ให้รีเฟรชหน้า</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGetKey, apiCheck, apiExtend, copy } from '/app.js';
+    let lastKey = null, t = null;
+
+    const elKey = document.getElementById('keyBox');
+    const elRem = document.getElementById('remain');
+    const elStat= document.getElementById('stat');
+
+    async function refresh(){
+      if(!lastKey) return;
+      const j = await apiCheck(lastKey);
+      if(!j.ok){ elRem.textContent='หมดอายุ/ไม่พบคีย์'; return; }
+      elRem.textContent = j.remainingSeconds + 's';
+      elStat.style.display = 'flex';
+    }
+    function tick(){
+      refresh(); clearInterval(t);
+      t = setInterval(refresh, 3000);
+    }
+
+    document.getElementById('btnGet').onclick = async ()=>{
+      const j = await apiGetKey();
+      if(j.ok){
+        lastKey = j.key; elKey.textContent = j.key; elKey.style.display='inline-flex';
+        tick();
+      } else alert(j.message||'error');
+    };
+    document.getElementById('btnExtend').onclick = async ()=>{
+      if(!lastKey) return alert('ยังไม่มีคีย์');
+      const j = await apiExtend(lastKey);
+      if(j.ok) tick(); else alert(j.message||'extend error');
+    };
+    document.getElementById('btnCopy').onclick = ()=>{ if(lastKey) copy(lastKey); };
+  </script>
+</body>
+</html>
