@@ -1,79 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UFO HUB X Key Portal</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UFO HUB X — Key Portal</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <!-- โลโก้ -->
-  <div class="header">
-    <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png" 
-         alt="UFO HUB X" class="logo">
-  </div>
+  <!-- พื้นหลังถูกกำหนดใน CSS -->
 
-  <!-- กล่อง Key -->
-  <div class="card">
-    <div class="title">UFO HUB X Campaign</div>
-    <div class="progress-container">
-      <span>Progress:</span>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress"></div>
-      </div>
-      <span id="progress-text">0/2</span>
+  <!-- แถบหัว (สีน้ำเงินโค้งมน) -->
+  <header class="topbar">
+    <div class="topbar__pill">
+      <img src="/images/logo.png" class="brand-logo" alt="UFO HUB X" />
+      <span class="brand-text">Luarmor</span>
     </div>
+    <button class="hamburger" aria-label="menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
 
-    <div class="actions">
-      <button id="startBtn" class="btn start">START</button>
-      <button id="nextBtn" class="btn next hidden">NEXT</button>
-    </div>
-
-    <div class="key-list">
-      <div class="key-header">
-        <span>YOUR KEYS (0/1)</span>
-        <span>TIME LEFT</span>
-        <span>STATUS</span>
-        <span>ACTIONS</span>
-      </div>
-      <div id="key-container"></div>
-    </div>
-  </div>
-
-  <script>
-    let step = 0;
-    const progress = document.getElementById("progress");
-    const progressText = document.getElementById("progress-text");
-    const startBtn = document.getElementById("startBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const keyContainer = document.getElementById("key-container");
-
-    startBtn.addEventListener("click", () => {
-      step = 1;
-      progress.style.width = "50%";
-      progressText.textContent = "1/2";
-      startBtn.classList.add("hidden");
-      nextBtn.classList.remove("hidden");
-    });
-
-    nextBtn.addEventListener("click", () => {
-      step = 2;
-      progress.style.width = "100%";
-      progressText.textContent = "2/2";
-      nextBtn.classList.add("hidden");
-
-      // สร้าง Key
-      const key = "zZnFp...kwocw";
-      keyContainer.innerHTML = `
-        <div class="key-item">
-          <span class="icon">🔑</span>
-          <span class="key">${key}</span>
-          <span class="time">48:00:00</span>
-          <span class="status active">ACTIVE</span>
-          <button class="btn extend">+5H</button>
+  <!-- การ์ดแคมเปญ -->
+  <main class="container">
+    <section class="card">
+      <div class="card__head">
+        <div class="left-title">
+          <div>Speed</div>
+          <div>Hub X</div>
+          <div>Linkvertise</div>
         </div>
-      `;
-    });
-  </script>
+
+        <div class="progress-wrap">
+          <label>Progress:</label>
+          <div class="progress">
+            <div id="progressFill" class="progress__fill"></div>
+          </div>
+          <span id="progressText" class="progress__txt">0/2</span>
+        </div>
+
+        <div class="step-btns">
+          <button id="btnStart" class="btn btn--start">START</button>
+          <button id="btnNext"  class="btn btn--next is-hidden">NEXT</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- หัวตาราง -->
+      <div class="list-head">
+        <div>YOUR KEYS (0/6)</div>
+        <div>TIME LEFT</div>
+        <div>STATUS</div>
+        <div>ACTIONS</div>
+      </div>
+
+      <!-- รายการคีย์ -->
+      <div id="keyList" class="key-list">
+        <!-- สร้างหลังจบขั้นตอน 2 -->
+      </div>
+
+      <!-- ปุ่ม New Key -->
+      <div class="bottom-actions">
+        <button class="btn btn--ghost" id="btnNewKey">+  GET A NEW KEY</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
 </body>
 </html>
