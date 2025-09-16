@@ -1,71 +1,92 @@
-:root{
-  --green:#00ff99; --dark:#0a0a0a; --white:#fff;
-  --muted:#9aa5b1; --danger:#e34d4d; --stroke:rgba(0,255,153,.38);
-  --radius:16px;
-  /* เปลี่ยนพื้นหลังตรงนี้ถ้าต้องการ */
-  --bg-url: url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&");
-}
-
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  color:var(--white);
-  background: var(--bg-url) no-repeat center center fixed, radial-gradient(1200px 600px at 70% -10%, rgba(0,255,153,.10), transparent 55%), #0b0f0c;
+/* พื้นหลัง */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png") 
+              no-repeat center center fixed;
   background-size: cover;
-  display:flex; align-items:center; justify-content:center; padding:24px;
-}
-.container{ width:100%; max-width:420px; text-align:center }
-
-.card{
-  background: rgba(0,0,0,.78);
-  border:1.5px solid var(--stroke);
-  border-radius:var(--radius);
-  box-shadow:0 12px 36px rgba(0,0,0,.45);
-  padding:22px 20px;
+  color: #fff;
 }
 
-.profile{
-  width:120px; height:120px; border-radius:50%;
-  margin:0 auto 14px;
-  border:3px solid var(--green);
-  object-fit:cover; object-position:center;
-  display:block;
+/* โลโก้ */
+.header {
+  text-align: center;
+  padding: 20px;
+}
+.logo {
+  width: 160px;
 }
 
-.title{ margin:8px 0 6px; font-weight:900; letter-spacing:.4px; font-size:28px }
-.title .ufo{ color:var(--green) }
-.title .hx{ color:#fff }
-
-.subtitle{ color:var(--muted); margin:0 0 16px; font-size:14px }
-
-.row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:12px 0 }
-
-.input{
-  background:#131616; border:1px solid var(--stroke); color:var(--white);
-  border-radius:12px; height:46px; padding:0 12px; width:100%; outline:none;
-}
-.input::placeholder{ color:#7e8a8b }
-
-.btn{
-  background:#1a1f1d; color:var(--white);
-  border:1.5px solid var(--stroke); padding:12px 16px; border-radius:12px;
-  cursor:pointer; font-weight:800; letter-spacing:.2px;
-  transition: .18s transform, .18s background, .18s border-color;
-}
-.btn:hover{ transform:translateY(-1px); background:#15221b }
-.btn.primary{ background:var(--green); color:#04160f; border-color:transparent }
-.btn.danger{ background:var(--danger); border-color:transparent }
-
-.kpill{
-  display:inline-block; padding:8px 12px;
-  background:#0f1412; border:1px dashed var(--stroke); border-radius:12px;
-  color:var(--green); font-family: ui-monospace, Menlo, Consolas, monospace;
-  margin:10px 0 6px;
+/* กล่องหลัก */
+.card {
+  max-width: 700px;
+  margin: auto;
+  background: rgba(10, 20, 40, 0.9);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
-.stat{ color:var(--muted); font-size:14px; margin-top:6px }
-.stat b{ color:var(--white) }
+/* Title */
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
 
-.footer{ color:#92a0a6; margin-top:14px; font-size:13px }
+/* Progress */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progress-bar {
+  flex: 1;
+  height: 10px;
+  background: #333;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: limegreen;
+  transition: width 0.4s;
+}
+
+/* ปุ่ม */
+.btn {
+  border: none;
+  padding: 10px 18px;
+  margin: 10px 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.start { background: green; color: white; }
+.next { background: dodgerblue; color: white; }
+.extend { background: orange; color: white; }
+.hidden { display: none; }
+
+/* Key Table */
+.key-header, .key-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  padding: 10px;
+}
+.key-header {
+  border-bottom: 1px solid #444;
+  font-weight: bold;
+}
+.key-item {
+  background: rgba(255,255,255,0.05);
+  margin-top: 5px;
+  border-radius: 6px;
+}
+.key {
+  font-family: monospace;
+}
+.status.active {
+  color: limegreen;
+  font-weight: bold;
+}
