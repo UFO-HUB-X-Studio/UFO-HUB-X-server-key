@@ -1,254 +1,190 @@
-// UFO HUB X Key API — server.js
-// -----------------------------------------
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import bodyParser from "body-parser";
-import fs from "fs-extra";
-import path from "path";
-import { fileURLToPath } from "url";
-import moment from "moment";
-import { v4 as uuidv4 } from "uuid";
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import fs from 'fs/promises';
+import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname  = path.dirname(__filename);
 
-// ---------- CONFIG ----------
+const app  = express();
 const PORT = process.env.PORT || 10000;
-const DATA_DIR = path.join(__dirname, "data");
-const DB_FILE = path.join(DATA_DIR, "keys.json");
 
-const DEFAULT_LIFETIME_HOURS = 48;  // เวลาหลัก
-const EXTEND_HOURS = 5;             // ยืดครั้งละ +5 ชม
-const EXTEND_COOLDOWN_MIN = 10;     // ยืดได้ทุกกี่นาที (กันสแปม)
-const ONE_KEY_PER_FINGERPRINT = true;
+const DATA_DIR  = path.join(__dirname, 'data');
+const DB_FILE   = path.join(DATA_DIR, 'keys.json');
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || ""; // ใส่ใน Render Env ถ้าจะใช้ endpoint admin
+const KEY_PREFIX       = 'UFO-HUB-X-';
+const DEFAULT_TTL_HRS  = 48;     // อายุคีย์เริ่มต้น
+const EXTEND_HRS       = 5;      // ยืดต่อครั้ง
+const EXTEND_MAX_DAILY = 2;      // ต่อได้กี่ครั้ง/วัน
+const ONE_KEY_PER_FP   = true;   // 1 fingerprint ออกได้ 1 คีย์/วัน
 
-// ---------- Helpers ----------
-function nowUtc() { return moment.utc(); }
-function toISO(m) { return m.clone().toISOString(); }
-function fromISO(s) { return moment.utc(s); }
-function sanitizeUA(ua="") { return ua.substring(0, 180); }
+// -------- Middlewares --------
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-function makeKey() {
-  // รูปแบบ: UFO-HUB-X-xxxxx-xxxxx
-  const short = () => uuidv4().split("-")[0].toUpperCase();
-  return `UFO-HUB-X-${short()}-${short()}`;
-}
-
-async function ensureDB() {
-  await fs.ensureDir(DATA_DIR);
-  if (!(await fs.pathExists(DB_FILE))) {
-    await fs.writeJson(DB_FILE, { keys: {}, logs: [] }, { spaces: 2 });
-  }
-}
-
-async function readDB() {
-  await ensureDB();
-  try {
-    return await fs.readJson(DB_FILE);
-  } catch (err) {
-    // ถ้าไฟล์พัง/ไม่ครบ ให้รีเซ็ต
-    console.error("loadDB error:", err?.message);
-    await fs.writeJson(DB_FILE, { keys: {}, logs: [] }, { spaces: 2 });
-    return { keys: {}, logs: [] };
-  }
-}
-
-async function writeDB(db) {
-  await fs.writeJson(DB_FILE, db, { spaces: 2 });
-}
-
-function fpFromReq(req) {
-  const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").toString().split(",")[0].trim();
-  const ua = sanitizeUA(req.headers["user-agent"] || "");
-  // fingerprint แบบง่าย: ip + ua
-  return `${ip}|${ua}`;
-}
-
-function keySummary(keyObj) {
-  const now = nowUtc();
-  const expiresAt = fromISO(keyObj.expiresAt);
-  const remainingSec = Math.max(0, expiresAt.diff(now, "seconds"));
-  return {
-    key: keyObj.key,
-    createdAt: keyObj.createdAt,
-    expiresAt: keyObj.expiresAt,
-    remainingSeconds: remainingSec,
-    remainingHuman: moment.duration(remainingSec, "seconds").humanize(),
-    extendedHours: keyObj.extendedHours || 0
-  };
-}
-
-// ---------- Rate-limit แบบเบา ๆ ----------
-const hitCache = new Map(); // fp -> { count, resetAt }
-const MAX_REQ_PER_MIN = 60;
-
-function rateGuard(req, res, next) {
-  const fp = fpFromReq(req);
-  const now = Date.now();
-  const record = hitCache.get(fp) || { count: 0, resetAt: now + 60_000 };
-  if (now > record.resetAt) {
-    record.count = 0;
-    record.resetAt = now + 60_000;
-  }
-  record.count += 1;
-  hitCache.set(fp, record);
-  if (record.count > MAX_REQ_PER_MIN) {
-    return res.status(429).json({ ok:false, error: "Too many requests. Please slow down." });
-  }
-  next();
-}
-
-// ---------- App ----------
-const app = express();
-app.use(helmet());
-app.use(cors({ origin: "*", credentials: false }));
-app.use(bodyParser.json());
-app.use(rateGuard);
+// rate limit APIs (กันสแปม)
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 นาที
+  max: 60,             // 60 req/นาที/ไอพี
+});
+app.use('/api/', apiLimiter);
 
 // เสิร์ฟไฟล์หน้าเว็บ
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// ---------- API ----------
-
-// สถานะ/เวอร์ชัน
-app.get("/api/version", async (req, res) => {
-  res.json({ ok: true, name: "UFO HUB X Key API", version: "1.0.0", now: nowUtc().toISOString() });
-});
-
-// ออกคีย์ (1 คน/1 คีย์) : POST /api/getkey
-// body: { fingerprint? } (ถ้าอยากส่งอะไรเพิ่มก็ได้)
-app.post("/api/getkey", async (req, res) => {
+// -------- DB helpers --------
+async function ensureDB() {
+  await fs.mkdir(DATA_DIR, { recursive: true });
   try {
-    const db = await readDB();
-    const fp = fpFromReq(req);
-
-    // หา key เดิมถ้ามี (นับเป็น “1 คน 1 คีย์”)
-    if (ONE_KEY_PER_FINGERPRINT) {
-      const existed = Object.values(db.keys).find(k => k.fingerprint === fp);
-      if (existed) {
-        return res.json({ ok: true, exist: true, data: keySummary(existed) });
-      }
-    }
-
-    // ออกคีย์ใหม่
-    const key = makeKey();
-    const createdAt = toISO(nowUtc());
-    const expiresAt = toISO(nowUtc().add(DEFAULT_LIFETIME_HOURS, "hours"));
-
-    const record = {
-      key,
-      fingerprint: fp,
-      createdAt,
-      expiresAt,
-      extendedHours: 0,
-      ua: sanitizeUA(req.headers["user-agent"] || ""),
-      lastExtendAt: null
-    };
-    db.keys[key] = record;
-    db.logs.push({ t: createdAt, type: "issue", key, fp });
-
-    await writeDB(db);
-    return res.json({ ok: true, data: keySummary(record) });
-  } catch (err) {
-    console.error("getkey error:", err);
-    return res.status(500).json({ ok: false, error: "Server error" });
+    await fs.access(DB_FILE);
+  } catch {
+    const init = { keys: {} };
+    await fs.writeFile(DB_FILE, JSON.stringify(init, null, 2), 'utf8');
   }
-});
-
-// ตรวจคีย์: GET /api/check/:key
-app.get("/api/check/:key", async (req, res) => {
-  try {
-    const db = await readDB();
-    const key = req.params.key;
-    const item = db.keys[key];
-    if (!item) {
-      return res.status(404).json({ ok: false, error: "Key not found" });
-    }
-    const expiresAt = fromISO(item.expiresAt);
-    const valid = nowUtc().isBefore(expiresAt);
-    return res.json({ ok: true, valid, data: keySummary(item) });
-  } catch (err) {
-    console.error("check error:", err);
-    return res.status(500).json({ ok: false, error: "Server error" });
-  }
-});
-
-// ยืดเวลา: POST /api/extend/:key  (+5H, มีคูลดาวน์)
-app.post("/api/extend/:key", async (req, res) => {
-  try {
-    const db = await readDB();
-    const key = req.params.key;
-    const item = db.keys[key];
-    if (!item) {
-      return res.status(404).json({ ok: false, error: "Key not found" });
-    }
-
-    // จำกัดให้คนเดิมยืด (จาก fingerprint เดียวกัน)
-    const fp = fpFromReq(req);
-    if (item.fingerprint !== fp) {
-      return res.status(403).json({ ok: false, error: "Not allowed to extend this key" });
-    }
-
-    // Cooldown ยืด
-    const now = nowUtc();
-    if (item.lastExtendAt) {
-      const last = fromISO(item.lastExtendAt);
-      const diffMin = now.diff(last, "minutes");
-      if (diffMin < EXTEND_COOLDOWN_MIN) {
-        return res.status(429).json({
-          ok: false,
-          error: `Please wait ${EXTEND_COOLDOWN_MIN - diffMin} more minute(s) before next extend`
-        });
-      }
-    }
-
-    const oldExp = fromISO(item.expiresAt);
-    const newExp = oldExp.add(EXTEND_HOURS, "hours");
-
-    item.expiresAt = toISO(newExp);
-    item.extendedHours = (item.extendedHours || 0) + EXTEND_HOURS;
-    item.lastExtendAt = toISO(now);
-
-    db.logs.push({ t: toISO(now), type: "extend", key, fp, addedHours: EXTEND_HOURS });
-    await writeDB(db);
-
-    return res.json({ ok: true, data: keySummary(item) });
-  } catch (err) {
-    console.error("extend error:", err);
-    return res.status(500).json({ ok: false, error: "Server error" });
-  }
-});
-
-// ---------- Admin (optional) ----------
-// ใช้ได้เมื่อส่ง header:  Authorization: Bearer <ADMIN_TOKEN>
-function requireAdmin(req, res, next) {
-  if (!ADMIN_TOKEN) return res.status(403).json({ ok:false, error:"Admin is disabled" });
-  const auth = (req.headers.authorization || "").replace("Bearer ", "");
-  if (auth !== ADMIN_TOKEN) return res.status(401).json({ ok:false, error:"Unauthorized" });
-  next();
+}
+async function loadDB() {
+  await ensureDB();
+  const raw = await fs.readFile(DB_FILE, 'utf8');
+  const json = raw.trim() ? JSON.parse(raw) : { keys: {} };
+  if (!json.keys) json.keys = {};
+  return json;
+}
+async function saveDB(db) {
+  await fs.writeFile(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
 }
 
-app.get("/api/admin/list", requireAdmin, async (req, res) => {
-  const db = await readDB();
-  res.json({ ok: true, count: Object.keys(db.keys).length, keys: db.keys, logs: db.logs.slice(-200) });
+// fingerprint จาก IP + UA
+function fingerprint(req) {
+  const ip = (req.headers['x-forwarded-for'] || req.ip || '')
+    .toString().split(',')[0].trim();
+  const ua = (req.headers['user-agent'] || '').toString();
+  return crypto.createHash('sha256').update(ip + '|' + ua).digest('hex');
+}
+function nowMs() { return Date.now(); }
+function futureMs(hours) { return nowMs() + hours * 3600 * 1000; }
+function todayKey() {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()}`;
+}
+function dailyCounter(obj) {
+  const key = todayKey();
+  obj.daily = obj.daily || {};
+  obj.daily[key] = (obj.daily[key] || 0) + 1;
+  return obj.daily[key];
+}
+
+// ------------- API -----------------
+
+// POST /api/getkey — ออกคีย์ (จำกัด 1 คน 1 คีย์ต่อวัน)
+app.post('/api/getkey', async (req, res) => {
+  try {
+    const db = await loadDB();
+    const fp = fingerprint(req);
+
+    // หา key เดิมที่ยังไม่หมดอายุ & fingerprint ตรง
+    let existingKey = null;
+    for (const [k, v] of Object.entries(db.keys)) {
+      if (v.fingerprint === fp && v.expiresAt > nowMs()) {
+        existingKey = k;
+        break;
+      }
+    }
+    if (ONE_KEY_PER_FP && existingKey) {
+      return res.json({
+        ok: true,
+        key: existingKey,
+        message: 'You already have an active key.'
+      });
+    }
+
+    // จำกัด “ออกคีย์” วันละ 1 ครั้งต่อ fingerprint
+    db.fplog = db.fplog || {};
+    const log = db.fplog[fp] || { countByDate:{} };
+    const dkey = todayKey();
+    if ((log.countByDate[dkey] || 0) >= 1) {
+      return res.status(429).json({ ok:false, message:'Daily limit reached' });
+    }
+    log.countByDate[dkey] = (log.countByDate[dkey] || 0) + 1;
+    db.fplog[fp] = log;
+
+    // สร้างคีย์ใหม่
+    const token = crypto.randomBytes(8).toString('base64url');
+    const key   = KEY_PREFIX + token;
+    const exp   = futureMs(DEFAULT_TTL_HRS);
+
+    db.keys[key] = {
+      fingerprint: fp,
+      issuedAt: nowMs(),
+      expiresAt: exp,
+      extendCount: 0,
+      extendLog: {}
+    };
+    await saveDB(db);
+
+    res.json({ ok:true, key, expiresAt:exp, ttlHours:DEFAULT_TTL_HRS });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:'Server error' });
+  }
 });
 
-app.delete("/api/admin/delete/:key", requireAdmin, async (req, res) => {
-  const db = await readDB();
-  const key = req.params.key;
-  if (!db.keys[key]) return res.status(404).json({ ok:false, error:"Key not found" });
-  delete db.keys[key];
-  await writeDB(db);
-  res.json({ ok:true, deleted:key });
+// GET /api/check/:key — ตรวจสถานะคีย์
+app.get('/api/check/:key', async (req, res) => {
+  try {
+    const k = req.params.key;
+    const db = await loadDB();
+    const v  = db.keys[k];
+    if (!v) return res.json({ ok:false, status:'NOT_FOUND' });
+
+    const remain = Math.max(0, Math.floor((v.expiresAt - nowMs())/1000));
+    const status = (remain>0) ? 'ACTIVE' : 'EXPIRED';
+    res.json({ ok:true, status, remainingSeconds: remain, expiresAt: v.expiresAt });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:'Server error' });
+  }
 });
 
-// ---------- Health ----------
-app.get("/healthz", (req, res) => res.json({ ok: true, status: "live" }));
+// POST /api/extend/:key — ยืดเวลา +5h (จำกัดวันละ EXTEND_MAX_DAILY)
+app.post('/api/extend/:key', async (req, res) => {
+  try {
+    const k = req.params.key;
+    const db = await loadDB();
+    const v  = db.keys[k];
+    if (!v) return res.status(404).json({ ok:false, message:'Key not found' });
 
-// ---------- Start ----------
+    // จำกัด fingerprint เดิมเท่านั้นที่ยืดได้
+    const fp = fingerprint(req);
+    if (v.fingerprint !== fp) {
+      return res.status(403).json({ ok:false, message:'Not owner of this key' });
+    }
+
+    // จำกัดต่อวัน
+    v.extendLog = v.extendLog || {};
+    const cnt = dailyCounter(v); // จะเพิ่มในวันนี้
+    if (cnt > EXTEND_MAX_DAILY) {
+      return res.status(429).json({ ok:false, message: 'Extend limit reached for today' });
+    }
+
+    v.expiresAt = Math.max(v.expiresAt, nowMs()) + EXTEND_HRS*3600*1000;
+    v.extendCount = (v.extendCount||0) + 1;
+    await saveDB(db);
+
+    res.json({ ok:true, addedHours:EXTEND_HRS, newExpiresAt: v.expiresAt });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:'Server error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`UFO HUB X Key API listening on :${PORT}`);
 });
