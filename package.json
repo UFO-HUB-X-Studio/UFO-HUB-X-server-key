@@ -1,14 +1,12 @@
 {
   "name": "ufo-hub-x-key",
   "version": "1.0.0",
-  "private": true,
+  "description": "UFO HUB X key server (get/check/extend)",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "express-rate-limit": "^7.4.0",
-    "fs-extra": "^11.2.0"
+    "express": "^4.19.2"
   }
 }
