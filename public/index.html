@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UFO HUB X - Key System</title>
+  <style>
+    body {
+      background: #0b0b0b;
+      color: #00ff88;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+    }
+    .box {
+      background: #111;
+      border: 2px solid #00ff88;
+      padding: 20px 40px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    button {
+      background: #00ff88;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00cc66;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🔑 UFO HUB X</h1>
+    <p>กดเพื่อรับ Key ของคุณ</p>
+    <button onclick="getKey()">Get Key</button>
+    <p id="keyBox"></p>
+  </div>
 
+  <script>
+    async function getKey() {
+      let res = await fetch("/getkey");
+      let data = await res.json();
+      document.getElementById("keyBox").innerText = "Your Key: " + data.key;
+    }
+  </script>
+</body>
+</html>
