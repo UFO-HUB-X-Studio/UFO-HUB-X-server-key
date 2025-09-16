@@ -1,92 +1,158 @@
-/* พื้นหลัง */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png") 
-              no-repeat center center fixed;
-  background-size: cover;
-  color: #fff;
+:root{
+  --navy-900:#0e1a2b;
+  --navy-800:#13243b;
+  --navy-700:#1a2f49;
+  --navy-650:#1f3553;
+  --text-weak:#a8b3c7;
+  --white:#fff;
+  --green:#2ecc71;
+  --green-strong:#23c35b;
+  --blue:#2d7df6;
+  --accent:#2bd686;
 }
 
-/* โลโก้ */
-.header {
-  text-align: center;
-  padding: 20px;
-}
-.logo {
-  width: 160px;
-}
-
-/* กล่องหลัก */
-.card {
-  max-width: 700px;
-  margin: auto;
-  background: rgba(10, 20, 40, 0.9);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--white);
+  /* พื้นหลังภาพ (ของเราเอง) */
+  background:url("/images/bg.png") no-repeat center center fixed;
+  background-size:cover;
 }
 
-/* Title */
-.title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
+/* ===== Top bar ===== */
+.topbar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px 14px 10px;
+}
+.topbar__pill{
+  display:flex; align-items:center; gap:14px;
+  background:linear-gradient(180deg,#2c3e63,#24365a);
+  padding:14px 22px;
+  border-radius:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+}
+.brand-logo{ width:26px; height:26px; object-fit:contain; filter:drop-shadow(0 1px 0 rgba(0,0,0,.4));}
+.brand-text{ font-weight:700; letter-spacing:.3px; color:#d8e3ff; }
+.hamburger{
+  margin-left:auto; margin-right:20px;
+  width:48px; height:38px; border:none; border-radius:10px;
+  background:linear-gradient(180deg,#2c3e63,#24365a);
+  display:flex; align-items:center; justify-content:center;
+  gap:4px; cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+}
+.hamburger span{display:block;width:18px;height:2px;background:#d8e3ff}
+.hamburger span:nth-child(2){opacity:.85}
+.hamburger span:nth-child(3){opacity:.7}
+
+/* ===== Card ===== */
+.container{ display:flex; justify-content:center; padding:14px }
+.card{
+  width:min(920px, calc(100% - 24px));
+  background:rgba(17,28,48,.92);
+  border-radius:14px;
+  box-shadow:0 16px 40px rgba(0,0,0,.45);
+  overflow:hidden;
+  backdrop-filter:blur(2px);
+}
+.card__head{
+  display:grid;
+  grid-template-columns: 200px 1fr auto;
+  gap:18px;
+  padding:24px 22px 18px;
+  align-items:center;
+}
+.left-title{ color:#d7e4ff; font-weight:700; line-height:1.2 }
+.left-title div{ font-size:18px }
+.left-title div+div{ margin-top:4px }
+
+.progress-wrap{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px;
+}
+.progress-wrap label{ color:#cdd7ee }
+.progress{ height:10px; background:#0f2038; border-radius:6px; overflow:hidden; box-shadow: inset 0 0 0 1px #10233f}
+.progress__fill{
+  height:100%; width:0%;
+  background:linear-gradient(90deg, #29d07f, #1ec65f);
+  box-shadow:0 0 10px rgba(41,208,127,.35);
+  transition:width .35s ease;
+}
+.progress__txt{ color:#b6c3dd; font-weight:600 }
+
+.step-btns{ display:flex; align-items:center; gap:10px }
+.btn{
+  border:none; cursor:pointer; font-weight:700; letter-spacing:.2px;
+  padding:12px 18px; border-radius:10px;
+  transition:transform .04s ease, filter .15s ease;
+}
+.btn:active{ transform:translateY(1px) }
+.btn--start{ background:#28c76f; color:#0d1a2f; box-shadow:0 8px 18px rgba(40,199,111,.35) }
+.btn--next { background:#25a0ff; color:#06203c; box-shadow:0 8px 18px rgba(37,160,255,.35) }
+.is-hidden{ display:none !important }
+
+.divider{ height:1px; background:#1b2c48; margin:4px 0 }
+
+/* ตารางหัวข้อ */
+.list-head{
+  display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  padding:12px 22px; color:#9fb2cf; font-weight:700; font-size:13px;
 }
 
-/* Progress */
-.progress-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* แถวคีย์ */
+.key-list{ padding:0 14px 8px }
+.key-row{
+  display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  align-items:center;
+  background:#13233c;
+  border:1px solid #1e3355;
+  padding:12px 12px 12px 14px;
+  border-radius:10px;
+  margin:8px 8px;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
 }
-.progress-bar {
-  flex: 1;
-  height: 10px;
-  background: #333;
-  border-radius: 5px;
-  overflow: hidden;
+.key-col{
+  display:flex; align-items:center; gap:10px;
 }
-.progress-fill {
-  height: 100%;
-  width: 0%;
-  background: limegreen;
-  transition: width 0.4s;
+.file-ico{
+  width:38px; height:38px; border-radius:10px;
+  background:linear-gradient(180deg,#1a2f4b,#152742);
+  display:grid; place-items:center; color:#9ec3ff;
+  border:1px solid #20365a;
+}
+.key-text{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#e6f0ff; font-weight:600 }
+
+.badge{
+  display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800;
+}
+.badge--active{ background:#1d3b2e; color:#3de081; border:1px solid #2e8d5b }
+
+.action-btn{
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  height:36px; padding:0 12px; border-radius:10px; border:1px solid #2b4a7d;
+  background:#14294a; color:#a9c1e8; font-weight:800; cursor:pointer;
+  transition:filter .2s ease;
+}
+.action-btn:hover{ filter:brightness(1.07) }
+
+/* ปุ่ม ghost ด้านล่าง */
+.bottom-actions{
+  display:flex; justify-content:center; padding:18px 0 24px;
+}
+.btn--ghost{
+  background:transparent; color:#80a7ff; border:1px solid #2b4a7d;
+  box-shadow:none; padding:12px 18px; border-radius:10px; font-weight:800;
 }
 
-/* ปุ่ม */
-.btn {
-  border: none;
-  padding: 10px 18px;
-  margin: 10px 5px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.start { background: green; color: white; }
-.next { background: dodgerblue; color: white; }
-.extend { background: orange; color: white; }
-.hidden { display: none; }
-
-/* Key Table */
-.key-header, .key-item {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  padding: 10px;
-}
-.key-header {
-  border-bottom: 1px solid #444;
-  font-weight: bold;
-}
-.key-item {
-  background: rgba(255,255,255,0.05);
-  margin-top: 5px;
-  border-radius: 6px;
-}
-.key {
-  font-family: monospace;
-}
-.status.active {
-  color: limegreen;
-  font-weight: bold;
+/* ตอบสนองจอเล็ก */
+@media (max-width:680px){
+  .card__head{ grid-template-columns: 1fr; gap:12px }
+  .left-title{ order:1 }
+  .progress-wrap{ order:2 }
+  .step-btns{ order:3; justify-content:flex-end }
+  .list-head, .key-row{ grid-template-columns: 1.4fr .9fr .9fr 1fr }
 }
