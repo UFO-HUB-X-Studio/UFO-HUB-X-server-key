@@ -1,246 +1,133 @@
-// server.js — UFO HUB X Key API (Full)
-// Features:
-// - Auto init/fix data file (no more "Unexpected end of JSON")
-// - POST /api/getkey         -> ออกคีย์จริง (1 คน 1 key, อายุ 48 ชม.)
-// - GET  /api/check/:key     -> ตรวจคีย์ + เวลาที่เหลือ
-// - POST /api/extend/:key    -> ยืดเวลา (สูงสุด +5 ชม./ครั้ง)
-// - GET  /api/health         -> health check
-// - Static /public           -> เว็บเพจของนาย
-//
-// Env (optional):
-//   PORT=10000
-//   API_TOKEN=your-secret   // ถ้าอยากล็อก POST /api/extend ให้ต้องใส่ token
-//
-// Data layout (data/keys.json):
-// {
-//   "keys": [{ key, clientId, createdAt, expiresAt, lastExtendAt? }],
-//   "clients": { "<clientId>": { key, expiresAt } }
-// }
+// server.js
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const fs = require("fs-extra");
-const rateLimit = require("express-rate-limit");
-const crypto = require("crypto");
-
-// -------------------- Config --------------------
-const PORT = process.env.PORT || 10000;
-const API_TOKEN = process.env.API_TOKEN || ""; // ถ้าเว้นว่าง = ไม่บังคับ
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_PATH = path.join(DATA_DIR, "keys.json");
-
-// อายุคีย์หลัก 48 ชั่วโมง
-const KEY_TTL_HOURS = 48;
-// เพิ่มเวลาได้ครั้งละสูงสุด 5 ชั่วโมง
-const EXTEND_MAX_HOURS = 5;
-
-// -------------------- Express --------------------
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 10000;
+
 app.use(express.json());
 
-// rate limit พื้นฐาน ป้องกันสแปม
-app.use(
-  "/api/",
-  rateLimit({
-    windowMs: 60 * 1000, // 1 นาที
-    max: 60,             // 60 req / นาที ต่อ IP
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
-
-// เสิร์ฟหน้าเว็บใน /public
-app.use(express.static(path.join(process.cwd(), "public")));
-
-// -------------------- DB Helper --------------------
-const DEFAULT_DB = { keys: [], clients: {} };
-
-async function ensureDB() {
-  await fs.ensureDir(DATA_DIR);
-  if (!(await fs.pathExists(DATA_PATH))) {
-    await fs.writeJSON(DATA_PATH, DEFAULT_DB, { spaces: 2 });
-    return;
-  }
-  // ถ้ามีไฟล์อยู่แล้วแต่เนื้อหาว่าง/เสีย -> เขียนค่า default ให้
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    if (!raw.trim()) {
-      await fs.writeJSON(DATA_PATH, DEFAULT_DB, { spaces: 2 });
-    } else {
-      JSON.parse(raw); // แค่ทดสอบ parse ว่าถูก
-    }
-  } catch {
-    await fs.writeJSON(DATA_PATH, DEFAULT_DB, { spaces: 2 });
-  }
-}
-
-async function loadDB() {
-  try {
-    const content = await fs.readFile(DATA_PATH, "utf-8");
-    if (!content.trim()) return { ...DEFAULT_DB };
-    return JSON.parse(content);
-  } catch (e) {
-    console.error("loadDB error:", e.message);
-    return { ...DEFAULT_DB };
-  }
-}
-
-async function saveDB(db) {
-  await fs.writeJSON(DATA_PATH, db, { spaces: 2 });
-}
-
-// -------------------- Utils --------------------
-function genKey() {
-  // รูปแบบคีย์อ่านง่าย เช่น UHX-9CXT2R-J6K7M3
-  const seg = () => crypto.randomBytes(4).toString("base64url").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-  return `UHX-${seg()}-${seg()}`;
-}
-
-function now() {
-  return Date.now();
-}
-
-function hoursFromNow(h) {
-  return now() + h * 60 * 60 * 1000;
-}
-
-function remainingMs(exp) {
-  return Math.max(0, exp - now());
-}
-
-// หา clientId: ใช้ header x-client-id; ถ้าไม่มีให้ hash IP เป็น id
-function resolveClientId(req) {
-  const cid = (req.headers["x-client-id"] || "").toString().trim();
-  if (cid) return cid;
-  const ip = (req.headers["x-forwarded-for"] || req.ip || "").toString();
-  return crypto.createHash("sha1").update(ip).digest("hex").slice(0, 16);
-}
-
-// -------------------- Middlewares --------------------
-function requireTokenIfSet(req, res, next) {
-  if (!API_TOKEN) return next();
-  const token = req.headers["x-api-token"];
-  if (token === API_TOKEN) return next();
-  return res.status(401).json({ ok: false, error: "Unauthorized" });
-}
-
-// -------------------- API --------------------
-
-// health
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "UFO HUB X KEY", time: new Date().toISOString() });
+// ---------- No-cache (กันเว็บเก่าค้าง) ----------
+app.use((req,res,next)=>{
+  res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma','no-cache');
+  res.setHeader('Expires','0');
+  res.setHeader('Surrogate-Control','no-store');
+  next();
 });
 
-// ออกคีย์ (1 คน 1 key, อายุ 48 ชั่วโมง)
-app.post("/api/getkey", async (req, res) => {
-  await ensureDB();
-  const db = await loadDB();
+// ---------- Static (เสิร์ฟหน้าเว็บเดิม) ----------
+app.use(express.static('public', { extensions: ['html'] }));
 
-  const clientId = resolveClientId(req);
+// ---------- DB (ไฟล์ JSON แบบทนหาย) ----------
+const DB_DIR  = path.join(__dirname, 'data');
+const DB_FILE = path.join(DB_DIR, 'keys.json');
 
-  // มีคีย์ที่ยังไม่หมดอายุอยู่แล้ว -> ส่งคีย์เดิมกลับ
-  const existing = db.clients[clientId];
-  if (existing) {
-    const remain = remainingMs(existing.expiresAt);
-    if (remain > 0) {
-      return res.json({
-        ok: true,
-        key: existing.key,
-        expiresAt: existing.expiresAt,
-        remainingSeconds: Math.floor(remain / 1000),
-        reused: true,
-      });
-    }
+function ensureDB(){
+  if(!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive:true });
+  if(!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify({keys:{}}), 'utf8');
+  let raw = fs.readFileSync(DB_FILE,'utf8');
+  if(!raw || !raw.trim()){
+    raw = JSON.stringify({keys:{}});
+    fs.writeFileSync(DB_FILE, raw, 'utf8');
+  }
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch {
+    parsed = {keys:{}};
+    fs.writeFileSync(DB_FILE, JSON.stringify(parsed), 'utf8');
+  }
+  if(!parsed.keys) parsed.keys = {};
+  return parsed;
+}
+function saveDB(db){
+  try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf8'); }
+  catch(e){ console.log('WARN: cannot save DB (ephemeral FS on free plan). Using memory only.'); }
+}
+
+// หน่วยช่วยคำนวณเวลา
+const HOUR = 3600 * 1000;
+const BASE_HOURS = 48;  // อายุคีย์เริ่มต้น 48 ชม
+const EXTEND_HOURS = 5; // ต่อครั้งละ +5 ชม
+const COOLDOWN_MS = 2 * 60 * 1000; // คูลดาวน์ขอคีย์ใหม่ 2 นาที/ไอพี
+
+// หน่วยจำคูลดาวน์ในเมมโมรี (รองรับเฟรีเรนเดอร์)
+const cooldown = new Map();
+
+function makeKey(){
+  // คีย์อ่านง่าย
+  const body = crypto.randomBytes(6).toString('base64url').replace(/[-_]/g,'').slice(0,8);
+  return `UFO-HUB-X-${body}`;
+}
+function now(){ return Date.now(); }
+
+// ---------- API ----------
+
+// ขอคีย์ใหม่ (1 คน/ไอพี ต่อครั้ง – คูลดาวน์ 2 นาที)
+app.post('/api/getkey', (req,res)=>{
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+  const ua = (req.headers['user-agent']||'').slice(0,120);
+
+  const cd = cooldown.get(ip);
+  if(cd && now() < cd) {
+    const left = Math.ceil((cd - now())/1000);
+    return res.status(429).json({ ok:false, error:'cooldown', secondsLeft:left });
   }
 
-  // ออกคีย์ใหม่
-  const key = genKey();
-  const createdAt = now();
-  const expiresAt = hoursFromNow(KEY_TTL_HOURS);
+  const db = ensureDB();
 
-  db.keys.push({ key, clientId, createdAt, expiresAt });
-  db.clients[clientId] = { key, expiresAt };
+  // 1 คน 1 คีย์ (ต่อวัน) — ผูกจาก ip+ua (ง่ายสุด)
+  let existing = Object.values(db.keys).find(k => k.ip===ip && k.ua===ua && k.expiresAt>now());
+  if(existing){
+    cooldown.set(ip, now()+COOLDOWN_MS);
+    return res.json({ ok:true, key: existing.key, expiresAt: existing.expiresAt });
+  }
 
-  await saveDB(db);
+  const key = makeKey();
+  const expiresAt = now() + BASE_HOURS * HOUR;
 
-  return res.json({
-    ok: true,
-    key,
-    expiresAt,
-    remainingSeconds: Math.floor((expiresAt - now()) / 1000),
-    reused: false,
-  });
+  db.keys[key] = { key, issuedAt: now(), expiresAt, ip, ua, extends: 0 };
+  saveDB(db);
+
+  cooldown.set(ip, now()+COOLDOWN_MS);
+  res.json({ ok:true, key, expiresAt });
 });
 
 // ตรวจคีย์
-app.get("/api/check/:key", async (req, res) => {
-  await ensureDB();
-  const db = await loadDB();
-
-  const k = req.params.key;
-  const row = db.keys.find((x) => x.key === k);
-  if (!row) {
-    return res.status(404).json({ ok: false, valid: false, error: "Key not found" });
-  }
-  const remain = remainingMs(row.expiresAt);
-  const valid = remain > 0;
-
-  return res.json({
-    ok: true,
-    valid,
-    key: k,
-    expiresAt: row.expiresAt,
-    remainingSeconds: Math.floor(remain / 1000),
-  });
+app.get('/api/check/:key', (req,res)=>{
+  const key = req.params.key;
+  const db = ensureDB();
+  const rec = db.keys[key];
+  if(!rec) return res.json({ ok:true, valid:false, secondsLeft:0 });
+  const secondsLeft = Math.max(0, Math.floor((rec.expiresAt - now())/1000));
+  res.json({ ok:true, valid: secondsLeft>0, secondsLeft });
 });
 
-// ยืดเวลา (สูงสุด +5 ชั่วโมง/ครั้ง) — ป้องกันสแปมด้วย token (ถ้าตั้งไว้)
-app.post("/api/extend/:key", requireTokenIfSet, async (req, res) => {
-  await ensureDB();
-  const db = await loadDB();
+// ต่อเวลา +5H
+app.post('/api/extend/:key', (req,res)=>{
+  const key = req.params.key;
+  const db = ensureDB();
+  const rec = db.keys[key];
+  if(!rec) return res.status(404).json({ ok:false, error:'not_found' });
 
-  const k = req.params.key;
-  const row = db.keys.find((x) => x.key === k);
-  if (!row) return res.status(404).json({ ok: false, error: "Key not found" });
+  if(rec.expiresAt <= now()) return res.status(400).json({ ok:false, error:'expired' });
 
-  // ชั่วโมงที่จะเพิ่ม (default = 5, max = 5)
-  let hours = Number(req.body?.hours || EXTEND_MAX_HOURS);
-  if (!Number.isFinite(hours) || hours <= 0) hours = EXTEND_MAX_HOURS;
-  hours = Math.min(hours, EXTEND_MAX_HOURS);
+  rec.expiresAt += EXTEND_HOURS * HOUR;
+  rec.extends = (rec.extends||0) + 1;
+  saveDB(db);
 
-  // ยืดจากค่า expiresAt เดิม (ไม่ต่อจากเวลาปัจจุบัน)
-  row.expiresAt = row.expiresAt + hours * 60 * 60 * 1000;
-
-  // sync clients
-  const idxClient = row.clientId;
-  if (db.clients[idxClient] && db.clients[idxClient].key === k) {
-    db.clients[idxClient].expiresAt = row.expiresAt;
-  }
-
-  await saveDB(db);
-
-  return res.json({
-    ok: true,
-    key: k,
-    addedHours: hours,
-    expiresAt: row.expiresAt,
-    remainingSeconds: Math.floor(remainingMs(row.expiresAt) / 1000),
-  });
+  const secondsLeft = Math.max(0, Math.floor((rec.expiresAt - now())/1000));
+  res.json({ ok:true, secondsLeft });
 });
 
-// 404 สำหรับ API อื่น
-app.use("/api", (_req, res) => {
-  res.status(404).json({ ok: false, error: "Not found" });
+// Fallback เสิร์ฟ index.html (รองรับ SPA/ลิงก์ตรง)
+app.get('*', (req,res)=>{
+  res.sendFile(path.join(__dirname,'public','index.html'));
 });
 
 // Start
-(async () => {
-  await ensureDB();
-  app.listen(PORT, () => {
-    console.log(`UFO HUB X Key API listening on :${PORT}`);
-    console.log("=> Your service is live 🎉");
-  });
-})();
+app.listen(PORT, ()=> {
+  console.log(`UFO HUB X Key API listening on :${PORT}`);
+});
