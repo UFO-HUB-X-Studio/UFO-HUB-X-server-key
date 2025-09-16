@@ -1,11 +1,11 @@
 {
-  "name": "ufo-hub-x-server-key",
+  "name": "ufo-hub-x-key",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.19.2"
   }
 }
