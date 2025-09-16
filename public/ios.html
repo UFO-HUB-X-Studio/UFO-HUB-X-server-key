@@ -10,47 +10,59 @@
 <body>
   <div class="container">
     <div class="card">
-      <h1 class="title"><span class="ufo">UFO</span> HUB X</h1>
-      <p class="subtitle">iOS Portal — แนะนำ “เพิ่มลงหน้าจอหลัก” เพื่อใช้งานสะดวก</p>
+      <img id="pf" class="profile" alt="UFO HUB X">
+      <h1 class="title"><span class="ufo">UFO</span> <span class="hx">HUB X</span></h1>
+      <p class="subtitle">iOS Portal — รองรับ iPhone / iPad</p>
 
       <div class="row">
         <button id="btnGet" class="btn primary">🔑 Get Key</button>
         <button id="btnExtend" class="btn">+5H</button>
-      </div>
-
-      <p id="keyBox" class="kpill mono" style="display:none"></p>
-      <div class="stat" id="stat" style="display:none">
-        <span>⌛ เหลือเวลา <b id="remain">—</b></span>
         <button id="btnCopy" class="btn">Copy</button>
       </div>
+
+      <p id="keyBox" class="kpill" style="display:none">—</p>
+      <div id="stat" class="stat" style="display:none">⌛ เหลือเวลา <b id="remain">—</b></div>
+
+      <p class="footer">Need support? <a href="#" id="discord">Join the Discord</a></p>
     </div>
   </div>
 
   <script type="module">
-    import { apiGetKey, apiCheck, apiExtend, copy } from '/app.js';
-    let k=null, timer=null;
+    import { apiGetKey, apiCheck, apiExtend, copyText, setProfile } from '/app.js';
+
+    const pf = document.getElementById('pf'); setProfile(pf);
     const keyBox = document.getElementById('keyBox');
     const remain = document.getElementById('remain');
     const stat   = document.getElementById('stat');
 
+    let key=null, timer=null;
+
     async function poll(){
-      if(!k) return;
-      const j = await apiCheck(k);
-      if(j.ok){ remain.textContent = j.remainingSeconds+'s'; stat.style.display='flex'; }
+      if(!key) return;
+      const j = await apiCheck(key);
+      if(j.ok){
+        stat.style.display='block';
+        remain.textContent = (j.remainingSeconds||0) + 's';
+      }
     }
+    function startPoll(){ clearInterval(timer); poll(); timer=setInterval(poll, 3000); }
 
     document.getElementById('btnGet').onclick = async ()=>{
       const j = await apiGetKey();
-      if(j.ok){ k=j.key; keyBox.textContent=k; keyBox.style.display='inline-flex';
-        clearInterval(timer); timer=setInterval(poll, 3000); poll();
-      }else alert(j.message||'error');
+      if(j.ok){
+        key = j.key;
+        keyBox.textContent = key;
+        keyBox.style.display='inline-block';
+        startPoll();
+      } else alert(j.message||'Get Key error');
     };
     document.getElementById('btnExtend').onclick = async ()=>{
-      if(!k) return alert('ยังไม่มีคีย์');
-      const j = await apiExtend(k);
-      if(j.ok) poll(); else alert(j.message||'extend error');
+      if(!key) return alert('ยังไม่มีคีย์');
+      const j = await apiExtend(key);
+      if(j.ok) startPoll(); else alert(j.message||'Extend error');
     };
-    document.getElementById('btnCopy').onclick = ()=>{ if(k) copy(k); };
+    document.getElementById('btnCopy').onclick = ()=>{ if(key) copyText(key); };
+    document.getElementById('discord').onclick = (e)=>{ e.preventDefault(); copyText('https://discord.gg/your-server'); };
   </script>
 </body>
 </html>
