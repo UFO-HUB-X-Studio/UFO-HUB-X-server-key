@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>UFO HUB X — Get Key</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="bg"></div>
+
+  <main class="wrap">
+    <section class="card">
+      <div class="brand">
+        <img class="logo"
+             src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png"
+             alt="UFO HUB X" />
+        <h1><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
+      </div>
+
+      <div class="desc">กดเพื่อรับคีย์ของคุณ (Android-first)</div>
+
+      <div class="btn-col">
+        <button id="btn-get" class="btn primary">รับคีย์ (Get Key)</button>
+        <div id="result" class="result hide">
+          <div class="keyline">
+            <code id="keytext">—</code>
+            <button id="copy" class="btn ghost">Copy</button>
+          </div>
+          <div class="time">
+            หมดอายุใน: <b><span id="remain">—</span></b>
+            <button id="extend" class="btn ghost">+5H</button>
+          </div>
+          <div class="note">* จำกัด 1 คน / 1 คีย์</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>Need support?</span>
+      <a href="#" id="discord">Join the Discord</a>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
