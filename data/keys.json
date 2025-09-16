@@ -1,2 +1,4 @@
-/data
-  keys.json   // ปล่อยว่างได้ โค้ดจะเติม default ให้
+{
+  "keys": [],
+  "clients": {}
+}
