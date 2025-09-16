@@ -320,7 +320,92 @@
 <span id="timeLeft">--:--:--</span>
 <button id="copyBtn">Copy</button>
 <button id="extendBtn">+5H</button>
-    
-  </script>
+
+<script>
+(function(){
+  const S = { step:0, key:null, expireAt:null, coolUntil:null };
+  const $ = id => document.getElementById(id);
+
+  function hhmmss(sec){
+    sec = Math.max(0, Math.floor(sec||0));
+    const h=String(Math.floor(sec/3600)).padStart(2,'0');
+    const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
+    const s=String(sec%60).padStart(2,'0');
+    return `${h}:${m}:${s}`;
+  }
+  function ui(){
+    $('progressText') && ($('progressText').textContent = `${S.step}/2`);
+    $('startBtn') && ($('startBtn').style.display = S.step===0 ? '' : 'none');
+    $('nextBtn')  && ($('nextBtn').style.display  = S.step===1 ? '' : 'none');
+    $('keyText')  && ($('keyText').textContent    = S.key || '-');
+  }
+
+  async function getKey(){
+    const r = await fetch('/api/getkey',{method:'POST'});
+    if(!r.ok) throw new Error('getkey failed');
+    return r.json();
+  }
+  async function check(key){
+    const r = await fetch('/api/check/'+encodeURIComponent(key));
+    if(!r.ok) throw new Error('check failed');
+    return r.json();
+  }
+  async function extend(key){
+    const r = await fetch('/api/extend/'+encodeURIComponent(key),{method:'POST'});
+    if(!r.ok) throw new Error('extend failed');
+    return r.json();
+  }
+
+  $('startBtn') && $('startBtn').addEventListener('click', ()=>{
+    if(S.coolUntil && Date.now()<S.coolUntil) return; // เคารพคูลดาวน์
+    S.step=1; ui();
+  });
+
+  $('nextBtn') && $('nextBtn').addEventListener('click', async ()=>{
+    try{
+      S.step=2; ui();
+      const d = await getKey();       // {ok,key,expiresAt}
+      S.key = d.key;
+      S.expireAt = d.expiresAt;
+      S.coolUntil = Date.now()+2*60*1000; // คูลดาวน์ 2 นาที
+      ui();
+    }catch(e){
+      S.step=1; ui();
+      alert('ขอคีย์ไม่สำเร็จ ลองใหม่อีกครั้ง');
+    }
+  });
+
+  $('copyBtn') && $('copyBtn').addEventListener('click', async ()=>{
+    if(!S.key) return;
+    try{ await navigator.clipboard.writeText(S.key); }catch(_){}
+    $('copyBtn').textContent = 'Copied ✓';
+    setTimeout(()=> $('copyBtn').textContent='Copy', 1200);
+  });
+
+  $('extendBtn') && $('extendBtn').addEventListener('click', async ()=>{
+    if(!S.key) return;
+    try{
+      const d = await extend(S.key);  // {ok,secondsLeft}
+      if(d.ok && typeof d.secondsLeft==='number'){
+        S.expireAt = Date.now() + d.secondsLeft*1000;
+        $('extendBtn').textContent = '+5H ✓';
+        setTimeout(()=> $('extendBtn').textContent = '+5H', 1200);
+      }
+    }catch(e){ alert('ต่อเวลาไม่สำเร็จ'); }
+  });
+
+  // นับเวลาคงเหลือแบบเรียลไทม์
+  function tick(){
+    if(S.expireAt && $('timeLeft')){
+      $('timeLeft').textContent = hhmmss((S.expireAt - Date.now())/1000);
+    }
+    requestAnimationFrame(tick);
+  }
+  ui(); tick();
+
+  // ป้องกัน gesture บางเครื่องทำ UI เพี้ยน
+  window.addEventListener('gesturestart', e=>e.preventDefault());
+})()
+ </script>
 </body>
 </html>
