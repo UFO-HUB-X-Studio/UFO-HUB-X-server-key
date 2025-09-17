@@ -43,14 +43,13 @@
     .progress>.bar{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--accent),#a6ffc7);border-radius:999px;transition:width .25s ease;box-shadow:0 0 16px rgba(0,255,140,.35) inset}
 
     .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 18px;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;
       border:1px solid rgba(0,255,140,.28); border-radius:12px;font-weight:700;
       color:#08120e;background:var(--accent);cursor:pointer;transition:.15s;user-select:none
     }
     .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
     .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25)}
     .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
-    .btn.warn{background:var(--danger);border-color:rgba(255,77,77,.3);color:#fff}
 
     table{width:100%;border-collapse:separate;border-spacing:0 10px}
     th,td{padding:12px 14px;text-align:left}
@@ -65,7 +64,17 @@
     .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
 
     .title-green{color:var(--accent)} .title-white{color:#fff}
-    td.timeCell, th.timeCell { width: 140px; }
+
+    /* TIME LEFT: ไม่ขยับ */
+    td.timeCell, th.timeCell {
+      width: 150px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .icon{width:16px;height:16px;display:inline-block}
   </style>
 </head>
 <body>
@@ -83,7 +92,7 @@
             <span class="title-green">UFO</span>
             <span class="title-white">HUB X</span>
           </div>
-          <button id="startBtn" class="btn small"><span>🟢</span> START</button>
+          <button id="startBtn" class="btn small">🟢 START</button>
         </div>
         <div class="card-bd">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -97,6 +106,8 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge" style="background:#111a14;border-color:rgba(0,255,140,.2);color:var(--text)">🔑 Your Key</div>
+          <!-- ปุ่ม GET A NEW KEY (เก็บไว้ แต่จะทำงานเฉพาะตอนยังไม่มีคีย์/หมดอายุ) -->
+          <button id="newKey" class="btn small">＋ GET A NEW KEY</button>
         </div>
         <div class="card-bd">
           <table>
@@ -115,93 +126,135 @@
     </div>
   </div>
 
-  <script>
-    const $ = s => document.querySelector(s);
+<script>
+/* ========= State ========= */
+const $ = s => document.querySelector(s);
+const STORAGE = 'ufo_keys';
+let keys = [];
+try { keys = JSON.parse(localStorage.getItem(STORAGE) || '[]'); } catch { keys = []; }
+enforceOne();
 
-    const state = {
-      hasKey: false,
-      key: null,
-      expires: 0
-    };
+/* ========= Config ========= */
+const KEY_LIFETIME = 48*60*60*1000;   // 48h
+const EXTEND_MS    = 5*60*60*1000;    // +5h
+const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
-    const KEY_LIFETIME = 48*60*60*1000;
-    const EXTEND_MS = 5*60*60*1000;
-    const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+/* ========= Helpers ========= */
+function save(){ localStorage.setItem(STORAGE, JSON.stringify(keys)); }
+function enforceOne(){ if(keys.length>1){ keys=[keys[0]]; save(); } }
+function fmt(ms){
+  if(ms<=0) return "00:00:00";
+  const s = Math.floor(ms/1000);
+  const h = String(Math.floor(s/3600)).padStart(2,'0');
+  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss= String(s%60).padStart(2,'0');
+  return `${h}:${m}:${ss}`;
+}
+function randKey(){
+  const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let k="UFO-HUB-X-";
+  for(let i=0;i<8;i++) k+=abc[Math.floor(Math.random()*abc.length)];
+  return k;
+}
 
-    function randKey(){
-      const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let a="UFO-HUB-X-";
-      for(let i=0;i<8;i++) a+=abc[Math.floor(Math.random()*abc.length)];
-      return a;
-    }
+/* ========= UI: paint table ========= */
+function paint(){
+  const tbody = $('#keyRows');
+  tbody.innerHTML='';
 
-    function fmtLeft(ms){
-      if(ms<=0) return "00:00:00";
-      const s = Math.floor(ms/1000);
-      const h = String(Math.floor(s/3600)).padStart(2,'0');
-      const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
-      const ss= String(s%60).padStart(2,'0');
-      return `${h}:${m}:${ss}`;
-    }
+  // ลบที่หมดอายุออกก่อน
+  const now = Date.now();
+  keys = (keys||[]).filter(k => k.expires > now);
+  enforceOne();
 
-    function paint(){
-      const tbody = $('#keyRows');
-      tbody.innerHTML='';
-      if(!state.hasKey){
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td colspan="4" class="muted" style="text-align:center;padding:26px">No key yet — press START</td>`;
-        tbody.appendChild(tr);
-        return;
+  if(keys.length===0){
+    // ไม่ใส่ข้อความ placeholder ตามที่ขอ — ปล่อยตารางว่าง
+    return;
+  }
+
+  const k = keys[0];
+  const left = Math.max(0, k.expires - now);
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="font-weight:700">${k.value}</td>
+    <td class="timeCell muted" id="leftCell">${fmt(left)}</td>
+    <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
+    <td class="actions-center">
+      <div class="btnrow">
+        <button class="btn small ghost" id="copyBtn">📋 Copy</button>
+        <button class="btn small" id="plusBtn">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 5v14m-7-7h14"/>
+          </svg>
+          <span>+5H</span>
+        </button>
+      </div>
+    </td>`;
+  tbody.appendChild(tr);
+
+  // actions
+  $('#copyBtn').onclick = async ()=>{
+    await navigator.clipboard.writeText(k.value);
+    const btn = $('#copyBtn'); const old = btn.textContent;
+    btn.textContent = '✅ Copied';
+    setTimeout(()=> btn.textContent = old, 1000);
+  };
+  $('#plusBtn').onclick = ()=>{
+    // เปิดลิงก์ (แท็บใหม่) + ต่อเวลาคีย์เดิมเท่านั้น
+    window.open(LINK, '_blank');
+    const now = Date.now();
+    if(k.expires > now) k.expires += EXTEND_MS;
+    else k.expires = now + EXTEND_MS;
+    save(); paint();
+  };
+}
+
+/* ========= Buttons ========= */
+$('#startBtn').addEventListener('click', ()=>{
+  // progress → 1/1 + bar เต็ม
+  $('#bar').style.width = '100%';
+  $('#progressText').textContent = '1/1';
+
+  // ออกคีย์ถ้ายังไม่มี (1 คน 1 คีย์)
+  if(keys.length === 0){
+    const key = randKey();
+    keys = [{ value: key, expires: Date.now() + KEY_LIFETIME }];
+    save(); paint();
+  }
+  // ไปลิงก์
+  window.location.href = LINK;
+});
+
+$('#newKey').addEventListener('click', ()=>{
+  // อนุญาตให้รับใหม่เฉพาะตอน “ไม่มีคีย์” (หรือโดนลบเพราะหมดเวลาไปแล้ว)
+  if(keys.length >= 1){
+    alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น');
+    return;
+  }
+  const key = randKey();
+  keys = [{ value: key, expires: Date.now() + KEY_LIFETIME }];
+  save(); paint();
+  window.location.href = LINK;
+});
+
+/* ========= Tick (อัปเดต TIME LEFT & auto-expire) ========= */
+setInterval(()=>{
+  if(keys.length){
+    const leftCell = $('#leftCell');
+    if(leftCell){
+      const left = Math.max(0, keys[0].expires - Date.now());
+      leftCell.textContent = fmt(left);
+      if(left <= 0){
+        keys = [];
+        save(); paint();
       }
-      const left = state.expires - Date.now();
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td style="font-weight:700">${state.key}</td>
-        <td class="timeCell muted">${fmtLeft(Math.max(0,left))}</td>
-        <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
-        <td class="actions-center">
-          <div class="btnrow">
-            <button class="btn small ghost" id="copyBtn">📋 Copy</button>
-            <button class="btn small" id="plusBtn">⏩ +5H</button>
-          </div>
-        </td>`;
-      tbody.appendChild(tr);
-      $('#copyBtn').onclick=()=>{
-        navigator.clipboard.writeText(state.key);
-        const btn=$('#copyBtn');
-        const old=btn.innerHTML;
-        btn.innerHTML='✅ Copied';
-        setTimeout(()=>btn.innerHTML=old,1000);
-      };
-      $('#plusBtn').onclick=()=>{
-        window.open(LINK,'_blank');
-        const now=Date.now();
-        if(state.expires>now) state.expires+=EXTEND_MS;
-        else state.expires=now+EXTEND_MS;
-        paint();
-      };
     }
+  }
+}, 1000);
 
-    $('#startBtn').addEventListener('click', ()=>{
-      $('#bar').style.width='100%';
-      $('#progressText').textContent='1/1';
-      if(!state.hasKey){
-        state.key=randKey();
-        state.expires=Date.now()+KEY_LIFETIME;
-        state.hasKey=true;
-        paint();
-      }
-      window.location.href=LINK;
-    });
-
-    setInterval(()=>{
-      if(state.hasKey && state.expires<=Date.now()){
-        state.hasKey=false; state.key=null;
-      }
-      paint();
-    },1000);
-
-    paint();
-  </script>
+/* init */
+paint();
+</script>
 </body>
 </html>
