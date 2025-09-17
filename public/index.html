@@ -9,9 +9,9 @@
   <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&">
   <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&">
 
-  <!-- 🆕 เพิ่ม: เตรียม DNS และ TCP/TLS ไปยัง CDN ของรูป -->
-  <link rel="dns-prefetch" href="https://cdn.discordapp.com">
-  <link rel="preconnect" href="https://cdn.discordapp.com" crossorigin>
+  <!-- 🆕 เร่งตั้งแต่ระดับ DNS/TLS สำหรับ CDN ที่เก็บรูป -->
+  <link rel="dns-prefetch" href="https://cdn.discordapp.com"> <!-- 🆕 -->
+  <link rel="preconnect" href="https://cdn.discordapp.com" crossorigin> <!-- 🆕 -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,6 @@
     .container{max-width:1000px;margin:0 auto;padding:18px}
     .grid{display:grid;gap:16px;margin:18px auto}
     @media(min-width:880px){.grid{grid-template-columns:1fr 1fr}}
-
     .card{
       background:linear-gradient(180deg, #121a22, #0e151c);
       border:1px solid rgba(0,255,140,.18);
@@ -109,8 +108,8 @@
       display:block;
     }
     .modal-title{ font-weight:800; font-size:24px; letter-spacing:.3px; }
-    .modal-title .ufo{ color:var(--accent);}  
-    .modal-title .hubx{ color:#fff;}          
+    .modal-title .ufo{ color:var(--accent);}    
+    .modal-title .hubx{ color:#fff;}            
     .modal-body{ padding:16px 18px; display:grid; gap:14px; }
     .bg-thumb{ width:100%; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.06); background:#0b0f13; }
     .bg-thumb img{ width:100%; display:block; }
@@ -127,7 +126,7 @@
         src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&"
         alt="UFO HUB X"
         width="250" height="250"
-        fetchpriority="high" decoding="async" loading="eager"  <!-- 🆕 เพิ่มเฉพาะ attribute -->
+        fetchpriority="high" decoding="async" loading="eager"  <!-- 🆕 -->
       >
     </div>
 
@@ -151,7 +150,7 @@
         </div>
       </div>
 
-      <!-- RIGHT (คงเดิมทั้งหมด) -->
+      <!-- RIGHT -->
       <div class="card">
         <div class="card-hd">
           <div class="badge" style="background:#111a14;border-color:rgba(0,255,140,.2);color:var(--text)">🔑 Your Key</div>
@@ -183,7 +182,7 @@
           src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&"
           alt="UFO HUB X"
           width="160" height="160"
-          fetchpriority="high" decoding="async" loading="eager"  <!-- 🆕 เพิ่มเฉพาะ attribute -->
+          fetchpriority="high" decoding="async" loading="eager"  <!-- 🆕 -->
         >
         <div class="modal-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
       </div>
@@ -193,7 +192,7 @@
             src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&"
             alt="Background"
             width="1024" height="1024"
-            decoding="async" loading="eager"  <!-- 🆕 ช่วยเร่งโหลดพรีวิวในโมดัล -->
+            decoding="async" loading="eager"  <!-- 🆕 -->
           >
         </div>
       </div>
@@ -203,9 +202,9 @@
     </div>
   </div>
 
-<script>
-  /* โค้ด JS ทั้งหมดของคุณ “คงเดิม” — ไม่ลบ/เปลี่ยนพฤติกรรมเดิม */
-  /* …วางสคริปต์เดิมของคุณต่อจากนี้ได้เลย… */
-</script>
+  <!-- JS ดั้งเดิมของคุณคงไว้ตามเดิม -->
+  <script>
+    /* วางสคริปต์เดิมของคุณต่อจากนี้ (ไม่เปลี่ยนพฤติกรรมใด ๆ) */
+  </script>
 </body>
 </html>
