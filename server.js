@@ -1,5 +1,4 @@
-// server.js — UFO HUB X Key API (Full Stable)
-
+// server.js — UFO HUB X Key API
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -9,13 +8,13 @@ const crypto = require("crypto");
 
 // -------------------- Config --------------------
 const PORT = process.env.PORT || 10000;
-const API_TOKEN = process.env.API_TOKEN || "";
+const API_TOKEN = process.env.API_TOKEN || ""; 
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_PATH = path.join(DATA_DIR, "keys.json");
 
-const KEY_TTL_HOURS = 48;
-const EXTEND_MAX_HOURS = 5;
+const KEY_TTL_HOURS = 48;  // อายุคีย์หลัก 48 ชั่วโมง
+const EXTEND_MAX_HOURS = 5; // ต่ออายุได้สูงสุดครั้งละ 5 ชม.
 
 // -------------------- Express --------------------
 const app = express();
@@ -72,8 +71,7 @@ async function saveDB(db) {
 // -------------------- Utils --------------------
 function genKey() {
   const seg = () =>
-    crypto
-      .randomBytes(4)
+    crypto.randomBytes(4)
       .toString("base64url")
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, "")
@@ -81,17 +79,9 @@ function genKey() {
   return `UHX-${seg()}-${seg()}`;
 }
 
-function now() {
-  return Date.now();
-}
-
-function hoursFromNow(h) {
-  return now() + h * 60 * 60 * 1000;
-}
-
-function remainingMs(exp) {
-  return Math.max(0, exp - now());
-}
+function now() { return Date.now(); }
+function hoursFromNow(h) { return now() + h * 60 * 60 * 1000; }
+function remainingMs(exp) { return Math.max(0, exp - now()); }
 
 function resolveClientId(req) {
   const cid = (req.headers["x-client-id"] || "").toString().trim();
@@ -115,20 +105,17 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/getkey", async (req, res) => {
   await ensureDB();
   const db = await loadDB();
-
   const clientId = resolveClientId(req);
+
   const existing = db.clients[clientId];
-  if (existing) {
-    const remain = remainingMs(existing.expiresAt);
-    if (remain > 0) {
-      return res.json({
-        ok: true,
-        key: existing.key,
-        expiresAt: existing.expiresAt,
-        remainingSeconds: Math.floor(remain / 1000),
-        reused: true,
-      });
-    }
+  if (existing && remainingMs(existing.expiresAt) > 0) {
+    return res.json({
+      ok: true,
+      key: existing.key,
+      expiresAt: existing.expiresAt,
+      remainingSeconds: Math.floor(remainingMs(existing.expiresAt) / 1000),
+      reused: true,
+    });
   }
 
   const key = genKey();
@@ -137,10 +124,9 @@ app.post("/api/getkey", async (req, res) => {
 
   db.keys.push({ key, clientId, createdAt, expiresAt });
   db.clients[clientId] = { key, expiresAt };
-
   await saveDB(db);
 
-  return res.json({
+  res.json({
     ok: true,
     key,
     expiresAt,
@@ -155,15 +141,12 @@ app.get("/api/check/:key", async (req, res) => {
 
   const k = req.params.key;
   const row = db.keys.find((x) => x.key === k);
-  if (!row) {
-    return res.status(404).json({ ok: false, valid: false, error: "Key not found" });
-  }
-  const remain = remainingMs(row.expiresAt);
-  const valid = remain > 0;
+  if (!row) return res.status(404).json({ ok: false, valid: false, error: "Key not found" });
 
-  return res.json({
+  const remain = remainingMs(row.expiresAt);
+  res.json({
     ok: true,
-    valid,
+    valid: remain > 0,
     key: k,
     expiresAt: row.expiresAt,
     remainingSeconds: Math.floor(remain / 1000),
@@ -182,16 +165,15 @@ app.post("/api/extend/:key", requireTokenIfSet, async (req, res) => {
   if (!Number.isFinite(hours) || hours <= 0) hours = EXTEND_MAX_HOURS;
   hours = Math.min(hours, EXTEND_MAX_HOURS);
 
-  row.expiresAt = row.expiresAt + hours * 60 * 60 * 1000;
+  row.expiresAt += hours * 60 * 60 * 1000;
 
-  const idxClient = row.clientId;
-  if (db.clients[idxClient] && db.clients[idxClient].key === k) {
-    db.clients[idxClient].expiresAt = row.expiresAt;
+  if (db.clients[row.clientId] && db.clients[row.clientId].key === k) {
+    db.clients[row.clientId].expiresAt = row.expiresAt;
   }
 
   await saveDB(db);
 
-  return res.json({
+  res.json({
     ok: true,
     key: k,
     addedHours: hours,
@@ -204,11 +186,10 @@ app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found" });
 });
 
-// -------------------- Start --------------------
+// Start
 (async () => {
   await ensureDB();
   app.listen(PORT, () => {
-    console.log(`UFO HUB X Key API listening on :${PORT}`);
-    console.log("=> Your service is live 🎉");
+    console.log(`UFO HUB X Key API running on http://localhost:${PORT}`);
   });
 })();
