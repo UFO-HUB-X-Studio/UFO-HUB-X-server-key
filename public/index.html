@@ -17,7 +17,7 @@
     body{
       font-family:'Outfit',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
       color:var(--text);
-      background:#0b0f13 url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png") center/cover fixed no-repeat;
+      background:#0b0f13 url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&") center/cover fixed no-repeat;
     }
     .container{max-width:1000px;margin:0 auto;padding:18px}
     .grid{display:grid;gap:16px;margin:18px auto}
@@ -43,13 +43,14 @@
     .progress>.bar{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--accent),#a6ffc7);border-radius:999px;transition:width .25s ease;box-shadow:0 0 16px rgba(0,255,140,.35) inset}
 
     .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 18px;
       border:1px solid rgba(0,255,140,.28); border-radius:12px;font-weight:700;
       color:#08120e;background:var(--accent);cursor:pointer;transition:.15s;user-select:none
     }
     .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
     .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25)}
     .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
+    .btn.warn{background:var(--danger);border-color:rgba(255,77,77,.3);color:#fff}
 
     table{width:100%;border-collapse:separate;border-spacing:0 10px}
     th,td{padding:12px 14px;text-align:left}
@@ -65,23 +66,21 @@
 
     .title-green{color:var(--accent)} .title-white{color:#fff}
 
-    /* TIME LEFT: ไม่ขยับ */
-    td.timeCell, th.timeCell {
+    /* ⬇️ แก้ TIME LEFT ไม่ให้ขยับ */
+    td.timeCell, th.timeCell{
       width: 150px;
       text-align: right;
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum";
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     }
-
-    .icon{width:16px;height:16px;display:inline-block}
   </style>
 </head>
 <body>
   <div class="container">
     <!-- โลโก้ -->
     <div class="center logo-wrap">
-      <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png" alt="UFO HUB X">
+      <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
     </div>
 
     <div class="grid">
@@ -92,11 +91,13 @@
             <span class="title-green">UFO</span>
             <span class="title-white">HUB X</span>
           </div>
-          <button id="startBtn" class="btn small">🟢 START</button>
+          <button id="startBtn" class="btn small"><span>🟢</span> START</button>
         </div>
         <div class="card-bd">
+          <!-- ⬇️ แก้เป็น 0/1 ตามที่สั่ง -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div class="muted">Progress: <b id="progressText">0/1</b></div>
+            <div class="muted" id="timer"></div>
           </div>
           <div class="progress"><div class="bar" id="bar"></div></div>
         </div>
@@ -106,15 +107,14 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge" style="background:#111a14;border-color:rgba(0,255,140,.2);color:var(--text)">🔑 Your Key</div>
-          <!-- ปุ่ม GET A NEW KEY (เก็บไว้ แต่จะทำงานเฉพาะตอนยังไม่มีคีย์/หมดอายุ) -->
-          <button id="newKey" class="btn small">＋ GET A NEW KEY</button>
+          <button id="newKey" class="btn small"><span>➕</span> GET A NEW KEY</button>
         </div>
         <div class="card-bd">
           <table>
             <thead>
               <tr>
                 <th>KEY</th>
-                <th class="timeCell">TIME LEFT</th>
+                <th class="timeCell">TIME LEFT</th> <!-- ⬅️ fixed width -->
                 <th>STATUS</th>
                 <th class="actions-center">ACTIONS</th>
               </tr>
@@ -126,135 +126,127 @@
     </div>
   </div>
 
-<script>
-/* ========= State ========= */
-const $ = s => document.querySelector(s);
-const STORAGE = 'ufo_keys';
-let keys = [];
-try { keys = JSON.parse(localStorage.getItem(STORAGE) || '[]'); } catch { keys = []; }
-enforceOne();
+  <script>
+    const $ = s => document.querySelector(s);
 
-/* ========= Config ========= */
-const KEY_LIFETIME = 48*60*60*1000;   // 48h
-const EXTEND_MS    = 5*60*60*1000;    // +5h
-const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+    const state = { keys: loadKeys() };
+    const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+    const KEY_LIFETIME = 48*60*60*1000; // 48h
 
-/* ========= Helpers ========= */
-function save(){ localStorage.setItem(STORAGE, JSON.stringify(keys)); }
-function enforceOne(){ if(keys.length>1){ keys=[keys[0]]; save(); } }
-function fmt(ms){
-  if(ms<=0) return "00:00:00";
-  const s = Math.floor(ms/1000);
-  const h = String(Math.floor(s/3600)).padStart(2,'0');
-  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
-  const ss= String(s%60).padStart(2,'0');
-  return `${h}:${m}:${ss}`;
-}
-function randKey(){
-  const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let k="UFO-HUB-X-";
-  for(let i=0;i<8;i++) k+=abc[Math.floor(Math.random()*abc.length)];
-  return k;
-}
-
-/* ========= UI: paint table ========= */
-function paint(){
-  const tbody = $('#keyRows');
-  tbody.innerHTML='';
-
-  // ลบที่หมดอายุออกก่อน
-  const now = Date.now();
-  keys = (keys||[]).filter(k => k.expires > now);
-  enforceOne();
-
-  if(keys.length===0){
-    // ไม่ใส่ข้อความ placeholder ตามที่ขอ — ปล่อยตารางว่าง
-    return;
-  }
-
-  const k = keys[0];
-  const left = Math.max(0, k.expires - now);
-
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td style="font-weight:700">${k.value}</td>
-    <td class="timeCell muted" id="leftCell">${fmt(left)}</td>
-    <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
-    <td class="actions-center">
-      <div class="btnrow">
-        <button class="btn small ghost" id="copyBtn">📋 Copy</button>
-        <button class="btn small" id="plusBtn">
-          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 5v14m-7-7h14"/>
-          </svg>
-          <span>+5H</span>
-        </button>
-      </div>
-    </td>`;
-  tbody.appendChild(tr);
-
-  // actions
-  $('#copyBtn').onclick = async ()=>{
-    await navigator.clipboard.writeText(k.value);
-    const btn = $('#copyBtn'); const old = btn.textContent;
-    btn.textContent = '✅ Copied';
-    setTimeout(()=> btn.textContent = old, 1000);
-  };
-  $('#plusBtn').onclick = ()=>{
-    // เปิดลิงก์ (แท็บใหม่) + ต่อเวลาคีย์เดิมเท่านั้น
-    window.open(LINK, '_blank');
-    const now = Date.now();
-    if(k.expires > now) k.expires += EXTEND_MS;
-    else k.expires = now + EXTEND_MS;
-    save(); paint();
-  };
-}
-
-/* ========= Buttons ========= */
-$('#startBtn').addEventListener('click', ()=>{
-  // progress → 1/1 + bar เต็ม
-  $('#bar').style.width = '100%';
-  $('#progressText').textContent = '1/1';
-
-  // ออกคีย์ถ้ายังไม่มี (1 คน 1 คีย์)
-  if(keys.length === 0){
-    const key = randKey();
-    keys = [{ value: key, expires: Date.now() + KEY_LIFETIME }];
-    save(); paint();
-  }
-  // ไปลิงก์
-  window.location.href = LINK;
-});
-
-$('#newKey').addEventListener('click', ()=>{
-  // อนุญาตให้รับใหม่เฉพาะตอน “ไม่มีคีย์” (หรือโดนลบเพราะหมดเวลาไปแล้ว)
-  if(keys.length >= 1){
-    alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น');
-    return;
-  }
-  const key = randKey();
-  keys = [{ value: key, expires: Date.now() + KEY_LIFETIME }];
-  save(); paint();
-  window.location.href = LINK;
-});
-
-/* ========= Tick (อัปเดต TIME LEFT & auto-expire) ========= */
-setInterval(()=>{
-  if(keys.length){
-    const leftCell = $('#leftCell');
-    if(leftCell){
-      const left = Math.max(0, keys[0].expires - Date.now());
-      leftCell.textContent = fmt(left);
-      if(left <= 0){
-        keys = [];
-        save(); paint();
-      }
+    function loadKeys(){
+      try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; }
     }
-  }
-}, 1000);
+    function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
+    function randKey(){
+      const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let a="UFO-HUB-X-";
+      for(let i=0;i<8;i++) a+=abc[Math.floor(Math.random()*abc.length)];
+      return a;
+    }
+    function fmtLeft(ms){
+      if(ms<=0) return "00:00:00";
+      const s = Math.floor(ms/1000);
+      const h = String(Math.floor(s/3600)).padStart(2,'0');
+      const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+      const ss= String(s%60).padStart(2,'0');
+      return `${h}:${m}:${ss}`;
+    }
 
-/* init */
-paint();
-</script>
+    function paintKeys(){
+      const tbody = $('#keyRows');
+      tbody.innerHTML = '';
+      const now = Date.now();
+
+      // ลบคีย์ที่หมดอายุ
+      state.keys = state.keys.filter(k => k.expires > now);
+      // จำกัด 1 คีย์
+      if(state.keys.length > 1){ state.keys = [state.keys[0]]; saveKeys(); }
+
+      if(state.keys.length===0) return;
+
+      const k = state.keys[0];
+      const left = k.expires - now;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight:700">${k.value}</td>
+        <td class="timeCell muted" id="leftCell">${fmtLeft(Math.max(0,left))}</td>
+        <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
+        <td class="actions-center">
+          <div class="btnrow">
+            <button class="btn small ghost" id="copyBtn">📋 Copy</button>
+            <!-- ⬇️ ไอคอน + ข้อความอยู่ติดกัน ไม่สลับ -->
+            <button class="btn small" id="plusBtn">⏩ <span style="margin-left:4px">+5H</span></button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      // Copy
+      $('#copyBtn').onclick = ()=>{
+        navigator.clipboard.writeText(k.value);
+        const btn = $('#copyBtn');
+        const old = btn.textContent;
+        btn.textContent='✅ Copied';
+        setTimeout(()=>btn.textContent=old,1200);
+      };
+
+      // +5H — แค่บวกเวลาเท่านั้น (ห้ามสร้าง key ใหม่)
+      $('#plusBtn').onclick = ()=>{
+        if(state.keys.length === 0) return; // ไม่มีคีย์ไม่ทำอะไร
+        // เปิดลิงก์ตามที่สั่ง
+        window.open(LINK, "_blank");
+        const now = Date.now();
+        if(k.expires > now) k.expires += 5*60*60*1000;
+        else k.expires = now + 5*60*60*1000;
+        saveKeys(); paintKeys();
+      };
+    }
+
+    // กด START → พาไปลิงก์ + อัปเดต progress + ออกคีย์ครั้งแรก (ถ้ายังไม่มี)
+    $('#startBtn').addEventListener('click', ()=>{
+      const bar = $('#bar');
+      const ptx = $('#progressText');
+      if(bar) bar.style.width = '100%';
+      if(ptx) ptx.textContent = '1/1';
+
+      // สร้างคีย์ถ้ายังไม่มี
+      if(state.keys.length === 0){
+        const v = randKey();
+        const expires = Date.now() + KEY_LIFETIME;
+        state.keys = [{value:v, expires}];
+        saveKeys(); paintKeys();
+      }
+      // พาไปลิงก์
+      window.location.href = LINK;
+    });
+
+    // ปุ่ม GET A NEW KEY (ทำงานก็ต่อเมื่อ "ไม่มีคีย์")
+    $('#newKey').addEventListener('click', ()=>{
+      if(state.keys.length>=1){
+        alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น');
+        return;
+      }
+      const v = randKey();
+      const expires = Date.now() + KEY_LIFETIME;
+      state.keys = [{value:v, expires}];
+      saveKeys(); paintKeys();
+      window.location.href = LINK;
+    });
+
+    // อัปเดต TIME LEFT ทุกวินาที + ลบคีย์เมื่อหมดอายุ
+    setInterval(()=>{
+      const k = state.keys[0];
+      if(!k) return;
+      const left = Math.max(0, k.expires - Date.now());
+      const cell = document.getElementById('leftCell');
+      if(cell) cell.textContent = fmtLeft(left);
+      if(left <= 0){
+        state.keys = [];
+        saveKeys(); paintKeys();
+      }
+    }, 1000);
+
+    paintKeys();
+  </script>
 </body>
 </html>
