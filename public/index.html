@@ -64,7 +64,7 @@
     .actions-center{text-align:center}
     .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
 
-    /* ชื่อสลับสี: UFO ขาว, HUB X เขียว (ของเดิม) */
+    /* ชื่อสลับสี (ของเดิมฝั่งหน้าแรก): UFO ขาว / HUB X เขียว */
     .title-white{color:#fff} .title-green{color:var(--accent)}
 
     /* TIME LEFT คงที่ ไม่ส่าย */
@@ -73,24 +73,28 @@
       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
     }
 
-    /* ปุ่ม OK (ยืนยันไปลิงก์) — ของเดิม (คงไว้) */
+    /* ปุ่ม OK (ยืนยันไปลิงก์) — คงไว้ */
     #okBtn{display:none;margin-top:12px}
 
-    /* ========= เพิ่ม: Modal UI ใหม่ตอนกด START ========= */
+    /* ========= Modal UI ใหม่ตอนกด START ========= */
     .modal{
       position:fixed; inset:0; display:none; z-index:9999;
-      background:rgba(0,0,0,.6);
+      /* พื้นหลังเต็มจอ = รูปที่ 2 */
+      background:
+        linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.65)),
+        url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&")
+        center/cover no-repeat fixed;
       align-items:center; justify-content:center; padding:20px;
     }
     .modal.open{display:flex}
     .modal-card{
-      width:min(520px,100%); border-radius:16px; overflow:hidden;
+      width:min(560px,100%); border-radius:20px; overflow:hidden;
       background:linear-gradient(180deg,#0f151b,#0d1419);
       border:1px solid rgba(0,255,140,.25);
-      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      box-shadow:0 20px 60px rgba(0,0,0,.6);
     }
     .modal-head{
-      padding:18px; border-bottom:1px solid rgba(255,255,255,.06);
+      padding:22px 18px; border-bottom:1px solid rgba(255,255,255,.06);
       display:flex; gap:14px; align-items:center; justify-content:center; flex-direction:column;
       text-align:center;
     }
@@ -98,18 +102,18 @@
       width:160px; height:auto; border-radius:12px; box-shadow:0 0 0 2px rgba(0,255,140,.25);
       display:block;
     }
-    .modal-title{
-      font-weight:800; font-size:22px; letter-spacing:.3px;
-    }
-    .modal-title .ufo{ color:var(--accent);}   /* UFO สีเขียว */
-    .modal-title .hubx{ color:#fff;}           /* HUB X สีขาว */
+    .modal-title{ font-weight:800; font-size:24px; letter-spacing:.3px; }
+    .modal-title .ufo{ color:var(--accent);}  /* UFO สีเขียว */
+    .modal-title .hubx{ color:#fff;}          /* HUB X สีขาว */
     .modal-body{ padding:16px 18px; display:grid; gap:14px; }
     .bg-thumb{
       width:100%; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.06);
       background:#0b0f13;
     }
     .bg-thumb img{ width:100%; display:block; }
-    .modal-actions{ display:flex; gap:12px; justify-content:center; padding:0 18px 18px; }
+
+    .modal-actions{ display:flex; justify-content:center; padding:0 18px 22px; }
+    .btn.big{ font-size:18px; padding:16px 24px; border-radius:14px; }
   </style>
 </head>
 <body>
@@ -124,7 +128,7 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge">
-            <!-- ของเดิม: UFO ขาว / HUB X เขียว (คงไว้) -->
+            <!-- ของเดิม: UFO ขาว / HUB X เขียว -->
             <span class="title-white">UFO</span>
             <span class="title-green">HUB X</span>
           </div>
@@ -136,7 +140,7 @@
             <div class="muted" id="timer"></div>
           </div>
           <div class="progress" style="width:100%"><div class="bar" id="bar"></div></div>
-          <!-- ปุ่ม OK (คงไว้ แต่ไม่ได้ใช้ใน flow ใหม่นี้) -->
+          <!-- ปุ่ม OK (คงไว้) -->
           <button id="okBtn" class="btn small">OK</button>
         </div>
       </div>
@@ -164,7 +168,7 @@
     </div>
   </div>
 
-  <!-- ========= เพิ่ม: Modal UI ใหม่ (กด START แล้วแสดง) ========= -->
+  <!-- ========= Modal UI ใหม่ (กด START แล้วแสดง / ไม่มีปุ่มปิด) ========= -->
   <div id="startModal" class="modal" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-head">
@@ -175,14 +179,14 @@
         </div>
       </div>
       <div class="modal-body">
-        <!-- รูปพื้นหลัง (ตัวอย่าง/พรีวิว) -->
+        <!-- รูปพื้นหลัง (พรีวิว) -->
         <div class="bg-thumb">
           <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&" alt="Background">
         </div>
       </div>
       <div class="modal-actions">
-        <button id="goLinkBtn" class="btn small">ไปต่อ</button>
-        <button id="closeModal" class="btn small ghost">ปิด</button>
+        <!-- ปุ่มภาษาอังกฤษ ตัวใหญ่ -->
+        <button id="goLinkBtn" class="btn big">CONTINUE</button>
       </div>
     </div>
   </div>
@@ -191,11 +195,7 @@
   const $ = s => document.querySelector(s);
 
   // --- STATE ---
-  const state = {
-    keys: loadKeys(),
-    progressed: false,                          // คงไว้
-    startCooldownUntil: Number(localStorage.getItem('ufo_start_until') || 0) // คงไว้
-  };
+  const state = { keys: loadKeys(), progressed:false };
   const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const KEY_LIFETIME = 48*60*60*1000; // 48h
 
@@ -254,26 +254,29 @@
     };
   }
 
-  /* ======= ปรับ START: ไม่ให้ Progress/หลอดขยับ และเปิด Modal แทน ======= */
+  /* ======= START: เปิด Modal + ตั้ง Progress เป็น 1/1 และเติมหลอด ======= */
   $('#startBtn').addEventListener('click', ()=>{
-    // ไม่แตะ #bar และ #progressText (คง 0/1)
-    const modal = $('#startModal');
-    modal.classList.add('open');         // แสดง UI ใหม่
+    // อัปเดต progress/หลอดทันที
+    const bar = document.getElementById('bar');
+    const ptx = document.getElementById('progressText');
+    if(bar) bar.style.width = '100%';
+    if(ptx) ptx.textContent = '1/1';
+    state.progressed = true;
+
+    // เปิด UI ใหม่ (เต็มจอ ไม่มีปุ่มปิด)
+    document.getElementById('startModal').classList.add('open');
   });
 
-  // ปุ่มใน Modal
-  $('#goLinkBtn').addEventListener('click', ()=>{
-    window.open(LINK,"_blank");          // ไปหน้าลิงก์
-  });
-  $('#closeModal').addEventListener('click', ()=>{
-    $('#startModal').classList.remove('open');
+  // ปุ่ม CONTINUE (ไปลิงก์)
+  document.getElementById('goLinkBtn').addEventListener('click', ()=>{
+    window.open(LINK,"_blank");
   });
 
-  // GET A NEW KEY: (เงื่อนไขเดิม) ต้อง Progress 1/1 — ตรงนี้ยังคงเดิม
-  $('#newKey').addEventListener('click', ()=>{
-    const progressed = ($('#progressText')?.textContent || '').trim() === '1/1' || state.progressed;
-    if(!progressed){ alert('กรุณากด START ให้ Progress เป็น 1/1 ก่อน'); return; }
-    if(state.keys.length>=1){ alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น'); return; }
+  // GET A NEW KEY: เงียบๆ ถ้ายังไม่ 1/1 (ไม่ต้องมี alert แล้ว)
+  document.getElementById('newKey').addEventListener('click', ()=>{
+    const progressed = (document.getElementById('progressText')?.textContent || '').trim() === '1/1' || state.progressed;
+    if(!progressed){ return; }                // เงียบ ไม่เด้ง
+    if(state.keys.length>=1){ return; }       // มีแล้วก็เงียบ
     const v=randKey(); const expires=Date.now()+KEY_LIFETIME;
     state.keys=[{value:v,expires}]; saveKeys(); paintKeys();
   });
