@@ -64,7 +64,7 @@
     .actions-center{text-align:center}
     .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
 
-    /* ชื่อสลับสี: UFO ขาว, HUB X เขียว */
+    /* ชื่อสลับสี: UFO ขาว, HUB X เขียว (ของเดิม) */
     .title-white{color:#fff} .title-green{color:var(--accent)}
 
     /* TIME LEFT คงที่ ไม่ส่าย */
@@ -73,8 +73,43 @@
       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
     }
 
-    /* ปุ่ม OK (ยืนยันไปลิงก์) */
+    /* ปุ่ม OK (ยืนยันไปลิงก์) — ของเดิม (คงไว้) */
     #okBtn{display:none;margin-top:12px}
+
+    /* ========= เพิ่ม: Modal UI ใหม่ตอนกด START ========= */
+    .modal{
+      position:fixed; inset:0; display:none; z-index:9999;
+      background:rgba(0,0,0,.6);
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .modal.open{display:flex}
+    .modal-card{
+      width:min(520px,100%); border-radius:16px; overflow:hidden;
+      background:linear-gradient(180deg,#0f151b,#0d1419);
+      border:1px solid rgba(0,255,140,.25);
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .modal-head{
+      padding:18px; border-bottom:1px solid rgba(255,255,255,.06);
+      display:flex; gap:14px; align-items:center; justify-content:center; flex-direction:column;
+      text-align:center;
+    }
+    .modal-head img.logo{
+      width:160px; height:auto; border-radius:12px; box-shadow:0 0 0 2px rgba(0,255,140,.25);
+      display:block;
+    }
+    .modal-title{
+      font-weight:800; font-size:22px; letter-spacing:.3px;
+    }
+    .modal-title .ufo{ color:var(--accent);}   /* UFO สีเขียว */
+    .modal-title .hubx{ color:#fff;}           /* HUB X สีขาว */
+    .modal-body{ padding:16px 18px; display:grid; gap:14px; }
+    .bg-thumb{
+      width:100%; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.06);
+      background:#0b0f13;
+    }
+    .bg-thumb img{ width:100%; display:block; }
+    .modal-actions{ display:flex; gap:12px; justify-content:center; padding:0 18px 18px; }
   </style>
 </head>
 <body>
@@ -89,6 +124,7 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge">
+            <!-- ของเดิม: UFO ขาว / HUB X เขียว (คงไว้) -->
             <span class="title-white">UFO</span>
             <span class="title-green">HUB X</span>
           </div>
@@ -100,7 +136,7 @@
             <div class="muted" id="timer"></div>
           </div>
           <div class="progress" style="width:100%"><div class="bar" id="bar"></div></div>
-          <!-- ปุ่ม OK (ยืนยันไปลิงก์) -->
+          <!-- ปุ่ม OK (คงไว้ แต่ไม่ได้ใช้ใน flow ใหม่นี้) -->
           <button id="okBtn" class="btn small">OK</button>
         </div>
       </div>
@@ -128,18 +164,40 @@
     </div>
   </div>
 
+  <!-- ========= เพิ่ม: Modal UI ใหม่ (กด START แล้วแสดง) ========= -->
+  <div id="startModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <!-- รูปโปรไฟล์อยู่บนชื่อ -->
+        <img class="logo" src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
+        <div class="modal-title">
+          <span class="ufo">UFO</span> <span class="hubx">HUB X</span>
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- รูปพื้นหลัง (ตัวอย่าง/พรีวิว) -->
+        <div class="bg-thumb">
+          <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&" alt="Background">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="goLinkBtn" class="btn small">ไปต่อ</button>
+        <button id="closeModal" class="btn small ghost">ปิด</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   const $ = s => document.querySelector(s);
 
   // --- STATE ---
   const state = {
     keys: loadKeys(),
-    progressed: false,
-    startCooldownUntil: Number(localStorage.getItem('ufo_start_until') || 0) // เก็บเวลา 10 นาที ถ้ามี
+    progressed: false,                          // คงไว้
+    startCooldownUntil: Number(localStorage.getItem('ufo_start_until') || 0) // คงไว้
   };
   const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const KEY_LIFETIME = 48*60*60*1000; // 48h
-  const START_COOLDOWN_MS = 10*60*1000; // 10 นาที
 
   function loadKeys(){ try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; } }
   function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
@@ -196,57 +254,31 @@
     };
   }
 
-  // --- START: อัปเดต UI + โชว์ปุ่ม OK (ไม่พาไปลิงค์) ---
+  /* ======= ปรับ START: ไม่ให้ Progress/หลอดขยับ และเปิด Modal แทน ======= */
   $('#startBtn').addEventListener('click', ()=>{
-    $('#bar').style.width='100%';
-    $('#progressText').textContent='1/1';
-    state.progressed=true;
-    $('#okBtn').style.display='inline-flex'; // ให้ผู้ใช้กดยืนยันเอง
+    // ไม่แตะ #bar และ #progressText (คง 0/1)
+    const modal = $('#startModal');
+    modal.classList.add('open');         // แสดง UI ใหม่
   });
 
-  // --- OK: เปิดลิงก์ และเริ่มนับ 10 นาทีบนปุ่ม START ---
-  $('#okBtn').addEventListener('click', ()=>{
-    window.open(LINK,"_blank");
-    state.startCooldownUntil = Date.now() + START_COOLDOWN_MS;
-    localStorage.setItem('ufo_start_until', String(state.startCooldownUntil));
-    $('#okBtn').style.display='none';
-    updateStartCooldown(); // รีเฟรชสถานะปุ่มทันที
+  // ปุ่มใน Modal
+  $('#goLinkBtn').addEventListener('click', ()=>{
+    window.open(LINK,"_blank");          // ไปหน้าลิงก์
+  });
+  $('#closeModal').addEventListener('click', ()=>{
+    $('#startModal').classList.remove('open');
   });
 
-  // --- GET A NEW KEY: สร้างคีย์ได้เฉพาะเมื่อ Progress = 1/1; หลังสร้างให้รีเซ็ตกลับ 0/1 และล็อกเพิ่ม ---
+  // GET A NEW KEY: (เงื่อนไขเดิม) ต้อง Progress 1/1 — ตรงนี้ยังคงเดิม
   $('#newKey').addEventListener('click', ()=>{
     const progressed = ($('#progressText')?.textContent || '').trim() === '1/1' || state.progressed;
     if(!progressed){ alert('กรุณากด START ให้ Progress เป็น 1/1 ก่อน'); return; }
     if(state.keys.length>=1){ alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น'); return; }
-
     const v=randKey(); const expires=Date.now()+KEY_LIFETIME;
     state.keys=[{value:v,expires}]; saveKeys(); paintKeys();
-
-    // รีเซ็ต Progress กลับ 0/1 ตามคำสั่ง และหุบปุ่ม OK
-    state.progressed=false;
-    $('#bar').style.width='0%';
-    $('#progressText').textContent='0/1';
-    $('#okBtn').style.display='none';
   });
 
-  // --- START Cooldown handler (แสดงนับถอยหลังบนปุ่ม START) ---
-  function updateStartCooldown(){
-    const btn = $('#startBtn');
-    const t = state.startCooldownUntil - Date.now();
-    if(t > 0){
-      btn.classList.add('disabled');
-      const mm = String(Math.floor(t/60000)).padStart(2,'0');
-      const ss = String(Math.floor((t%60000)/1000)).padStart(2,'0');
-      btn.innerHTML = `${mm}:${ss}`;
-    }else{
-      btn.classList.remove('disabled');
-      btn.innerHTML = '<span>🟢</span> START';
-      state.startCooldownUntil = 0;
-      localStorage.removeItem('ufo_start_until');
-    }
-  }
-
-  // อัปเดต TIME LEFT + เคลียร์คีย์หมดอายุ + อัปเดตนาฬิกา START
+  // อัปเดต TIME LEFT + ลบคีย์หมดอายุ
   setInterval(()=>{
     const k=state.keys[0];
     if(k){
@@ -254,12 +286,10 @@
       const cell=document.getElementById('leftCell'); if(cell) cell.textContent=fmtLeft(left);
       if(left<=0){ state.keys=[]; saveKeys(); paintKeys(); }
     }
-    updateStartCooldown();
   },1000);
 
   // init
   paintKeys();
-  updateStartCooldown();
 </script>
 </body>
 </html>
