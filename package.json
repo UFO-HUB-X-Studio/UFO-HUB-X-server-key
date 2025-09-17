@@ -1,15 +1,14 @@
 {
-  "name": "ufo-hub-x-server-key",
+  "name": "ufo-hub-x-key-server",
   "version": "1.0.0",
-  "private": true,
-  "type": "commonjs",
+  "description": "Simple key verification API for UFO HUB X",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "express-rate-limit": "^7.1.5",
-    "fs-extra": "^11.2.0"
+    "express": "^4.19.2"
   }
 }
