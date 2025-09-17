@@ -17,6 +17,7 @@
     body{
       font-family:'Outfit',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
       color:var(--text);
+      /* พื้นหลัง = รูปที่ 2 */
       background:#0b0f13 url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&") center/cover fixed no-repeat;
     }
     .container{max-width:1000px;margin:0 auto;padding:18px}
@@ -37,6 +38,7 @@
     .card-bd{padding:18px}
     .center{display:flex;justify-content:center;align-items:center}
     .logo-wrap{margin-top:14px}
+    /* โลโก้ (รูปที่ 1) อยู่เหนือชื่อ */
     .logo-wrap img{width:250px;height:auto;border-radius:12px;box-shadow:0 0 0 2px rgba(0,255,140,.25)}
 
     .progress{height:10px;border-radius:999px;background:#0e1216;border:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden}
@@ -64,7 +66,8 @@
     .actions-center{text-align:center}
     .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
 
-    .title-green{color:var(--accent)} .title-white{color:#fff}
+    /* ชื่อสลับสี: UFO ขาว, HUB X เขียว */
+    .title-white{color:#fff} .title-green{color:var(--accent)}
 
     /* TIME LEFT คงที่ ไม่ส่าย */
     td.timeCell, th.timeCell{
@@ -78,7 +81,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- โลโก้ -->
+    <!-- โลโก้ (รูปที่ 1) อยู่บนชื่อ -->
     <div class="center logo-wrap">
       <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
     </div>
@@ -88,8 +91,9 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge">
-            <span class="title-green">UFO</span>
-            <span class="title-white">HUB X</span>
+            <!-- ชื่อ: UFO ขาว / HUB X เขียว -->
+            <span class="title-white">UFO</span>
+            <span class="title-green">HUB X</span>
           </div>
           <button id="startBtn" class="btn small"><span>🟢</span> START</button>
         </div>
@@ -128,15 +132,15 @@
 <script>
   const $ = s => document.querySelector(s);
 
-  const state = { keys: loadKeys() };
+  const state = { keys: loadKeys(), progressed:false };
   const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const KEY_LIFETIME = 48*60*60*1000; // 48h
-  const DELAY_MS = 1200;              // ✅ ดีเลย์ก่อน progress ขยับ/แถบเต็ม
 
   function loadKeys(){
     try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; }
   }
   function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
+
   function randKey(){
     const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let a="UFO-HUB-X-";
@@ -157,7 +161,7 @@
     tbody.innerHTML = '';
     const now = Date.now();
 
-    // ลบคีย์ที่หมดอายุและจำกัด 1 คีย์
+    // ลบคีย์หมดอายุ และจำกัด 1 คีย์
     state.keys = state.keys.filter(k => k.expires > now);
     if(state.keys.length > 1){ state.keys = [state.keys[0]]; saveKeys(); }
 
@@ -173,7 +177,7 @@
       <td class="actions-center">
         <div class="btnrow">
           <button class="btn small ghost" id="copyBtn">📋 Copy</button>
-          <!-- ✅ +5H อยู่หน้าก่อน แล้วค่อยอีโมจิ (ชิดขึ้น) -->
+          <!-- +5H อยู่หน้าก่อน แล้วค่อยอีโมจิ และชิดขึ้น -->
           <button class="btn small" id="plusBtn" style="gap:4px"><span>+5H</span><span>⏩</span></button>
         </div>
       </td>
@@ -189,7 +193,7 @@
       setTimeout(()=>btn.textContent=old,1200);
     };
 
-    // +5H — แค่บวกเวลา (ถ้าไม่มีคีย์ ไม่ทำงาน)
+    // +5H — แค่บวกเวลา (ถ้าไม่มีคีย์ ไม่ทำงาน) + เปิดลิงก์ตามที่เคยสั่ง
     $('#plusBtn').onclick = ()=>{
       if(state.keys.length === 0) return;
       window.open(LINK, "_blank");
@@ -200,25 +204,25 @@
     };
   }
 
-  // ✅ START: ไม่สร้างคีย์ + มีดีเลย์ก่อนแถบ/ตัวเลขขยับ + เปิดลิงก์หลังดีเลย์ (แท็บใหม่)
-  let startLock = false;
+  // START: อัปเดต Progress และแถบทันที (ไม่มีดีเลย์) + เปิดลิงก์ (ไม่สร้างคีย์)
   $('#startBtn').addEventListener('click', ()=>{
-    if(startLock) return;
-    startLock = true;
     const bar = $('#bar');
     const ptx = $('#progressText');
-
-    setTimeout(()=>{
-      if(bar) bar.style.width = '100%';
-      if(ptx) ptx.textContent = '1/1';
-      window.open(LINK, "_blank");
-      // ปลดล็อกภายหลังนิดหน่อย (กันกดรัว)
-      setTimeout(()=>{ startLock = false; }, 600);
-    }, DELAY_MS);
+    if(bar) bar.style.width = '100%';
+    if(ptx) ptx.textContent = '1/1';
+    state.progressed = true;
+    // เปิดลิงก์ (ตามพฤติกรรมเดิม)
+    window.open(LINK, "_blank");
   });
 
-  // GET A NEW KEY: สร้างคีย์เท่านั้น (ถ้ามีแล้ว ห้ามสร้าง)
+  // GET A NEW KEY: จะ “สร้างคีย์” ได้เฉพาะเมื่อ Progress เป็น 1/1 แล้วเท่านั้น และจะไม่เปิดลิงก์
   $('#newKey').addEventListener('click', ()=>{
+    // ต้อง progress ก่อน
+    const progressed = ($('#progressText')?.textContent || '').trim() === '1/1' || state.progressed;
+    if(!progressed){
+      alert('กรุณากด START ให้ Progress เป็น 1/1 ก่อน');
+      return;
+    }
     if(state.keys.length>=1){
       alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น');
       return;
@@ -227,8 +231,7 @@
     const expires = Date.now() + KEY_LIFETIME;
     state.keys = [{value:v, expires}];
     saveKeys(); paintKeys();
-    // ไปที่ลิงก์ตามเดิม
-    window.location.href = LINK;
+    // ❌ ไม่เปิดลิงก์ตามที่สั่ง
   });
 
   // อัปเดต TIME LEFT + เคลียร์คีย์หมดอายุ
