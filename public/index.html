@@ -66,7 +66,7 @@
 
     .title-green{color:var(--accent)} .title-white{color:#fff}
 
-    /* ⬇️ แก้ TIME LEFT ไม่ให้ขยับ */
+    /* TIME LEFT คงที่ ไม่ส่าย */
     td.timeCell, th.timeCell{
       width: 150px;
       text-align: right;
@@ -94,7 +94,6 @@
           <button id="startBtn" class="btn small"><span>🟢</span> START</button>
         </div>
         <div class="card-bd">
-          <!-- ⬇️ แก้เป็น 0/1 ตามที่สั่ง -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div class="muted">Progress: <b id="progressText">0/1</b></div>
             <div class="muted" id="timer"></div>
@@ -114,7 +113,7 @@
             <thead>
               <tr>
                 <th>KEY</th>
-                <th class="timeCell">TIME LEFT</th> <!-- ⬅️ fixed width -->
+                <th class="timeCell">TIME LEFT</th>
                 <th>STATUS</th>
                 <th class="actions-center">ACTIONS</th>
               </tr>
@@ -126,127 +125,126 @@
     </div>
   </div>
 
-  <script>
-    const $ = s => document.querySelector(s);
+<script>
+  const $ = s => document.querySelector(s);
 
-    const state = { keys: loadKeys() };
-    const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-    const KEY_LIFETIME = 48*60*60*1000; // 48h
+  const state = { keys: loadKeys() };
+  const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+  const KEY_LIFETIME = 48*60*60*1000; // 48h
+  const DELAY_MS = 1200;              // ✅ ดีเลย์ก่อน progress ขยับ/แถบเต็ม
 
-    function loadKeys(){
-      try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; }
-    }
-    function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
-    function randKey(){
-      const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let a="UFO-HUB-X-";
-      for(let i=0;i<8;i++) a+=abc[Math.floor(Math.random()*abc.length)];
-      return a;
-    }
-    function fmtLeft(ms){
-      if(ms<=0) return "00:00:00";
-      const s = Math.floor(ms/1000);
-      const h = String(Math.floor(s/3600)).padStart(2,'0');
-      const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
-      const ss= String(s%60).padStart(2,'0');
-      return `${h}:${m}:${ss}`;
-    }
+  function loadKeys(){
+    try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; }
+  }
+  function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
+  function randKey(){
+    const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let a="UFO-HUB-X-";
+    for(let i=0;i<8;i++) a+=abc[Math.floor(Math.random()*abc.length)];
+    return a;
+  }
+  function fmtLeft(ms){
+    if(ms<=0) return "00:00:00";
+    const s = Math.floor(ms/1000);
+    const h = String(Math.floor(s/3600)).padStart(2,'0');
+    const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    const ss= String(s%60).padStart(2,'0');
+    return `${h}:${m}:${ss}`;
+  }
 
-    function paintKeys(){
-      const tbody = $('#keyRows');
-      tbody.innerHTML = '';
+  function paintKeys(){
+    const tbody = $('#keyRows');
+    tbody.innerHTML = '';
+    const now = Date.now();
+
+    // ลบคีย์ที่หมดอายุและจำกัด 1 คีย์
+    state.keys = state.keys.filter(k => k.expires > now);
+    if(state.keys.length > 1){ state.keys = [state.keys[0]]; saveKeys(); }
+
+    if(state.keys.length===0) return;
+
+    const k = state.keys[0];
+    const left = k.expires - now;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:700">${k.value}</td>
+      <td class="timeCell muted" id="leftCell">${fmtLeft(Math.max(0,left))}</td>
+      <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
+      <td class="actions-center">
+        <div class="btnrow">
+          <button class="btn small ghost" id="copyBtn">📋 Copy</button>
+          <!-- ✅ +5H อยู่หน้าก่อน แล้วค่อยอีโมจิ (ชิดขึ้น) -->
+          <button class="btn small" id="plusBtn" style="gap:4px"><span>+5H</span><span>⏩</span></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    // Copy
+    $('#copyBtn').onclick = ()=>{
+      navigator.clipboard.writeText(k.value);
+      const btn = $('#copyBtn');
+      const old = btn.textContent;
+      btn.textContent='✅ Copied';
+      setTimeout(()=>btn.textContent=old,1200);
+    };
+
+    // +5H — แค่บวกเวลา (ถ้าไม่มีคีย์ ไม่ทำงาน)
+    $('#plusBtn').onclick = ()=>{
+      if(state.keys.length === 0) return;
+      window.open(LINK, "_blank");
       const now = Date.now();
+      if(k.expires > now) k.expires += 5*60*60*1000;
+      else k.expires = now + 5*60*60*1000;
+      saveKeys(); paintKeys();
+    };
+  }
 
-      // ลบคีย์ที่หมดอายุ
-      state.keys = state.keys.filter(k => k.expires > now);
-      // จำกัด 1 คีย์
-      if(state.keys.length > 1){ state.keys = [state.keys[0]]; saveKeys(); }
+  // ✅ START: ไม่สร้างคีย์ + มีดีเลย์ก่อนแถบ/ตัวเลขขยับ + เปิดลิงก์หลังดีเลย์ (แท็บใหม่)
+  let startLock = false;
+  $('#startBtn').addEventListener('click', ()=>{
+    if(startLock) return;
+    startLock = true;
+    const bar = $('#bar');
+    const ptx = $('#progressText');
 
-      if(state.keys.length===0) return;
-
-      const k = state.keys[0];
-      const left = k.expires - now;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="font-weight:700">${k.value}</td>
-        <td class="timeCell muted" id="leftCell">${fmtLeft(Math.max(0,left))}</td>
-        <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
-        <td class="actions-center">
-          <div class="btnrow">
-            <button class="btn small ghost" id="copyBtn">📋 Copy</button>
-            <!-- ⬇️ ไอคอน + ข้อความอยู่ติดกัน ไม่สลับ -->
-            <button class="btn small" id="plusBtn">⏩ <span style="margin-left:4px">+5H</span></button>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(tr);
-
-      // Copy
-      $('#copyBtn').onclick = ()=>{
-        navigator.clipboard.writeText(k.value);
-        const btn = $('#copyBtn');
-        const old = btn.textContent;
-        btn.textContent='✅ Copied';
-        setTimeout(()=>btn.textContent=old,1200);
-      };
-
-      // +5H — แค่บวกเวลาเท่านั้น (ห้ามสร้าง key ใหม่)
-      $('#plusBtn').onclick = ()=>{
-        if(state.keys.length === 0) return; // ไม่มีคีย์ไม่ทำอะไร
-        // เปิดลิงก์ตามที่สั่ง
-        window.open(LINK, "_blank");
-        const now = Date.now();
-        if(k.expires > now) k.expires += 5*60*60*1000;
-        else k.expires = now + 5*60*60*1000;
-        saveKeys(); paintKeys();
-      };
-    }
-
-    // กด START → พาไปลิงก์ + อัปเดต progress + ออกคีย์ครั้งแรก (ถ้ายังไม่มี)
-    $('#startBtn').addEventListener('click', ()=>{
-      const bar = $('#bar');
-      const ptx = $('#progressText');
+    setTimeout(()=>{
       if(bar) bar.style.width = '100%';
       if(ptx) ptx.textContent = '1/1';
+      window.open(LINK, "_blank");
+      // ปลดล็อกภายหลังนิดหน่อย (กันกดรัว)
+      setTimeout(()=>{ startLock = false; }, 600);
+    }, DELAY_MS);
+  });
 
-      // สร้างคีย์ถ้ายังไม่มี
-      if(state.keys.length === 0){
-        const v = randKey();
-        const expires = Date.now() + KEY_LIFETIME;
-        state.keys = [{value:v, expires}];
-        saveKeys(); paintKeys();
-      }
-      // พาไปลิงก์
-      window.location.href = LINK;
-    });
+  // GET A NEW KEY: สร้างคีย์เท่านั้น (ถ้ามีแล้ว ห้ามสร้าง)
+  $('#newKey').addEventListener('click', ()=>{
+    if(state.keys.length>=1){
+      alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น');
+      return;
+    }
+    const v = randKey();
+    const expires = Date.now() + KEY_LIFETIME;
+    state.keys = [{value:v, expires}];
+    saveKeys(); paintKeys();
+    // ไปที่ลิงก์ตามเดิม
+    window.location.href = LINK;
+  });
 
-    // ปุ่ม GET A NEW KEY (ทำงานก็ต่อเมื่อ "ไม่มีคีย์")
-    $('#newKey').addEventListener('click', ()=>{
-      if(state.keys.length>=1){
-        alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น');
-        return;
-      }
-      const v = randKey();
-      const expires = Date.now() + KEY_LIFETIME;
-      state.keys = [{value:v, expires}];
+  // อัปเดต TIME LEFT + เคลียร์คีย์หมดอายุ
+  setInterval(()=>{
+    const k = state.keys[0];
+    if(!k) return;
+    const left = Math.max(0, k.expires - Date.now());
+    const cell = document.getElementById('leftCell');
+    if(cell) cell.textContent = fmtLeft(left);
+    if(left <= 0){
+      state.keys = [];
       saveKeys(); paintKeys();
-      window.location.href = LINK;
-    });
+    }
+  }, 1000);
 
-    // อัปเดต TIME LEFT ทุกวินาที + ลบคีย์เมื่อหมดอายุ
-    setInterval(()=>{
-      const k = state.keys[0];
-      if(!k) return;
-      const left = Math.max(0, k.expires - Date.now());
-      const cell = document.getElementById('leftCell');
-      if(cell) cell.textContent = fmtLeft(left);
-      if(left <= 0){
-        state.keys = [];
-        saveKeys(); paintKeys();
-      }
-    }, 1000);
-
-    paintKeys();
-  </script>
+  paintKeys();
+</script>
 </body>
 </html>
