@@ -35,7 +35,7 @@
     .logo-wrap img{
       width:250px;height:auto;border-radius:12px;
       box-shadow:0 0 0 2px rgba(0,255,140,.25);
-      display:block;  /* ✅ กันหาย/หดจาก inline */
+      display:block;
     }
 
     .progress{height:10px;border-radius:999px;background:#0e1216;border:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden}
@@ -50,6 +50,7 @@
     .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25)}
     .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
     .btn.warn{background:var(--danger);border-color:rgba(255,77,77,.3);color:#fff}
+    .btn.disabled{opacity:.6;pointer-events:none}
 
     table{width:100%;border-collapse:separate;border-spacing:0 10px}
     th,td{padding:12px 14px;text-align:left}
@@ -63,7 +64,7 @@
     .actions-center{text-align:center}
     .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
 
-    /* ชื่อสลับสี: UFO ขาว, HUB X เขียว (ตามที่ขอ) */
+    /* ชื่อสลับสี: UFO ขาว, HUB X เขียว */
     .title-white{color:#fff} .title-green{color:var(--accent)}
 
     /* TIME LEFT คงที่ ไม่ส่าย */
@@ -72,7 +73,7 @@
       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
     }
 
-    /* ปุ่ม OK (กดแล้วค่อยเปิดลิงก์) */
+    /* ปุ่ม OK (ยืนยันไปลิงก์) */
     #okBtn{display:none;margin-top:12px}
   </style>
 </head>
@@ -88,7 +89,6 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge">
-            <!-- ชื่อ: UFO ขาว / HUB X เขียว -->
             <span class="title-white">UFO</span>
             <span class="title-green">HUB X</span>
           </div>
@@ -100,7 +100,7 @@
             <div class="muted" id="timer"></div>
           </div>
           <div class="progress" style="width:100%"><div class="bar" id="bar"></div></div>
-          <!-- ปุ่ม OK โผล่หลัง START เพื่อให้ผู้ใช้กดยืนยันก่อนเข้าลิงก์ -->
+          <!-- ปุ่ม OK (ยืนยันไปลิงก์) -->
           <button id="okBtn" class="btn small">OK</button>
         </div>
       </div>
@@ -131,9 +131,15 @@
 <script>
   const $ = s => document.querySelector(s);
 
-  const state = { keys: loadKeys(), progressed:false };
+  // --- STATE ---
+  const state = {
+    keys: loadKeys(),
+    progressed: false,
+    startCooldownUntil: Number(localStorage.getItem('ufo_start_until') || 0) // เก็บเวลา 10 นาที ถ้ามี
+  };
   const LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const KEY_LIFETIME = 48*60*60*1000; // 48h
+  const START_COOLDOWN_MS = 10*60*1000; // 10 นาที
 
   function loadKeys(){ try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; } }
   function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
@@ -190,34 +196,70 @@
     };
   }
 
-  // START: อัปเดต UI เท่านั้น แล้วโชว์ปุ่ม OK
+  // --- START: อัปเดต UI + โชว์ปุ่ม OK (ไม่พาไปลิงค์) ---
   $('#startBtn').addEventListener('click', ()=>{
     $('#bar').style.width='100%';
     $('#progressText').textContent='1/1';
     state.progressed=true;
-    $('#okBtn').style.display='inline-flex';    // ให้ผู้ใช้กดยืนยันเอง
+    $('#okBtn').style.display='inline-flex'; // ให้ผู้ใช้กดยืนยันเอง
   });
 
-  // OK: ค่อยเปิดลิงก์
-  $('#okBtn').addEventListener('click', ()=>{ window.open(LINK,"_blank"); });
+  // --- OK: เปิดลิงก์ และเริ่มนับ 10 นาทีบนปุ่ม START ---
+  $('#okBtn').addEventListener('click', ()=>{
+    window.open(LINK,"_blank");
+    state.startCooldownUntil = Date.now() + START_COOLDOWN_MS;
+    localStorage.setItem('ufo_start_until', String(state.startCooldownUntil));
+    $('#okBtn').style.display='none';
+    updateStartCooldown(); // รีเฟรชสถานะปุ่มทันที
+  });
 
-  // GET A NEW KEY: สร้างคีย์ได้เมื่อ Progress 1/1 เท่านั้น (ไม่พาไปลิงก์)
+  // --- GET A NEW KEY: สร้างคีย์ได้เฉพาะเมื่อ Progress = 1/1; หลังสร้างให้รีเซ็ตกลับ 0/1 และล็อกเพิ่ม ---
   $('#newKey').addEventListener('click', ()=>{
-    if(!state.progressed){ alert('กรุณากด START ให้ Progress เป็น 1/1 ก่อน'); return; }
+    const progressed = ($('#progressText')?.textContent || '').trim() === '1/1' || state.progressed;
+    if(!progressed){ alert('กรุณากด START ให้ Progress เป็น 1/1 ก่อน'); return; }
     if(state.keys.length>=1){ alert('คุณมี Key อยู่แล้ว — 1 คนมีได้แค่ 1 Key เท่านั้น'); return; }
+
     const v=randKey(); const expires=Date.now()+KEY_LIFETIME;
     state.keys=[{value:v,expires}]; saveKeys(); paintKeys();
+
+    // รีเซ็ต Progress กลับ 0/1 ตามคำสั่ง และหุบปุ่ม OK
+    state.progressed=false;
+    $('#bar').style.width='0%';
+    $('#progressText').textContent='0/1';
+    $('#okBtn').style.display='none';
   });
 
-  // อัปเดต TIME LEFT + ลบคีย์หมดอายุ
+  // --- START Cooldown handler (แสดงนับถอยหลังบนปุ่ม START) ---
+  function updateStartCooldown(){
+    const btn = $('#startBtn');
+    const t = state.startCooldownUntil - Date.now();
+    if(t > 0){
+      btn.classList.add('disabled');
+      const mm = String(Math.floor(t/60000)).padStart(2,'0');
+      const ss = String(Math.floor((t%60000)/1000)).padStart(2,'0');
+      btn.innerHTML = `${mm}:${ss}`;
+    }else{
+      btn.classList.remove('disabled');
+      btn.innerHTML = '<span>🟢</span> START';
+      state.startCooldownUntil = 0;
+      localStorage.removeItem('ufo_start_until');
+    }
+  }
+
+  // อัปเดต TIME LEFT + เคลียร์คีย์หมดอายุ + อัปเดตนาฬิกา START
   setInterval(()=>{
-    const k=state.keys[0]; if(!k) return;
-    const left=Math.max(0,k.expires-Date.now());
-    const cell=document.getElementById('leftCell'); if(cell) cell.textContent=fmtLeft(left);
-    if(left<=0){ state.keys=[]; saveKeys(); paintKeys(); }
+    const k=state.keys[0];
+    if(k){
+      const left=Math.max(0,k.expires-Date.now());
+      const cell=document.getElementById('leftCell'); if(cell) cell.textContent=fmtLeft(left);
+      if(left<=0){ state.keys=[]; saveKeys(); paintKeys(); }
+    }
+    updateStartCooldown();
   },1000);
 
+  // init
   paintKeys();
+  updateStartCooldown();
 </script>
 </body>
 </html>
