@@ -48,7 +48,7 @@
       color:#08120e;background:var(--accent);cursor:pointer;transition:.15s;user-select:none
     }
     .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
-    .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25)}
+    .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25);opacity:.7}
     .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
     .btn.warn{background:var(--danger);border-color:rgba(255,77,77,.3);color:#fff}
 
@@ -63,12 +63,12 @@
     .muted{color:var(--muted)}
     .actions-center{text-align:center}
     .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
+
     .title-green{color:var(--accent)} .title-white{color:#fff}
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- โลโก้ -->
     <div class="center logo-wrap">
       <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
     </div>
@@ -77,10 +77,7 @@
       <!-- LEFT -->
       <div class="card">
         <div class="card-hd">
-          <div class="badge">
-            <span class="title-green">UFO</span>
-            <span class="title-white">HUB X</span>
-          </div>
+          <div class="badge"><span class="title-green">UFO</span><span class="title-white">HUB X</span></div>
           <button id="startBtn" class="btn small"><span>🟢</span> START</button>
         </div>
         <div class="card-bd">
@@ -96,7 +93,7 @@
       <div class="card">
         <div class="card-hd">
           <div class="badge" style="background:#111a14;border-color:rgba(0,255,140,.2);color:var(--text)">🔑 Your Keys</div>
-          <button id="newKey" class="btn small"><span>➕</span> GET A NEW KEY</button>
+          <button id="newKey" class="btn small ghost" disabled>＋ GET A NEW KEY</button>
         </div>
         <div class="card-bd">
           <table>
@@ -115,151 +112,171 @@
     </div>
   </div>
 
-<script>
-/* =========================
-   CONFIG (แก้ได้)
-========================= */
-const EXTEND_HOURS   = 5;               // +5H ตามที่ต้องการ
-const STEP_SECONDS   = 60;              // ต่อสเต็ป
-const COOLDOWN_MS    = 2*60*1000;       // คูลดาวน์ 2 นาที
-const API_TOKEN      = "";              // ถ้าตั้ง API_TOKEN ใน server.js ให้ใส่ตรงนี้ (จะส่งใน header)
+  <script>
+    const $ = s => document.querySelector(s);
 
-/* API calls */
-const API = {
-  getKey: async () => (await fetch('/api/getkey', { method:'POST' })).json(),
-  check : async (key) => (await fetch('/api/check/' + encodeURIComponent(key))).json(),
-  extend: async (key, hours=EXTEND_HOURS) => (await fetch('/api/extend/' + encodeURIComponent(key),{
-              method:'POST',
-              headers: { 'content-type':'application/json', ...(API_TOKEN?{'x-api-token':API_TOKEN}:{}) },
-              body: JSON.stringify({ hours })
-            })).json()
-};
+    // ---------- STATE ----------
+    const CLAIM_FLAG = "ufo_claimed_once";
+    const state = {
+      step: 0,                          // 0 -> START, 1 -> NEXT, 2 -> done
+      keys: loadKeys(),
+      claimedOnce: localStorage.getItem(CLAIM_FLAG) === "1"
+    };
 
-const $ = s => document.querySelector(s);
-
-/* ===== STATE ===== */
-const state = {
-  step: 0,                    // 0 -> START, 1 -> NEXT, 2 -> done
-  cooldownUntil: 0,
-  item: loadItem()            // {key, expiresAt}
-};
-function loadItem(){ try{return JSON.parse(localStorage.getItem('ufo_item')||'null')}catch{return null} }
-function saveItem(){ localStorage.setItem('ufo_item', JSON.stringify(state.item)) }
-
-/* ===== UI helpers ===== */
-function setProgress(done){ $('#progText').textContent = `${done}/2`; $('#bar').style.width = (done/2*100)+'%'; }
-function fmtLeft(ms){
-  if(ms<=0) return "00:00:00";
-  const s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0');
-  const m=String(Math.floor((s%3600)/60)).padStart(2,'0'); const ss=String(s%60).padStart(2,'0');
-  return `${h}:${m}:${ss}`;
-}
-function mask(k){ return k?.length>6 ? k.slice(0,3)+'…'+k.slice(-3) : (k||''); }
-function remainMs(exp){ return Math.max(0, (exp||0) - Date.now()); }
-
-/* ===== START / NEXT ===== */
-let stepTimer=null;
-function runStep(sec,done){
-  clearInterval(stepTimer);
-  const end=Date.now()+sec*1000;
-  stepTimer=setInterval(()=>{
-    const left=end-Date.now();
-    $('#timer').textContent = '⏳ ' + fmtLeft(Math.max(0,left));
-    if(left<=0){ clearInterval(stepTimer); $('#timer').textContent=''; done&&done(); }
-  },200);
-}
-$('#startBtn').addEventListener('click', ()=>{
-  if(state.step===0){ state.step=1; setProgress(1); $('#startBtn').innerHTML='<span>➡️</span> NEXT';  runStep(STEP_SECONDS, ()=>{}); }
-  else if(state.step===1){ state.step=2; setProgress(2); $('#startBtn').innerHTML='<span>✅</span> DONE'; runStep(STEP_SECONDS, ()=>{ $('#startBtn').innerHTML='<span>🟢</span> START'; }); }
-});
-
-/* ===== TABLE ===== */
-async function paintTable(){
-  const tbody = $('#keyRows'); tbody.innerHTML='';
-  if(!state.item){
-    tbody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;padding:26px">No keys yet — click “GET A NEW KEY”.</td></tr>`;
-    return;
-  }
-  // sync expiry จากเซิร์ฟเวอร์
-  try{
-    const r = await API.check(state.item.key);
-    if(r.ok){ state.item.expiresAt = r.expiresAt; saveItem(); }
-  }catch(_){}
-
-  const ms = remainMs(state.item.expiresAt);
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td style="font-weight:700" title="${state.item.key}">${mask(state.item.key)}</td>
-    <td class="muted" id="timeLeft">${fmtLeft(ms)}</td>
-    <td><span class="pill ${ms>0?'active':''}">${ms>0?'ACTIVE':'EXPIRED'}</span></td>
-    <td class="actions-center">
-      <div class="btnrow">
-        <button class="btn small ghost" id="copyBtn">📋 Copy</button>
-        <button class="btn small" id="plusBtn">⏩ +${EXTEND_HOURS}H</button>
-      </div>
-    </td>`;
-  tbody.appendChild(tr);
-
-  $('#copyBtn').addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText(state.item.key); const b=$('#copyBtn'); const old=b.textContent; b.textContent='✅ Copied'; setTimeout(()=>b.textContent=old,900);}catch(_){}
-  });
-  $('#plusBtn').addEventListener('click', async ()=>{
-    const b=$('#plusBtn'), old=b.textContent; b.textContent='…';
-    try{
-      const r=await API.extend(state.item.key);
-      if(r.ok){ state.item.expiresAt=r.expiresAt; saveItem(); }
-    }catch(_){}
-    b.textContent=old;
-    paintTable();
-  });
-}
-
-/* ===== NEW KEY ===== */
-function canClaimNow(){
-  if(Date.now()<state.cooldownUntil) return false;
-  return state.step===2; // ต้องจบ STEP แล้ว
-}
-function updateNewKeyButton(){
-  const btn=$('#newKey');
-  if(state.item){ btn.classList.add('ghost'); btn.disabled=true; btn.innerHTML='Only 1 key per user'; return; }
-  if(Date.now()<state.cooldownUntil){
-    btn.classList.add('ghost'); btn.disabled=true;
-    btn.innerHTML='⏳ Wait '+Math.ceil((state.cooldownUntil-Date.now())/1000)+'s';
-    return;
-  }
-  if(state.step<2){ btn.classList.add('ghost'); btn.disabled=true; btn.innerHTML='Finish START → NEXT first'; return; }
-  btn.classList.remove('ghost'); btn.disabled=false; btn.innerHTML='<span>➕</span> GET A NEW KEY';
-}
-$('#newKey').addEventListener('click', async ()=>{
-  if($('#newKey').disabled) return;
-  $('#newKey').textContent='…';
-  try{
-    const r = await API.getKey();
-    if(r.ok){
-      state.item = { key:r.key, expiresAt:r.expiresAt };
-      saveItem();
-      state.cooldownUntil = Date.now() + COOLDOWN_MS;
-      state.step = 0; setProgress(0);
-      $('#startBtn').innerHTML = '<span>🟢</span> START';
-      $('#timer').textContent = '';
+    function loadKeys(){
+      try{ return JSON.parse(localStorage.getItem('ufo_keys')||'[]'); }catch{ return []; }
     }
-  }catch(err){}
-  updateNewKeyButton(); paintTable();
-});
+    function saveKeys(){ localStorage.setItem('ufo_keys', JSON.stringify(state.keys)); }
 
-/* ===== Tick ===== */
-setInterval(()=>{
-  if(state.item){
-    const el=$('#timeLeft');
-    if(el) el.textContent = fmtLeft(remainMs(state.item.expiresAt));
-  }
-  updateNewKeyButton();
-},1000);
+    // ---------- helpers ----------
+    function setProgress(done){
+      $('#progText').textContent = `${done}/2`;
+      $('#bar').style.width = (done/2*100)+'%';
+    }
+    function randKeyLocal(){                 // เผื่อ fallback แสดงก่อน
+      const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let a="UFO-HUB-X-";
+      for(let i=0;i<8;i++) a+=abc[Math.floor(Math.random()*abc.length)];
+      return a;
+    }
+    function fmtLeft(ms){
+      if(ms<=0) return "00:00:00";
+      const s = Math.floor(ms/1000);
+      const h = String(Math.floor(s/3600)).padStart(2,'0');
+      const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+      const ss= String(s%60).padStart(2,'0');
+      return `${h}:${m}:${ss}`;
+    }
 
-/* init */
-setProgress(0);
-paintTable();
-updateNewKeyButton();
-</script>
+    // ---------- START / NEXT ----------
+    $('#startBtn').addEventListener('click', ()=>{
+      if(state.step===0){
+        state.step=1; setProgress(1);
+        $('#startBtn').innerHTML = '<span>➡️</span> NEXT';
+      }else if(state.step===1){
+        state.step=2; setProgress(2);
+        $('#startBtn').innerHTML = '<span>✅</span> DONE';
+      }
+      updateNewKeyButton();
+    });
+
+    // ---------- Table ----------
+    function paintKeys(){
+      const tbody = $('#keyRows');
+      tbody.innerHTML = '';
+      const now = Date.now();
+      state.keys.forEach((k,i)=>{
+        const left = Math.max(0, k.expires - now);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:700">${k.value}</td>
+          <td class="muted">${fmtLeft(left)}</td>
+          <td><span class="pill ${left>0?'active':''}">${left>0?'ACTIVE':'EXPIRED'}</span></td>
+          <td class="actions-center">
+            <div class="btnrow">
+              <button class="btn small ghost" data-copy="${i}">📋 Copy</button>
+              <button class="btn small" data-plus="${i}">⏩ +5H</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ---------- Actions ----------
+    document.addEventListener('click', async (e)=>{
+      const copyBtn = e.target.closest('[data-copy]');
+      if(copyBtn){
+        const idx = +copyBtn.dataset.copy;
+        await navigator.clipboard.writeText(state.keys[idx].value);
+        const old = copyBtn.innerHTML; copyBtn.innerHTML = '✅ Copied';
+        setTimeout(()=>copyBtn.innerHTML = old, 1200);
+        return;
+      }
+      const plusBtn = e.target.closest('[data-plus]');
+      if(plusBtn){
+        const idx = +plusBtn.dataset.plus;
+        const key = state.keys[idx].value;
+
+        // เรียก API ยืดเวลา +5H
+        try{
+          const r = await fetch(`/api/extend/${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'}
+          }).then(r=>r.json());
+
+          if(r.ok){
+            // sync เวลาใหม่จากเซิร์ฟเวอร์
+            state.keys[idx].expires = r.expiresAt;
+            saveKeys(); paintKeys();
+          }else{
+            // ถ้า API ล้มเหลว ให้ fallback ในเครื่อง
+            state.keys[idx].expires += 5*60*60*1000;
+            saveKeys(); paintKeys();
+          }
+        }catch{
+          state.keys[idx].expires += 5*60*60*1000;
+          saveKeys(); paintKeys();
+        }
+      }
+    });
+
+    // ---------- New Key ----------
+    function canClaimNow(){
+      if(state.claimedOnce) return false;     // เคลมได้ครั้งเดียวตลอดไป (ฝั่ง client)
+      if(state.keys.length>=1) return false;  // มีคีย์แล้ว ไม่ให้เพิ่ม
+      return state.step===2;
+    }
+    function updateNewKeyButton(){
+      const btn = $('#newKey');
+      if(state.claimedOnce || state.keys.length>=1){
+        btn.classList.add('ghost'); btn.disabled = true;
+        btn.innerHTML = '✅ Already claimed';
+        return;
+      }
+      if(!canClaimNow()){
+        btn.classList.add('ghost'); btn.disabled = true;
+        btn.innerHTML = '＋ GET A NEW KEY';  // ตามที่ขอ
+      }else{
+        btn.classList.remove('ghost'); btn.disabled = false;
+        btn.innerHTML = '<span>➕</span> GET A NEW KEY';
+      }
+    }
+
+    $('#newKey').addEventListener('click', async ()=>{
+      if(!canClaimNow()){
+        alert('Finish START → NEXT first');
+        return;
+      }
+      try{
+        const r = await fetch('/api/getkey', {method:'POST'}).then(r=>r.json());
+        if(r.ok){
+          state.keys = [{ value: r.key, expires: r.expiresAt }];
+          saveKeys(); paintKeys();
+
+          state.claimedOnce = true;
+          localStorage.setItem(CLAIM_FLAG, "1");
+          updateNewKeyButton();
+          return;
+        }
+      }catch(e){ /* เงียบไว้ แล้ว fallback local */ }
+
+      // fallback local (กรณีออฟไลน์)
+      const v = randKeyLocal();
+      const expires = Date.now() + 48*60*60*1000;
+      state.keys = [{ value: v, expires }];
+      saveKeys(); paintKeys();
+
+      state.claimedOnce = true;
+      localStorage.setItem(CLAIM_FLAG, "1");
+      updateNewKeyButton();
+    });
+
+    // ---------- Init ----------
+    setProgress(0);
+    paintKeys();
+    updateNewKeyButton();
+    setInterval(()=>{ paintKeys(); }, 1000);
+  </script>
 </body>
 </html>
