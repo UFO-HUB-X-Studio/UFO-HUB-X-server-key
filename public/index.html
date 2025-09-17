@@ -1,354 +1,265 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>UFO HUB X — Get Key</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UFO HUB X — Get Key</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f13; --card:#10161d; --text:#e7f4ee; --muted:#9cc6b5;
+      --accent:#00ff8c; --danger:#ff4d4d;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+      font-family:'Outfit',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:#0b0f13 url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&") center/cover fixed no-repeat;
+    }
+    .container{max-width:1000px;margin:0 auto;padding:18px}
+    .grid{display:grid;gap:16px;margin:18px auto}
+    @media(min-width:880px){.grid{grid-template-columns:1fr 1fr}}
 
-<!-- ========== THEME ========== -->
-<style>
-  :root{
-    --bg:#0b0f12;
-    --card:#111827cc;                 /* กรอบเข้มโปร่ง */
-    --stroke:#1f2a30;
-    --muted:#9fb0b7;
-    --text:#e9f1f3;
-    --accent:#00ff8c;                 /* เขียวเอกลักษณ์ */
-    --accent-2:#2ad39a;
-    --ok:#21d28b;
-    --warn:#f6c14c;
-    --bad:#e35b62;
-    --pill:#1e293b;
-    --shadow:0 12px 30px rgba(0,0,0,.35);
-    --radius:18px;
-    --logo-url:url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&");
-    --bg-url:url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&");
-  }
+    .card{
+      background:linear-gradient(180deg, #121a22, #0e151c);
+      border:1px solid rgba(0,255,140,.18);
+      border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+    .card-hd{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
+    .badge{
+      display:inline-flex;align-items:center;gap:10px;background:#0c1611;
+      border:1px solid rgba(0,255,140,.3); padding:8px 12px;border-radius:999px;
+      font-weight:800
+    }
+    .card-bd{padding:18px}
+    .center{display:flex;justify-content:center;align-items:center}
+    .logo-wrap{margin-top:14px}
+    .logo-wrap img{width:250px;height:auto;border-radius:12px;box-shadow:0 0 0 2px rgba(0,255,140,.25)}
 
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
-    color:var(--text);
-    background:#000;
-    background-image:var(--bg-url);
-    background-size:cover; background-position:center; background-attachment:fixed;
-  }
-  .overlay{position:fixed; inset:0; background:linear-gradient(180deg,#0007,#000c)}
-  .wrap{position:relative; z-index:1; min-height:100%; padding:18px; display:grid; place-items:start center}
+    .progress{height:10px;border-radius:999px;background:#0e1216;border:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden}
+    .progress>.bar{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--accent),#a6ffc7);border-radius:999px;transition:width .25s ease;box-shadow:0 0 16px rgba(0,255,140,.35) inset}
 
-  /* ======= NAV (บาร์บน) ======= */
-  .nav{
-    width:min(1000px,100%);
-    height:64px;
-    background:#1f2937cc;
-    border:1px solid #2b3a42;
-    border-radius:16px;
-    box-shadow:var(--shadow);
-    padding:0 18px;
-    display:flex; align-items:center; justify-content:space-between;
-    margin:8px 0 16px;
-  }
-  .nav .brand{display:flex; align-items:center; gap:12px}
-  .nav .brand .logo{
-    width:40px; height:40px; border-radius:12px; border:1px solid #00ff8c66;
-    background:var(--logo-url) center/cover no-repeat;
-  }
-  .nav .brand .name{font-weight:800; letter-spacing:.3px; color:#dbe8ee}
-  .nav .menu{width:40px; height:40px; border-radius:10px; border:1px solid #30414a; display:grid; place-items:center; color:#9fb0b7}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 18px;
+      border:1px solid rgba(0,255,140,.28); border-radius:12px;font-weight:700;
+      color:#08120e;background:var(--accent);cursor:pointer;transition:.15s;user-select:none
+    }
+    .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
+    .btn.ghost{background:#0f151a;color:var(--text);border-color:rgba(0,255,140,.25)}
+    .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
+    .btn.warn{background:var(--danger);border-color:rgba(255,77,77,.3);color:#fff}
 
-  /* ======= CARD หลัก ======= */
-  .card{
-    width:min(1000px,100%);
-    background:var(--card);
-    border:1px solid #2b3a42;
-    border-radius:var(--radius);
-    backdrop-filter:blur(6px);
-    box-shadow:var(--shadow);
-    overflow:hidden;
-  }
-  .card .inner{padding:18px}
-
-  /* Header ภายในการ์ด */
-  .hdr{
-    display:flex; align-items:center; justify-content:space-between; gap:16px;
-    padding:8px 10px 14px; border-bottom:1px solid #ffffff14;
-  }
-  .hdr .ttl{font-weight:900; font-size:22px; letter-spacing:.2px}
-  .ttl .ufo{color:var(--accent)} .ttl .hub{color:#fff}
-
-  /* แถว progress */
-  .progressRow{
-    position:relative;
-    display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center;
-    background:#0f172acc; border:1px solid var(--stroke);
-    border-radius:14px; padding:14px 14px 14px 16px;
-    margin-top:16px;
-  }
-  .barMeta{display:flex; justify-content:space-between; color:var(--muted); font-size:14px; margin-bottom:6px}
-  .bar{height:10px; background:#0b1a20; border:1px solid #17333a; border-radius:999px; overflow:hidden}
-  .bar>span{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#76ffd1); transition:width .25s}
-  .timerPill{
-    display:inline-flex; align-items:center; gap:8px; padding:10px 14px;
-    background:#0b1220; border:1px solid #244051; color:#b6d7f5; border-radius:12px; font-weight:700;
-  }
-
-  /* ปุ่ม */
-  .btn{
-    border:none; border-radius:12px; padding:12px 18px; font-weight:800; cursor:pointer;
-    color:#0b1115; background:var(--accent); transition:transform .06s, opacity .2s, background .2s;
-    display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  }
-  .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#0f1620; color:#e9f1f3; border:1px solid var(--accent)}
-  .btn.dim{opacity:.55; pointer-events:none}
-
-  /* ตารางคีย์ */
-  .section{margin-top:16px; background:#0f172acc; border:1px solid var(--stroke); border-radius:14px; padding:12px}
-  .secHead{display:flex; align-items:center; justify-content:space-between; padding:6px 6px 10px; border-bottom:1px solid #ffffff12; margin-bottom:6px}
-  .secTitle{font-weight:800; color:#d9e6ea}
-  table{width:100%; border-collapse:collapse}
-  th,td{padding:12px 10px; border-bottom:1px solid #ffffff12; text-align:center}
-  th{color:#9db2b9; text-transform:uppercase; letter-spacing:.4px; font-size:12px}
-  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;}
-  .actions{display:flex; justify-content:center; gap:10px}
-  .badge{padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; display:inline-block}
-  .ok{background:#0c3226; border:1px solid var(--accent-2); color:#69f5c6}
-  .bad{background:#34151a; border:1px solid #e45865; color:#ff8ea0}
-
-  /* mobile */
-  @media (max-width:640px){
-    .nav{height:56px}
-    .hdr .ttl{font-size:18px}
-    .progressRow{grid-template-columns:1fr}
-    th:nth-child(2), td:nth-child(2){display:none} /* ซ่อน Full Key บนมือถือ */
-  }
-</style>
+    table{width:100%;border-collapse:separate;border-spacing:0 10px}
+    th,td{padding:12px 14px;text-align:left}
+    th{color:var(--muted);font-weight:600;font-size:14px}
+    tr{background:#0f151b;border:1px solid rgba(255,255,255,.06)}
+    tr td:first-child,tr th:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px}
+    tr td:last-child,tr th:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px}
+    .pill.active{background:#0e1a14;color:var(--accent);border:1px solid rgba(0,255,140,.35)}
+    .muted{color:var(--muted)}
+    .actions-center{text-align:center}
+    .btnrow{display:inline-flex;gap:12px;align-items:center;justify-content:center}
+    .title-green{color:var(--accent)} .title-white{color:#fff}
+  </style>
 </head>
 <body>
-<div class="overlay"></div>
-
-<!-- NAV -->
-<div class="wrap">
-  <div class="nav">
-    <div class="brand">
-      <div class="logo" aria-label="UFO HUB X"></div>
-      <div class="name">Luarmor</div>
+  <div class="container">
+    <!-- โลโก้ -->
+    <div class="center logo-wrap">
+      <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
     </div>
-    <div class="menu">≡</div>
-  </div>
 
-  <!-- CARD -->
-  <div class="card">
-    <div class="inner">
-      <div class="hdr">
-        <div class="ttl"><span class="ufo">UFO</span> <span class="hub">HUB X</span></div>
-      </div>
-
-      <!-- PROGRESS BAR + START/NEXT -->
-      <div class="progressRow">
-        <div>
-          <div class="barMeta">
-            <div>Progress: <b id="progressText">0/2</b></div>
-            <div class="timerPill" id="timer"><span>⏳</span><b>00:00:00</b></div>
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="badge">
+            <span class="title-green">UFO</span>
+            <span class="title-white">HUB X</span>
           </div>
-          <div class="bar"><span id="barFill"></span></div>
+          <button id="startBtn" class="btn small"><span>🟢</span> START</button>
         </div>
-        <button id="startBtn" class="btn"><span>🟢</span> START</button>
+        <div class="card-bd">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="muted">Progress: <b id="progText">0/2</b></div>
+            <div class="muted" id="timer"></div>
+          </div>
+          <div class="progress"><div class="bar" id="bar"></div></div>
+        </div>
       </div>
 
-      <!-- TABLE -->
-      <div class="section">
-        <div class="secHead">
-          <div class="secTitle">Your Keys (max 1)</div>
-          <button id="newKey" class="btn secondary dim">＋ GET A NEW KEY</button>
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="badge" style="background:#111a14;border-color:rgba(0,255,140,.2);color:var(--text)">🔑 Your Keys</div>
+          <button id="newKey" class="btn small"><span>➕</span> GET A NEW KEY</button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Full Key</th>
-              <th>Time Left</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="keysBody">
-            <tr><td colspan="5" style="padding:16px;color:#a6bac1;">No keys yet.</td></tr>
-          </tbody>
-        </table>
+        <div class="card-bd">
+          <table>
+            <thead>
+              <tr>
+                <th>KEY</th>
+                <th>TIME LEFT</th>
+                <th>STATUS</th>
+                <th class="actions-center">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="keyRows"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ========== APP SCRIPT (เชื่อม API จริง) ========== -->
 <script>
+/* =========================
+   CONFIG (แก้ได้)
+========================= */
+const EXTEND_HOURS   = 5;               // +5H ตามที่ต้องการ
+const STEP_SECONDS   = 60;              // ต่อสเต็ป
+const COOLDOWN_MS    = 2*60*1000;       // คูลดาวน์ 2 นาที
+const API_TOKEN      = "";              // ถ้าตั้ง API_TOKEN ใน server.js ให้ใส่ตรงนี้ (จะส่งใน header)
+
+/* API calls */
 const API = {
-  getKey: async () => {
-    const r = await fetch('/api/getkey', {method:'POST', headers:{'content-type':'application/json'}});
-    return r.json();
-  },
-  check: async (key) => {
-    const r = await fetch('/api/check/'+encodeURIComponent(key));
-    return r.json();
-  },
-  extend: async (key, hours=5) => {
-    const r = await fetch('/api/extend/'+encodeURIComponent(key), {
-      method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({hours})
-    });
-    return r.json();
-  }
+  getKey: async () => (await fetch('/api/getkey', { method:'POST' })).json(),
+  check : async (key) => (await fetch('/api/check/' + encodeURIComponent(key))).json(),
+  extend: async (key, hours=EXTEND_HOURS) => (await fetch('/api/extend/' + encodeURIComponent(key),{
+              method:'POST',
+              headers: { 'content-type':'application/json', ...(API_TOKEN?{'x-api-token':API_TOKEN}:{}) },
+              body: JSON.stringify({ hours })
+            })).json()
 };
 
-// ---------- State ----------
+const $ = s => document.querySelector(s);
+
+/* ===== STATE ===== */
 const state = {
-  step: 0,
+  step: 0,                    // 0 -> START, 1 -> NEXT, 2 -> done
   cooldownUntil: 0,
-  item: JSON.parse(localStorage.getItem('ufohubx-item')||'null') // {key, expiresAt}
+  item: loadItem()            // {key, expiresAt}
 };
-const COOLDOWN_MS = 2*60*1000;
+function loadItem(){ try{return JSON.parse(localStorage.getItem('ufo_item')||'null')}catch{return null} }
+function saveItem(){ localStorage.setItem('ufo_item', JSON.stringify(state.item)) }
 
-// ---------- Helpers ----------
-const $ = s=>document.querySelector(s);
-const pad = n=>String(n).padStart(2,'0');
+/* ===== UI helpers ===== */
+function setProgress(done){ $('#progText').textContent = `${done}/2`; $('#bar').style.width = (done/2*100)+'%'; }
 function fmtLeft(ms){
-  if(ms<=0) return 'Expired';
-  const s=Math.floor(ms/1000);
-  const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
-  return `${pad(h)}:${pad(m)}:${pad(ss)}`;
+  if(ms<=0) return "00:00:00";
+  const s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0');
+  const m=String(Math.floor((s%3600)/60)).padStart(2,'0'); const ss=String(s%60).padStart(2,'0');
+  return `${h}:${m}:${ss}`;
 }
 function mask(k){ return k?.length>6 ? k.slice(0,3)+'…'+k.slice(-3) : (k||''); }
-function remainMs(exp){ return Math.max(0, exp - Date.now()); }
-function setProgress(step){
-  state.step = Math.max(0,Math.min(2,step));
-  $('#progressText').textContent = `${state.step}/2`;
-  $('#barFill').style.width = (state.step/2*100)+'%';
-  paintButtons();
-}
+function remainMs(exp){ return Math.max(0, (exp||0) - Date.now()); }
 
-// ---------- Timer for 2 steps ----------
-let tmr=null;
-function runTimer(sec, after){
-  clearInterval(tmr);
+/* ===== START / NEXT ===== */
+let stepTimer=null;
+function runStep(sec,done){
+  clearInterval(stepTimer);
   const end=Date.now()+sec*1000;
-  tmr=setInterval(()=>{
+  stepTimer=setInterval(()=>{
     const left=end-Date.now();
-    $('#timer').innerHTML = `<span>⏳</span><b>${new Date(Math.max(0,left)).toISOString().substr(11,8)}</b>`;
-    if(left<=0){ clearInterval(tmr); after&&after(); }
+    $('#timer').textContent = '⏳ ' + fmtLeft(Math.max(0,left));
+    if(left<=0){ clearInterval(stepTimer); $('#timer').textContent=''; done&&done(); }
   },200);
 }
-
 $('#startBtn').addEventListener('click', ()=>{
-  if(state.step===0){
-    $('#startBtn').innerHTML='⏱️ NEXT';
-    runTimer(60, ()=>setProgress(1));       // 60s
-  }else if(state.step===1){
-    $('#startBtn').innerHTML='✅ DONE';
-    runTimer(60, ()=>{ setProgress(2); $('#startBtn').innerHTML='🟢 START'; });
-  }
+  if(state.step===0){ state.step=1; setProgress(1); $('#startBtn').innerHTML='<span>➡️</span> NEXT';  runStep(STEP_SECONDS, ()=>{}); }
+  else if(state.step===1){ state.step=2; setProgress(2); $('#startBtn').innerHTML='<span>✅</span> DONE'; runStep(STEP_SECONDS, ()=>{ $('#startBtn').innerHTML='<span>🟢</span> START'; }); }
 });
 
-// ---------- Render table ----------
+/* ===== TABLE ===== */
 async function paintTable(){
-  const body = $('#keysBody');
-  body.innerHTML='';
+  const tbody = $('#keyRows'); tbody.innerHTML='';
   if(!state.item){
-    body.innerHTML = `<tr><td colspan="5" style="padding:16px;color:#a6bac1;">No keys yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;padding:26px">No keys yet — click “GET A NEW KEY”.</td></tr>`;
     return;
   }
-  // sync เวลาจริงจาก API
+  // sync expiry จากเซิร์ฟเวอร์
   try{
-    const chk = await API.check(state.item.key);
-    if(chk.ok){
-      state.item.expiresAt = chk.expiresAt;
-      localStorage.setItem('ufohubx-item', JSON.stringify(state.item));
-    }
-  }catch(e){/* เงียบไว้ */}
-  const ms = remainMs(state.item.expiresAt);
+    const r = await API.check(state.item.key);
+    if(r.ok){ state.item.expiresAt = r.expiresAt; saveItem(); }
+  }catch(_){}
 
-  const tr=document.createElement('tr');
+  const ms = remainMs(state.item.expiresAt);
+  const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td class="mono">${mask(state.item.key)}</td>
-    <td class="mono">${state.item.key}</td>
-    <td class="mono" id="leftCell">${fmtLeft(ms)}</td>
-    <td>${ms>0?'<span class="badge ok">ACTIVE</span>':'<span class="badge bad">EXPIRED</span>'}</td>
-    <td class="actions">
-      <button class="btn secondary" id="copyBtn" style="padding:8px 12px">Copy</button>
-      <button class="btn secondary" id="plusBtn" style="padding:8px 12px">+5H</button>
+    <td style="font-weight:700" title="${state.item.key}">${mask(state.item.key)}</td>
+    <td class="muted" id="timeLeft">${fmtLeft(ms)}</td>
+    <td><span class="pill ${ms>0?'active':''}">${ms>0?'ACTIVE':'EXPIRED'}</span></td>
+    <td class="actions-center">
+      <div class="btnrow">
+        <button class="btn small ghost" id="copyBtn">📋 Copy</button>
+        <button class="btn small" id="plusBtn">⏩ +${EXTEND_HOURS}H</button>
+      </div>
     </td>`;
-  body.appendChild(tr);
+  tbody.appendChild(tr);
 
   $('#copyBtn').addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText(state.item.key); $('#copyBtn').textContent='✓ Copied'; setTimeout(()=>$('#copyBtn').textContent='Copy', 900); }catch(_){}
+    try{ await navigator.clipboard.writeText(state.item.key); const b=$('#copyBtn'); const old=b.textContent; b.textContent='✅ Copied'; setTimeout(()=>b.textContent=old,900);}catch(_){}
   });
   $('#plusBtn').addEventListener('click', async ()=>{
-    $('#plusBtn').textContent='…';
+    const b=$('#plusBtn'), old=b.textContent; b.textContent='…';
     try{
-      const r = await API.extend(state.item.key, 5);
-      if(r.ok){
-        state.item.expiresAt = r.expiresAt;
-        localStorage.setItem('ufohubx-item', JSON.stringify(state.item));
-      }
+      const r=await API.extend(state.item.key);
+      if(r.ok){ state.item.expiresAt=r.expiresAt; saveItem(); }
     }catch(_){}
-    $('#plusBtn').textContent='+5H';
+    b.textContent=old;
     paintTable();
   });
 }
 
-function paintButtons(){
-  const btn = $('#newKey');
-  if(state.item){
-    btn.classList.add('dim'); btn.textContent='Only 1 key per user'; return;
-  }
+/* ===== NEW KEY ===== */
+function canClaimNow(){
+  if(Date.now()<state.cooldownUntil) return false;
+  return state.step===2; // ต้องจบ STEP แล้ว
+}
+function updateNewKeyButton(){
+  const btn=$('#newKey');
+  if(state.item){ btn.classList.add('ghost'); btn.disabled=true; btn.innerHTML='Only 1 key per user'; return; }
   if(Date.now()<state.cooldownUntil){
-    btn.classList.add('dim');
-    btn.textContent='Wait ' + fmtLeft(state.cooldownUntil-Date.now());
+    btn.classList.add('ghost'); btn.disabled=true;
+    btn.innerHTML='⏳ Wait '+Math.ceil((state.cooldownUntil-Date.now())/1000)+'s';
     return;
   }
-  if(state.step<2){
-    btn.classList.add('dim'); btn.textContent='Finish START → NEXT first'; return;
-  }
-  btn.classList.remove('dim'); btn.textContent='＋ GET A NEW KEY';
+  if(state.step<2){ btn.classList.add('ghost'); btn.disabled=true; btn.innerHTML='Finish START → NEXT first'; return; }
+  btn.classList.remove('ghost'); btn.disabled=false; btn.innerHTML='<span>➕</span> GET A NEW KEY';
 }
-
-// ---------- Claim ----------
 $('#newKey').addEventListener('click', async ()=>{
-  if($('#newKey').classList.contains('dim')) return;
-
+  if($('#newKey').disabled) return;
   $('#newKey').textContent='…';
   try{
     const r = await API.getKey();
     if(r.ok){
       state.item = { key:r.key, expiresAt:r.expiresAt };
-      localStorage.setItem('ufohubx-item', JSON.stringify(state.item));
-      state.cooldownUntil = Date.now()+COOLDOWN_MS;
-      setProgress(0);
-    }else{
-      alert('Request failed');
+      saveItem();
+      state.cooldownUntil = Date.now() + COOLDOWN_MS;
+      state.step = 0; setProgress(0);
+      $('#startBtn').innerHTML = '<span>🟢</span> START';
+      $('#timer').textContent = '';
     }
-  }catch(e){
-    alert('Network error');
-  }
-  paintButtons(); paintTable();
+  }catch(err){}
+  updateNewKeyButton(); paintTable();
 });
 
-// ---------- Ticking ----------
+/* ===== Tick ===== */
 setInterval(()=>{
   if(state.item){
-    const cell = document.querySelector('#leftCell');
-    if(cell){
-      cell.textContent = fmtLeft(remainMs(state.item.expiresAt));
-    }
+    const el=$('#timeLeft');
+    if(el) el.textContent = fmtLeft(remainMs(state.item.expiresAt));
   }
-  paintButtons();
-}, 1000);
+  updateNewKeyButton();
+},1000);
 
-// ---------- Init ----------
-setProgress(state.step||0);
-paintButtons();
+/* init */
+setProgress(0);
 paintTable();
+updateNewKeyButton();
 </script>
 </body>
 </html>
