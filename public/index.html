@@ -1,8 +1,388 @@
-<img src="/images/logo.png" alt="UFO HUB X" style="width:160px;">
-
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UFO HUB X — Get Key</title>
 <style>
-  body {
-    background: url("/images/bg.png") no-repeat center center fixed;
-    background-size: cover;
+  :root{
+    --bg:#0b0f12;
+    --card:#0f1418CC;
+    --muted:#9fb0b7;
+    --text:#e9f1f3;
+    --accent:#00ff8c;          /* เขียว UFO */
+    --accent-d:#00d977;
+    --danger:#e5484d;
+    --ok:#23d18b;
+    --stroke:#1f2a30;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+    color:var(--text); background:#000;
+    /* พื้นหลังเต็มจอ (จาก Discord) */
+    background-image:url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68caedda&is=68c99c5a&hm=2638f6b576104b88e472c7f13517e8fa83d04ae63b785255a821d5c685daeaf9&");
+    background-size:cover; background-position:center; background-attachment:fixed;
+  }
+  .overlay{position:fixed; inset:0; background:linear-gradient(180deg,#00000066,#00000099)}
+  .wrap{
+    position:relative; z-index:1;
+    min-height:100%;
+    display:grid; place-items:center;
+    padding:24px;
+  }
+  .card{
+    width:min(920px,100%);
+    background:var(--card); backdrop-filter:blur(6px);
+    border:1px solid var(--accent); border-radius:18px;
+    box-shadow:0 10px 30px #0007;
+    padding:20px;
+  }
+  .header{
+    display:flex; align-items:center; gap:14px;
+    padding:6px 10px 14px 10px; border-bottom:1px solid #ffffff1a;
+  }
+  .logo{
+    width:64px; height:64px; border-radius:12px; border:1px solid #00ff8c55;
+    object-fit:cover;
+  }
+  .title{
+    font-weight:900; letter-spacing:.3px; line-height:1.15; font-size:28px;
+  }
+  .title .ufo{color:var(--accent)}
+  .title .hub{color:#fff}
+  .rows{display:grid; gap:16px; margin-top:14px}
+
+  /* Progress area */
+  .progressRow{
+    display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center;
+    background:#0b1013aa; border:1px solid var(--stroke); border-radius:12px; padding:14px;
+  }
+  .barWrap{width:100%}
+  .barMeta{display:flex; justify-content:space-between; font-size:14px; color:var(--muted); margin-bottom:6px}
+  .bar{height:10px; background:#0d2024; border:1px solid #17333a; border-radius:999px; overflow:hidden}
+  .bar>span{display:block; height:100%; width:0%; background:var(--accent); transition:width .25s ease}
+  .timer{font-weight:600; color:#cde6ff}
+  .btn{
+    border:none; border-radius:12px; padding:12px 18px; font-weight:800; cursor:pointer;
+    color:#000; background:var(--accent); transition:transform .06s ease, background .2s ease, opacity .2s;
+    display:inline-flex; gap:10px; align-items:center; justify-content:center;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.dim{opacity:.6; pointer-events:none}
+  .btn.secondary{background:#0e1518; color:#e9f1f3; border:1px solid var(--accent)}
+  .btn.danger{background:var(--danger); color:#fff}
+
+  /* Keys table */
+  .section{background:#0b1013aa; border:1px solid var(--stroke); border-radius:12px; padding:12px}
+  .secHead{
+    display:flex; justify-content:space-between; align-items:center; padding:6px 6px 10px 6px;
+    border-bottom:1px solid #ffffff12; margin-bottom:8px;
+  }
+  .secTitle{font-weight:800; color:#d9e6ea}
+  .table{width:100%; border-collapse:collapse}
+  .table th,.table td{
+    padding:12px 10px; border-bottom:1px solid #ffffff10; text-align:center;
+  }
+  .table th{text-transform:uppercase; letter-spacing:.4px; font-size:12px; color:#9db2b9}
+  .badge{
+    font-weight:800; padding:6px 10px; border-radius:999px; display:inline-block; font-size:12px;
+  }
+  .ok{background:#0c3226; color:#49f3b4; border:1px solid #2ad39a}
+  .bad{background:#34151a; color:#ff8c96; border:1px solid #e45865}
+  .actions{display:flex; justify-content:center; gap:10px}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;}
+
+  /* Mobile */
+  @media (max-width:640px){
+    .title{font-size:22px}
+    .logo{width:52px;height:52px}
+    .progressRow{grid-template-columns:1fr}
+    .secHead{flex-direction:column; gap:10px; align-items:flex-start}
+    .table th:nth-child(2), .table td:nth-child(2){display:none} /* ซ่อนคอลัมน์คีย์เต็มในมือถือ */
   }
 </style>
+</head>
+<body>
+<div class="overlay"></div>
+<div class="wrap">
+  <div class="card">
+    <div class="header">
+      <img class="logo" src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68caed8b&is=68c99c0b&hm=d765fd0dd2ea7abcf19570afee5aee70c89dc0c5c83a337454d4f5a1aa7d0f32&" alt="UFO HUB X">
+      <div class="title">
+        <span class="ufo">UFO</span> <span class="hub">HUB X</span>
+      </div>
+    </div>
+
+    <div class="rows">
+
+      <!-- PROGRESS -->
+      <div class="progressRow">
+        <div class="barWrap">
+          <div class="barMeta">
+            <div>Progress: <b id="progressText">0/2</b></div>
+            <div class="timer" id="timer"></div>
+          </div>
+          <div class="bar"><span id="barFill"></span></div>
+        </div>
+        <button id="startBtn" class="btn"><span>🟢</span> START</button>
+      </div>
+
+      <!-- KEYS -->
+      <div class="section">
+        <div class="secHead">
+          <div class="secTitle">Your Keys (max 1)</div>
+          <button id="newKey" class="btn secondary dim">＋ GET A NEW KEY</button>
+        </div>
+        <div class="tableWrap">
+          <table class="table" id="keysTable">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Full Key</th>
+                <th>Time Left</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="keysBody">
+              <tr><td colspan="5" style="padding:16px;color:#a6bac1;">No keys yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== CONFIG ================== */
+const API_TOKEN = ""; // ถ้าตั้ง API_TOKEN ใน server.js ใส่ที่นี่ จะถูกส่งเป็น x-api-token
+
+/* ================== STATE ================== */
+const state = {
+  step: 0,                        // 0 → 1 → 2 เพื่อปลดล็อก "GET A NEW KEY"
+  key: loadKey(),                 // { value, expiresAt } | null
+  ui: {
+    progressText: document.getElementById('progressText'),
+    barFill: document.getElementById('barFill'),
+    timer: document.getElementById('timer'),
+    startBtn: document.getElementById('startBtn'),
+    newKeyBtn: document.getElementById('newKey'),
+    keysBody: document.getElementById('keysBody'),
+  }
+};
+const HOUR = 3600 * 1000;
+
+/* ================== HELPERS ================== */
+function loadKey(){
+  try { return JSON.parse(localStorage.getItem('uhx-key')||'null'); } catch { return null; }
+}
+function saveKey(k){
+  if (!k) localStorage.removeItem('uhx-key');
+  else localStorage.setItem('uhx-key', JSON.stringify(k));
+}
+function mask(k){ return (k?.length>6) ? k.slice(0,3)+"…"+k.slice(-3) : (k||""); }
+function fmtLeft(ms){
+  if(ms<=0) return "Expired";
+  const s = Math.floor(ms/1000);
+  const d = Math.floor(s/86400);
+  const h = Math.floor((s%86400)/3600);
+  const m = Math.floor((s%3600)/60);
+  const ss= s%60;
+  if(d>0) return `${d}d ${h}h ${m}m`;
+  if(h>0) return `${h}h ${m}m`;
+  return `${m}m ${ss}s`;
+}
+function setProgress(step){
+  state.step = Math.max(0, Math.min(2, step));
+  state.ui.progressText.textContent = `${state.step}/2`;
+  state.ui.barFill.style.width = (state.step/2*100) + '%';
+  updateNewKeyButton();
+}
+
+/* ================== API ================== */
+async function apiGetKey(){
+  const r = await fetch('/api/getkey', { method:'POST' });
+  return r.json();
+}
+async function apiCheck(k){
+  const r = await fetch('/api/check/' + encodeURIComponent(k));
+  return r.json();
+}
+async function apiExtend(k, hours=5){
+  const r = await fetch('/api/extend/' + encodeURIComponent(k), {
+    method:'POST',
+    headers: {
+      'Content-Type':'application/json',
+      ...(API_TOKEN ? {'x-api-token': API_TOKEN} : {})
+    },
+    body: JSON.stringify({ hours: Math.min(5, hours) })
+  });
+  return r.json();
+}
+
+/* ================== UI: Render Keys ================== */
+function paintKeys(){
+  const body = state.ui.keysBody;
+  body.innerHTML = '';
+  const k = state.key;
+
+  if(!k){
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td colspan="5" style="padding:16px;color:#a6bac1;">No keys yet.</td>`;
+    body.appendChild(tr);
+    return;
+  }
+
+  const tr = document.createElement('tr');
+
+  const tdKey = document.createElement('td');
+  tdKey.className='mono'; tdKey.textContent = mask(k.value);
+
+  const tdFull = document.createElement('td');
+  tdFull.className='mono'; tdFull.textContent = k.value;
+
+  const tdLeft = document.createElement('td');
+  tdLeft.id = 'leftTime'; tdLeft.textContent = '—';
+
+  const tdStatus = document.createElement('td');
+  const badge = document.createElement('span');
+  badge.className='badge ok'; badge.textContent='ACTIVE';
+  tdStatus.appendChild(badge);
+
+  const tdAct = document.createElement('td');
+  tdAct.className='actions';
+
+  const bCopy = document.createElement('button');
+  bCopy.className='btn secondary'; bCopy.style.padding='8px 12px'; bCopy.textContent='Copy';
+  bCopy.onclick = async ()=>{
+    try { await navigator.clipboard.writeText(k.value); bCopy.textContent='✓ Copied'; }
+    catch { bCopy.textContent='Copied'; }
+    setTimeout(()=>bCopy.textContent='Copy', 900);
+  };
+
+  const bPlus = document.createElement('button');
+  bPlus.className='btn secondary'; bPlus.style.padding='8px 12px'; bPlus.textContent='+5H';
+  bPlus.onclick = async ()=>{
+    if(!state.key) return;
+    const r = await apiExtend(state.key.value, 5);
+    if(!r.ok){ alert(r.error||'Extend failed'); return; }
+    // เซิร์ฟเวอร์คืน expiresAt ใหม่
+    state.key.expiresAt = r.expiresAt;
+    saveKey(state.key);
+  };
+
+  tdAct.appendChild(bCopy);
+  tdAct.appendChild(bPlus);
+
+  tr.appendChild(tdKey);
+  tr.appendChild(tdFull);
+  tr.appendChild(tdLeft);
+  tr.appendChild(tdStatus);
+  tr.appendChild(tdAct);
+  body.appendChild(tr);
+}
+
+/* ================== Buttons / Flow ================== */
+let stepTimer = null;
+function startStep(ms, onDone){
+  clearInterval(stepTimer);
+  const end = Date.now() + ms;
+  stepTimer = setInterval(()=>{
+    const left = end - Date.now();
+    if(left<=0){
+      clearInterval(stepTimer);
+      state.ui.timer.textContent = '';
+      onDone?.();
+      return;
+    }
+    // แสดงแบบ HH:MM:SS
+    const s = Math.floor(left/1000);
+    const h = String(Math.floor(s/3600)).padStart(2,'0');
+    const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    const ss= String(s%60).padStart(2,'0');
+    state.ui.timer.textContent = `${h}:${m}:${ss}`;
+  }, 250);
+}
+
+document.getElementById('startBtn').addEventListener('click', async ()=>{
+  if(state.step===0){
+    state.ui.startBtn.innerHTML = '<span>⏱️</span> NEXT';
+    startStep(60*1000, ()=> setProgress(1));     // 60 วินาที (ปรับได้)
+  }else if(state.step===1){
+    state.ui.startBtn.innerHTML = '<span>✅</span> DONE';
+    startStep(60*1000, ()=> setProgress(2));
+  }
+});
+
+function updateNewKeyButton(){
+  const b = state.ui.newKeyBtn;
+  if(state.key){
+    b.classList.add('dim');
+    b.textContent = 'Only 1 key per user';
+  }else if(state.step>=2){
+    b.classList.remove('dim');
+    b.textContent = '＋ GET A NEW KEY';
+  }else{
+    b.classList.add('dim');
+    b.textContent = 'Finish START → NEXT first';
+  }
+}
+
+state.ui.newKeyBtn.addEventListener('click', async ()=>{
+  if(state.ui.newKeyBtn.classList.contains('dim')) return;
+  const r = await apiGetKey();
+  if(!r.ok){ alert(r.error||'Get Key failed'); return; }
+
+  // เซิร์ฟเวอร์จะคืนคีย์เดิมถ้ายังไม่หมดอายุ (reused:true)
+  state.key = { value: r.key, expiresAt: r.expiresAt };
+  saveKey(state.key);
+  paintKeys();
+  updateNewKeyButton();
+});
+
+/* ================== Poll / Init ================== */
+async function pollCheck(){
+  if(!state.key) return;
+  const x = await apiCheck(state.key.value).catch(()=>null);
+  const leftEl = document.getElementById('leftTime');
+  if(!x || !x.ok){
+    if(leftEl) leftEl.textContent = '—';
+    return;
+  }
+  // อัปเดตเวลาที่เหลือจริงจากเซิร์ฟเวอร์
+  state.key.expiresAt = x.expiresAt;
+  saveKey(state.key);
+  if(leftEl){
+    const ms = Math.max(0, x.remainingSeconds*1000);
+    leftEl.textContent = fmtLeft(ms);
+  }
+}
+setInterval(pollCheck, 1000);
+
+(async function init(){
+  // ถ้ามีคีย์เก่าใน localStorage ให้ตรวจสถานะจากเซิร์ฟเวอร์
+  if(state.key?.value){
+    const v = await apiCheck(state.key.value).catch(()=>null);
+    if(v && v.ok && v.valid){
+      state.key.expiresAt = v.expiresAt;
+      paintKeys();
+      setProgress(2);               // มีคีย์แล้วถือว่าผ่านขั้นตอน
+    }else{
+      state.key = null;
+      saveKey(null);
+      paintKeys();
+      setProgress(0);
+    }
+  }else{
+    paintKeys();
+    setProgress(0);
+  }
+  updateNewKeyButton();
+})();
+</script>
+</body>
+</html>
