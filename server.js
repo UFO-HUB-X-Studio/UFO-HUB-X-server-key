@@ -70,7 +70,7 @@ function saveJSON(p, obj) {
   }
 }
 
-// issued: { "<KEY>": { usedBy:"<uid>", expiresAt:<unix>, reusable:false } }
+// issued: { "<KEY>": { usedBy:"<uid>", expiresAt:<unix>, reusable:false, place?:string } }
 const issued = loadJSON(ISSUED_FILE, {});
 
 // สุ่ม A-Z0-9
@@ -223,10 +223,14 @@ app.get("/issued", (req, res) => {
 // ----[ADD] 404 handler (API/ไฟล์ที่ไม่มี) ----
 app.use((req, res, next) => {
   // ถ้าเป็นไฟล์ static หาย ให้ส่งหน้า UI กลับ (รองรับ SPA)
-  if (req.method === "GET" && !req.path.startsWith("/getkey") && !req.path.startsWith("/verify") && !req.path.startsWith("/extend") && !req.path.startsWith("/issued")) {
-    try {
-      return res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-    } catch (e) {}
+  if (
+    req.method === "GET" &&
+    !req.path.startsWith("/getkey") &&
+    !req.path.startsWith("/verify") &&
+    !req.path.startsWith("/extend") &&
+    !req.path.startsWith("/issued")
+  ) {
+    try { return res.sendFile(path.join(PUBLIC_DIR, "index.html")); } catch (e) {}
   }
   res.status(404).json({ ok: false, error: "not_found" });
 });
