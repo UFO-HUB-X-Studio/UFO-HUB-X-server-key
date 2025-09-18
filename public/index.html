@@ -12,8 +12,6 @@
   }
   *{box-sizing:border-box}
   body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
-
-  /* พื้นหลัง */
   .bg{position:fixed; inset:0;
     background:
       linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
@@ -21,22 +19,20 @@
     background-size:cover; background-position:center;
   }
 
-  /* ทำหน้าให้ “ยาวขึ้น” */
-  .wrap.pageTall{position:relative;min-height:1600px; /* เดิม 100dvh -> เพิ่มความสูงหน้า */ display:flex;justify-content:center;padding:24px 24px 120px;}
-  .stack{width:min(1100px,100%);display:flex;flex-direction:column;gap:22px} /* ขยายกว้างขึ้น */
+  /* ทำหน้าให้ยาวขึ้นรองรับหลายปุ่ม */
+  .wrap.pageTall{position:relative;min-height:1600px;display:flex;justify-content:center;padding:24px 24px 120px;}
+  .stack{width:min(1100px,100%);display:flex;flex-direction:column;gap:22px}
 
   .hero{display:flex;justify-content:center;margin-top:8px}
-  .logo{
-    width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
-    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)
-  }
+  .logo{width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
+    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)}
   .logo img{width:100%;height:100%;object-fit:cover}
   .brandText{margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px}
   .brandText .ufo{color:#ffffff}
   .brandText .hubx{color:var(--green)}
 
   .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:16px;padding:18px 20px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-  .card--tall{min-height:300px} /* การ์ดคีย์ให้สูงขึ้นรองรับหลายปุ่ม/หลายแถว */
+  .card--tall{min-height:300px}
   .topRow{display:flex;align-items:center;gap:16px}
   .title{font-weight:900}
   .title .ufo{color:#fff}.title .hubx{color:var(--green)}
@@ -49,7 +45,7 @@
 
   .grid{background:#0b172c;border-radius:14px;padding:12px}
   .head{display:grid;grid-template-columns:1fr 200px 130px 1fr;gap:12px;padding:8px 6px;color:var(--muted);font-weight:800}
-  .rows{display:flex;flex-direction:column;gap:10px;max-height:700px; /* ยาวขึ้น */ overflow:visible;} /* ไม่บีบ */
+  .rows{display:flex;flex-direction:column;gap:10px;max-height:700px;overflow:visible;}
   .row{display:grid;grid-template-columns:1fr 200px 130px 1fr;gap:12px;align-items:center; padding:12px;border-radius:12px;background:var(--row)}
   .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,Monaco,monospace}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-weight:900}
@@ -57,21 +53,18 @@
   .keyCell{display:flex;align-items:center;gap:14px}
   .keyIcon{width:40px;height:40px;border-radius:12px;background:#0f1f3a;display:grid;place-items:center;color:#cfe8ff;font-size:18px}
   .timeGreen{color:#19ff7c; font-weight:900}
-  .actWrap{display:flex;gap:8px;flex-wrap:wrap} /* รองรับหลายปุ่ม */
+  .actWrap{display:flex;gap:8px;flex-wrap:wrap}
   .btnIcon{background:#0f1f3a;color:#cfe8ff}
   .btnSmall{padding:9px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-  .newKey{display:flex;justify-content:center;margin:12px 0 4px}
-  .newKey .btn{background:#0f1f3a;color:#dff7ff}
   .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
-  .spacer{height:160px} /* ดันความยาวหน้าลงไปอีก */
+  .spacer{height:160px}
 
-  /* overlay ขณะกำลังรีเฟรช */
+  /* overlay ตอนรีโหลด */
   .overlay { position: fixed; inset: 0; display: none; background: rgba(5,12,20,.75);
     backdrop-filter: blur(2px); align-items: center; justify-content: center; z-index: 9999; color: #dff7ff; font-weight: 900; letter-spacing: .5px; }
   .overlay .box { background: #0f1d34; border: 1px solid rgba(255,255,255,.08);
     padding: 16px 22px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
 
-  /* responsive */
   @media (max-width: 640px){
     .head, .row{grid-template-columns:1fr 140px 110px 1fr}
     .keyIcon{width:36px;height:36px}
@@ -104,7 +97,7 @@
       <div class="muted" id="progressText" style="margin-top:10px">Progress: 0/2</div>
     </div>
 
-    <!-- TABLE (สูงขึ้น + รองรับหลายปุ่ม) -->
+    <!-- TABLE -->
     <div class="card card--tall">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px">
         <div class="title" style="font-size:16px">🔑 Your Key</div>
@@ -115,25 +108,24 @@
         <div class="head"><div>YOUR KEYS (1/6)</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
 
         <div class="rows" id="rows">
-          <!-- แถวจริง (ของเดิม) -->
           <div class="row" id="row" style="display:none">
             <div class="keyCell">
               <div class="keyIcon">🔑</div>
-              <div class="mono keyText" id="keyTxt">UFO-XXXXXXXX-48H</div>
+              <div class="mono" id="keyTxt">UFO-XXXXXXXX-48H</div>
             </div>
-            <div class="mono timeGreen leftText" id="left">--:--:--</div>
+            <div class="mono timeGreen" id="left">--:--:--</div>
             <div><span class="pill active">ACTIVE</span></div>
-            <div class="actWrap">
+            <div class="actWrap" oncontextmenu="return false">
               <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
               <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H</button>
-              <!-- เพิ่มปุ่มได้อีกตามต้องการ — จะขึ้นบรรทัดใหม่อัตโนมัติ -->
+              <!-- [ADD] ปุ่มแชร์ลิ้งก์ UI -->
+              <button class="btnSmall" id="shareBtn" title="Copy UI link">🔗 Share</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- spacer ดันให้ยาวขึ้นอีกนิด -->
     <div class="spacer"></div>
 
     <div class="footer">
@@ -149,7 +141,7 @@
 <div class="overlay" id="overlay"><div class="box">Saving key… reloading</div></div>
 
 <script>
-  /* === logic เดิมทั้งหมด + เพิ่มความยืดหยุ่นให้รองรับหลายแถว/หลายปุ่ม === */
+  /* ===== logic เดิม + เพิ่ม “Share link” & รองรับ deep-link ===== */
   const REQUIRED_STEPS = 2;
   const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
@@ -159,7 +151,7 @@
         LS_LAST_EXP="ufox_last_exp_v1";
   const COOLDOWN_MS = 10*60*1000;
 
-  // override reload -> show overlay, delay
+  // reload overlay
   (function(){
     const orig = location.reload.bind(location);
     location.reload = function(){
@@ -178,19 +170,19 @@
   let uid = localStorage.getItem(LS_UID);
   if (!uid) { uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase(); localStorage.setItem(LS_UID, uid); }
 
-  // DOM (อิงแถวหลักของเดิม)
+  // DOM
   const bar = document.getElementById("bar");
   const stepBtn = document.getElementById("stepBtn");
   const progressText = document.getElementById("progressText");
   const newBtn = document.getElementById("newBtn");
   const row = document.getElementById("row");
-  const rows = document.getElementById("rows");
   const keyTxt = document.getElementById("keyTxt");
   const leftEl = document.getElementById("left");
   const copyBtn = document.getElementById("copyBtn");
   const extBtn = document.getElementById("extBtn");
+  const shareBtn = document.getElementById("shareBtn");
 
-  // helpers storage
+  // storage helpers
   const readSteps=()=>Math.max(0,Math.min(REQUIRED_STEPS, parseInt(localStorage.getItem(LS_STEPS)||"0",10)||0));
   const writeSteps=(n)=>localStorage.setItem(LS_STEPS,String(Math.max(0,Math.min(REQUIRED_STEPS,n))));
   const getCD=()=>parseInt(localStorage.getItem(LS_CD)||"0",10)||0;
@@ -293,15 +285,55 @@
       if(j && j.ok && j.expires_at){
         setCurrent({ key: current.key, expires_at: j.expires_at });
         saveLast(current.key, j.expires_at);
+        updateShareBtn(); // อัปเดตลิ้งก์แชร์ให้หมดอายุใหม่
       }
     }catch(e){ alert("Extend failed"); }
   });
+
+  /* ---------- [ADD] SHARE LINK ---------- */
+  function makeShareUrl(key, exp){
+    const base = location.origin + location.pathname;
+    return `${base}#k=${encodeURIComponent(key)}&e=${encodeURIComponent(exp)}`;
+  }
+  function updateShareBtn(){
+    if(!current) { shareBtn.disabled = true; return; }
+    shareBtn.disabled = false;
+    shareBtn.onclick = async () => {
+      const url = makeShareUrl(current.key, current.expires_at|0);
+      try{
+        await navigator.clipboard?.writeText(url);
+        shareBtn.textContent = "✅ Copied Link";
+        setTimeout(()=>shareBtn.textContent="🔗 Share", 1200);
+      }catch(e){
+        alert(url); // กันกรณี clipboard ใช้ไม่ได้
+      }
+    };
+  }
 
   // กู้คืนคีย์ล่าสุดหลังรีเฟรช
   (function(){
     const { key, exp } = loadLast();
     const nowU = Math.floor(Date.now()/1000);
-    if (key && exp && exp > nowU) setCurrent({ key, expires_at: exp });
+    if (key && exp && exp > nowU) {
+      setCurrent({ key, expires_at: exp });
+      updateShareBtn();
+    }
+  })();
+
+  // รองรับ deep-link: #k=...&e=... หรือ ?k=&e=
+  (function deepLinkRead(){
+    const href = new URL(location.href);
+    const hash = new URLSearchParams((href.hash||"").replace(/^#/, ""));
+    let k = hash.get("k"), e = parseInt(hash.get("e")||"0",10);
+    if(!k){
+      k = href.searchParams.get("k");
+      e = parseInt(href.searchParams.get("e")||"0",10);
+    }
+    if (k && e && e > Math.floor(Date.now()/1000)){
+      setCurrent({key:k, expires_at:e});
+      saveLast(k, e);
+      updateShareBtn();
+    }
   })();
 
   // get a new key
@@ -315,19 +347,17 @@
       if(j && j.ok && j.key){
         setCurrent({ key:j.key, expires_at:j.expires_at });
         saveLast(j.key, j.expires_at);
+        updateShareBtn();
+
+        // ล็อก DONE + คูลดาวน์ NEW 10 นาที
         setDone(COOLDOWN_MS);
         setCD(COOLDOWN_MS);
         steps = REQUIRED_STEPS; writeSteps(steps);
+
         location.reload();
       }
     }catch(e){ alert("Get key failed"); }
   });
-
-  /* ====== (พร้อมสำหรับหลายคีย์ในอนาคต) ======
-     ถ้าคุณอยากใส่หลายแถว ก็ clone #row เพิ่มแบบนี้:
-     const clone = row.cloneNode(true); clone.style.display="grid"; rows.appendChild(clone);
-     แล้วผูก event / ข้อมูลของแถวใหม่ตามต้องการ
-  ================================================= */
 </script>
 </body>
 </html>
