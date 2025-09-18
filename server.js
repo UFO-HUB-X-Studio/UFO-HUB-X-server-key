@@ -18,6 +18,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ===== NEW: เสิร์ฟไฟล์หน้าเว็บจากโฟลเดอร์ public =====
+app.use(express.static(path.join(__dirname, "public")));
+
 // ---------- helpers ----------
 function loadJSON(p, fallback) {
   try {
@@ -79,8 +82,10 @@ function generateUniqueKey() {
 }
 
 // ---------- routes ----------
+
+// ===== NEW: root "/" ส่งหน้าเว็บ =====
 app.get("/", (req, res) => {
-  res.json({ ok: true, service: "UFO-HUB-X key server", time: Date.now() });
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // แจกคีย์: /getkey?uid=...&place=...
