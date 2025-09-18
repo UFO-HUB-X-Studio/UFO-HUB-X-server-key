@@ -3,132 +3,149 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>UFO HUB X — Key Center</title>
+<title>UFO HUB X — Get Key</title>
 <style>
   :root{
-    --bg:#0b1220; --card:#111a2e; --card2:#0f1729; --text:#e7eefc;
-    --muted:#a8b3cf; --accent:#02e3aa; --danger:#ff5a70; --white:#ffffff;
-    --green:#02e3aa;
+    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;
+    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:#000;color:var(--text);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
   .bg{
     position:fixed; inset:0;
     background:
-      linear-gradient(0deg, rgba(11,18,32,.92), rgba(11,18,32,.78)),
+      linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
       url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
     background-size:cover; background-position:center;
-    filter:saturate(1) contrast(1.05);
   }
-  .wrap{position:relative;min-height:100dvh;display:flex;align-items:flex-start;justify-content:center;padding:22px}
-  .panel{width:min(880px,100%);background:linear-gradient(180deg,var(--card),var(--card2));border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px 20px}
-  .row{display:flex;gap:16px;align-items:center;justify-content:space-between}
-  .brand{display:flex;align-items:center;gap:12px}
-  .avatar{width:44px;height:44px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.12)}
-  .brand-name{font-weight:900;font-size:22px;letter-spacing:.3px}
-  .ufo{color:var(--white)}
-  .hubx{color:var(--green)}
-  .progress{flex:1;height:10px;background:#0b1220;border-radius:999px;position:relative;margin:0 16px}
-  .bar{position:absolute;inset:0;height:100%;width:0;background:linear-gradient(90deg,#26ffb9,#76ffd9);border-radius:999px;transition:width .25s ease}
-  .btn{border:0;border-radius:12px;padding:10px 16px;background:#1b2a4a;color:var(--text);cursor:pointer;font-weight:800}
-  .btn:hover{filter:brightness(1.05)}
-  .btn-acc{background:linear-gradient(90deg,#12f3b3,#62ffd5);color:#052519}
-  .grid{margin-top:14px;background:#0e1528;border-radius:14px;padding:14px}
-  .gridhead{display:grid;grid-template-columns:1fr 160px 120px 150px;gap:12px;padding:10px 12px;color:var(--muted);font-weight:700}
-  .item{display:grid;grid-template-columns:1fr 160px 120px 150px;gap:12px;align-items:center;padding:12px;border-radius:12px;background:#0f1a2f}
-  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-weight:800}
-  .pill.active{background:rgba(2,227,170,.12);color:var(--accent)}
-  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}
+  .stack{width:min(980px,100%);display:flex;flex-direction:column;gap:18px}
+
+  .hero{display:flex;justify-content:center;margin-top:8px}
+  .logo{
+    width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
+    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)
+  }
+  .logo img{width:100%;height:100%;object-fit:cover}
+  .brandText{
+    margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px
+  }
+  .brandText .ufo{color:#ffffff}
+  .brandText .hubx{color:var(--green)}
+
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));
+        border-radius:16px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  .topRow{display:flex;align-items:center;gap:16px}
+  .title{font-weight:900}
+  .title .ufo{color:#fff}.title .hubx{color:var(--green)}
+  .progressWrap{flex:1;background:#0a1324;height:9px;border-radius:999px;position:relative;margin:0 16px}
+  .bar{position:absolute;inset:0;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#28ffbf,#70ffe0);transition:width .25s}
+  .btn{border:0;border-radius:12px;background:linear-gradient(90deg,#12f3b3,#62ffd5);color:#05251a;
+       padding:10px 16px;font-weight:900;cursor:pointer}
   .muted{color:var(--muted)}
-  .small{font-size:13px}
-  .footer{display:flex;gap:10px;justify-content:center;color:var(--muted);margin-top:14px}
-  .copy{background:#0e1b34}
-  .extend{background:#133c2f}
-  .newkey{display:flex;justify-content:center;margin-top:14px}
-  .newkey .btn{background:#0e1b34}
+
+  .grid{background:#0b172c;border-radius:14px;padding:10px 12px}
+  .head{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;padding:8px 6px;color:var(--muted);font-weight:800}
+  .row{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;align-items:center;
+       padding:12px;border-radius:12px;background:#0d1a31}
+  .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,Monaco,monospace}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-weight:800}
+  .pill.active{background:rgba(2,227,170,.12);color:var(--green)}
+  .btnIcon{background:#0f1f3a;color:#cfe8ff}
+  .btnSmall{padding:8px 10px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+  .newKey{display:flex;justify-content:center;margin:12px 0 4px}
+  .newKey .btn{background:#0f1f3a;color:#dff7ff}
+  .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="bg"></div>
+
 <div class="wrap">
-  <div class="panel">
-    <div class="row">
-      <div class="brand">
-        <img class="avatar" src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cce7cb&is=68cb964b&hm=9050a00523563e88eda267b4271a00ce2024663aae62078987e4401f5e7ce354&" alt="avatar">
-        <div>
-          <div class="brand-name"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
-          <div class="small muted" id="progressText">Progress: 0/2</div>
+  <div class="stack">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div>
+        <div class="logo">
+          <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cce7cb&is=68cb964b&hm=9050a00523563e88eda267b4271a00ce2024663aae62078987e4401f5e7ce354&" alt="logo"/>
         </div>
+        <div class="brandText"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
       </div>
-      <div class="progress"><div class="bar" id="bar"></div></div>
-      <button class="btn btn-acc" id="stepBtn">START</button>
     </div>
 
-    <div class="grid">
-      <div class="gridhead">
-        <div>YOUR KEYS</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
+    <!-- PROGRESS + START/NEXT -->
+    <div class="card">
+      <div class="topRow">
+        <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
+        <div class="progressWrap"><div class="bar" id="bar"></div></div>
+        <button class="btn" id="stepBtn">START</button>
       </div>
+      <div class="muted" id="progressText" style="margin-top:10px">Progress: 0/2</div>
+    </div>
 
-      <div class="item" id="row" style="display:none">
-        <div>
-          <button class="btn copy small" id="copyBtn">📋 Copy</button>
-          <span class="mono" id="keyTxt">UFO-xxxxxxxx-48H</span>
-        </div>
-        <div class="mono" id="left">--:--:--</div>
-        <div><span class="pill active" id="status">ACTIVE</span></div>
-        <div>
-          <button class="btn extend small" id="extBtn">⏳ +48H</button>
-        </div>
-      </div>
-
-      <div class="newkey">
+    <!-- KEY TABLE -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="title" style="font-size:16px">🔑 Your Key</div>
         <button class="btn" id="newBtn" disabled>＋ GET A NEW KEY</button>
       </div>
+
+      <div class="grid">
+        <div class="head"><div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
+
+        <div class="row" id="row" style="display:none">
+          <div class="mono" id="keyTxt">UFO-XXXXXXXX-48H</div>
+          <div class="mono" id="left">--:--:--</div>
+          <div><span class="pill active">ACTIVE</span></div>
+          <div style="display:flex;gap:8px">
+            <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
+            <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H ➜</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="footer small">
-      <a class="muted" id="discord" href="#" target="_blank">Join Discord</a>
+    <div class="footer">
+      <a class="muted" href="https://discord.gg/your-server" target="_blank">Join Discord</a>
       <span>·</span>
-      <span class="muted">Complete 2 steps to unlock your key.</span>
+      <span class="muted">Complete 2 steps, then get your key.</span>
     </div>
+
   </div>
 </div>
 
 <script>
-  // ====== CONFIG ที่คุณปรับได้ ======
-  const DISCORD_URL = "https://discord.gg/your-server"; // เปลี่ยนได้
-  const REQUIRED_STEPS = 2;                               // ต้องทำ 2 ครั้งตามที่ขอ
-  const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW"; // ลิงก์ที่ให้ไว้
-
-  document.getElementById("discord").href = DISCORD_URL;
-
-  // ใช้ uid/place แบบง่าย (ฝั่ง Roblox จะถูกแทนด้วยค่าเกมจริง)
+  // ===== CONFIG =====
+  const REQUIRED_STEPS = 2; // ต้องกด 2 ครั้ง
+  const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const uid   = Math.floor(Math.random()*1e9).toString();
   const place = "web";
 
-  const row    = document.getElementById("row");
+  // ===== EL =====
+  const bar = document.getElementById("bar");
+  const stepBtn = document.getElementById("stepBtn");
+  const progressText = document.getElementById("progressText");
+  const newBtn = document.getElementById("newBtn");
+  const row = document.getElementById("row");
   const keyTxt = document.getElementById("keyTxt");
   const leftEl = document.getElementById("left");
-  const bar    = document.getElementById("bar");
-  const progressText = document.getElementById("progressText");
-  const copyBtn= document.getElementById("copyBtn");
+  const copyBtn = document.getElementById("copyBtn");
   const extBtn = document.getElementById("extBtn");
-  const newBtn = document.getElementById("newBtn");
-  const stepBtn= document.getElementById("stepBtn");
 
-  let current = null; // { key, expires_at }
-  let steps   = 0;
+  let steps = 0;
+  let current = null; // {key, expires_at}
 
   function updateStepsUI(){
-    const pct = Math.min(100, steps / REQUIRED_STEPS * 100);
+    const pct = Math.min(100, steps/REQUIRED_STEPS*100);
     bar.style.width = pct + "%";
     progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
-    if (steps >= REQUIRED_STEPS){
+    if(steps >= REQUIRED_STEPS){
       stepBtn.textContent = "DONE";
       stepBtn.disabled = true;
-      newBtn.disabled = false;             // ปลดล็อกให้กดรับคีย์
-    } else {
-      stepBtn.textContent = (steps === 0 ? "START" : "NEXT");
+      newBtn.disabled = false;
+    }else{
+      stepBtn.textContent = (steps===0 ? "START" : "NEXT");
       stepBtn.disabled = false;
       newBtn.disabled = true;
     }
@@ -136,19 +153,14 @@
   updateStepsUI();
 
   stepBtn.addEventListener("click", ()=>{
-    // เปิดลิงก์ในแท็บใหม่ทุกครั้งที่กด
     window.open(OUT_LINK, "_blank");
-    steps = Math.min(REQUIRED_STEPS, steps + 1);
+    steps = Math.min(REQUIRED_STEPS, steps+1);
     updateStepsUI();
   });
 
-  async function api(url){
-    const r = await fetch(url);
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    return await r.json();
-  }
+  async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
 
-  function fmtLeft(sec){
+  function fmt(sec){
     sec = Math.max(0, sec|0);
     const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
@@ -162,8 +174,7 @@
   function tick(){
     if(!current) return;
     const now = Math.floor(Date.now()/1000);
-    const left = Math.max(0, (current.expires_at|0) - now);
-    leftEl.textContent = fmtLeft(left);
+    leftEl.textContent = fmt((current.expires_at|0) - now);
   }
   setInterval(tick, 1000);
 
@@ -171,7 +182,7 @@
     if(!current) return;
     navigator.clipboard?.writeText(current.key);
     copyBtn.textContent = "✅ Copied";
-    setTimeout(()=> copyBtn.textContent = "📋 Copy", 1200);
+    setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
   });
 
   extBtn.addEventListener("click", async ()=>{
@@ -179,18 +190,16 @@
     try{
       const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
       if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); }
-    }catch(e){ console.error(e); alert("Extend failed"); }
+    }catch(e){ alert("Extend failed"); }
   });
 
   newBtn.addEventListener("click", async ()=>{
-    if(steps < REQUIRED_STEPS) return; // กันพลาด
+    if(steps < REQUIRED_STEPS) return;
     try{
       const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
-      if(j && j.ok && j.key){ setCurrent({key: j.key, expires_at: j.expires_at}); }
-    }catch(e){ console.error(e); alert("Get key failed"); }
+      if(j && j.ok && j.key){ setCurrent({key:j.key, expires_at:j.expires_at}); }
+    }catch(e){ alert("Get key failed"); }
   });
-
-  // ไม่แจกคีย์อัตโนมัติ จนกว่าจะครบ 2 ขั้นตอน (ตามที่ขอ)
 </script>
 </body>
 </html>
