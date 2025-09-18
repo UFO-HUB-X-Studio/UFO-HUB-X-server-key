@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>UFO-HUB-X Key Server</title>
+  <link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="/logo.png" alt="UFO HUB X" class="logo"/>
+      <h1>UFO-HUB-X Key Server</h1>
+      <p class="muted">Generate & verify 48H keys</p>
+    </header>
+
+    <section class="card">
+      <h2>Get your key</h2>
+      <div class="row">
+        <div class="col">
+          <label>UserId (uid)</label>
+          <input id="uid" placeholder="Your Roblox userId (optional)"/>
+        </div>
+        <div class="col">
+          <label>PlaceId (place)</label>
+          <input id="place" placeholder="Game PlaceId (optional)"/>
+        </div>
+      </div>
+
+      <button id="btnGet">🔐 Get Key</button>
+
+      <div id="result" class="result hide">
+        <p><b>Key:</b> <span id="keyText">-</span></p>
+        <p><b>Expires:</b> <span id="expText">-</span></p>
+        <div class="actions">
+          <button id="btnCopy">Copy Key</button>
+          <a id="verifyLink" href="#" target="_blank">Open Verify</a>
+        </div>
+        <p class="muted small">
+          Keep your key safe. It will expire in 48 hours unless your server config says otherwise.
+        </p>
+      </div>
+    </section>
+
+    <section class="links">
+      <a class="discord" href="https://discord.gg/your-server" target="_blank">💬 Join our Discord</a>
+      <a class="muted" href="https://ufo-hub-x-key-umoq.onrender.com/issued" target="_blank">Admin: issued (debug)</a>
+    </section>
+  </div>
+
+  <script>
+    const btnGet   = document.getElementById('btnGet');
+    const btnCopy  = document.getElementById('btnCopy');
+    const keyText  = document.getElementById('keyText');
+    const expText  = document.getElementById('expText');
+    const verifyLink = document.getElementById('verifyLink');
+    const resultEl = document.getElementById('result');
+
+    function tsToLocal(ts){
+      try {
+        const d = new Date(ts*1000);
+        return d.toLocaleString();
+      } catch(e){ return String(ts); }
+    }
+
+    btnGet.addEventListener('click', async () => {
+      const uid   = encodeURIComponent(document.getElementById('uid').value || "");
+      const place = encodeURIComponent(document.getElementById('place').value || "");
+
+      btnGet.disabled = true;
+      btnGet.textContent = 'Working...';
+
+      try {
+        const u = `/getkey?uid=${uid}&place=${place}`;
+        const r = await fetch(u);
+        const j = await r.json();
+
+        if (j && j.ok && j.key) {
+          keyText.textContent = j.key;
+          expText.textContent = j.expires_at ? tsToLocal(j.expires_at) : 'unknown';
+          verifyLink.href = `/verify?key=${encodeURIComponent(j.key)}&uid=${uid}&place=${place}`;
+          resultEl.classList.remove('hide');
+        } else {
+          alert('No key returned (out_of_stock or server error).');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Request failed. Try again later.');
+      } finally {
+        btnGet.disabled = false;
+        btnGet.textContent = '🔐 Get Key';
+      }
+    });
+
+    btnCopy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(keyText.textContent);
+        btnCopy.textContent = 'Copied!';
+        setTimeout(()=> btnCopy.textContent='Copy Key', 1200);
+      } catch(e){
+        alert('Copy failed, select text manually.');
+      }
+    });
+  </script>
+</body>
+</html>
