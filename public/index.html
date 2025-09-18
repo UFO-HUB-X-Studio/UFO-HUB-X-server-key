@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>UFO HUB X — Get Key</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>UFO HUB X — Get Key + Key UI</title>
 <style>
   :root{
     --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;
@@ -11,45 +11,56 @@
     --accent:#12f3b3; --accent2:#62ffd5; --row:#0d1a31; --chip:#113222;
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
 
-  /* พื้นหลัง */
+  /* BG */
   .bg{position:fixed; inset:0;
     background:
       linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
-      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
+      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png');
     background-size:cover; background-position:center;
   }
 
-  /* ทำหน้าให้ “ยาวขึ้น” */
-  .wrap.pageTall{position:relative;min-height:1600px; /* เดิม 100dvh -> เพิ่มความสูงหน้า */ display:flex;justify-content:center;padding:24px 24px 120px;}
-  .stack{width:min(1100px,100%);display:flex;flex-direction:column;gap:22px} /* ขยายกว้างขึ้น */
+  /* Layout */
+  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px 24px 120px}
+  .stack{width:min(1100px,100%);display:flex;flex-direction:column;gap:22px}
 
+  /* Tabs */
+  .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+  .tab{padding:10px 14px;border-radius:12px;border:1px solid #1a2b4f;background:#0d1a31;color:#cfe8ff;cursor:pointer;font-weight:900}
+  .tab.active{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#05251a; border-color:transparent}
+
+  .section{display:none}
+  .section.active{display:block}
+
+  /* HERO */
   .hero{display:flex;justify-content:center;margin-top:8px}
-  .logo{
-    width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
-    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)
-  }
+  .logo{width:260px;height:260px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
+        background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)}
   .logo img{width:100%;height:100%;object-fit:cover}
   .brandText{margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px}
   .brandText .ufo{color:#ffffff}
   .brandText .hubx{color:var(--green)}
 
+  /* Card/Buttons/Common */
   .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:16px;padding:18px 20px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-  .card--tall{min-height:300px} /* การ์ดคีย์ให้สูงขึ้นรองรับหลายปุ่ม/หลายแถว */
-  .topRow{display:flex;align-items:center;gap:16px}
   .title{font-weight:900}
   .title .ufo{color:#fff}.title .hubx{color:var(--green)}
-  .progressWrap{flex:1;background:#0a1324;height:10px;border-radius:999px;position:relative;margin:0 16px}
-  .bar{position:absolute;inset:0;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#28ffbf,#70ffe0);transition:width .25s}
   .btn{border:0;border-radius:12px;background:linear-gradient(90deg,#12f3b3,#62ffd5);color:#05251a;
        padding:10px 16px;font-weight:900;cursor:pointer}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .muted{color:var(--muted)}
 
+  /* Progress area */
+  .topRow{display:flex;align-items:center;gap:16px}
+  .progressWrap{flex:1;background:#0a1324;height:10px;border-radius:999px;position:relative;margin:0 16px}
+  .bar{position:absolute;inset:0;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#28ffbf,#70ffe0);transition:width .25s}
+
+  /* Table/Rows */
   .grid{background:#0b172c;border-radius:14px;padding:12px}
   .head{display:grid;grid-template-columns:1fr 200px 130px 1fr;gap:12px;padding:8px 6px;color:var(--muted);font-weight:800}
-  .rows{display:flex;flex-direction:column;gap:10px;max-height:700px; /* ยาวขึ้น */ overflow:visible;} /* ไม่บีบ */
+  .rows{display:flex;flex-direction:column;gap:10px;max-height:700px;overflow:visible}
   .row{display:grid;grid-template-columns:1fr 200px 130px 1fr;gap:12px;align-items:center; padding:12px;border-radius:12px;background:var(--row)}
   .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,Monaco,monospace}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-weight:900}
@@ -57,277 +68,404 @@
   .keyCell{display:flex;align-items:center;gap:14px}
   .keyIcon{width:40px;height:40px;border-radius:12px;background:#0f1f3a;display:grid;place-items:center;color:#cfe8ff;font-size:18px}
   .timeGreen{color:#19ff7c; font-weight:900}
-  .actWrap{display:flex;gap:8px;flex-wrap:wrap} /* รองรับหลายปุ่ม */
+  .actWrap{display:flex;gap:8px;flex-wrap:wrap}
   .btnIcon{background:#0f1f3a;color:#cfe8ff}
   .btnSmall{padding:9px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-  .newKey{display:flex;justify-content:center;margin:12px 0 4px}
-  .newKey .btn{background:#0f1f3a;color:#dff7ff}
-  .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
-  .spacer{height:160px} /* ดันความยาวหน้าลงไปอีก */
 
-  /* overlay ขณะกำลังรีเฟรช */
-  .overlay { position: fixed; inset: 0; display: none; background: rgba(5,12,20,.75);
-    backdrop-filter: blur(2px); align-items: center; justify-content: center; z-index: 9999; color: #dff7ff; font-weight: 900; letter-spacing: .5px; }
-  .overlay .box { background: #0f1d34; border: 1px solid rgba(255,255,255,.08);
-    padding: 16px 22px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+  /* Admin (Key UI) */
+  .container{max-width:860px;margin:0 auto;padding:0}
+  .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logoMini{width:34px;height:34px;border-radius:8px;background:#2b2b2b}
+  h1{font-size:18px;letter-spacing:.2px;margin:0;color:var(--accent)}
+  .pillStat{font-size:14px;padding:6px 10px;border-radius:999px;background:#1a1a1a;border:1px solid #0f4130;color:#cdebdc}
+  .adminCard .rowAdmin{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin:10px 0}
+  .adminCard label{opacity:.85}
+  .adminCard input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #2c2c2c;background:#1b1b1b;color:var(--text);outline:none}
+  .adminCard input:focus{border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,255,140,.12)}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+  .out{margin-top:12px;padding:12px;background:#0f0f0f;border-radius:12px;border:1px solid #242424;white-space:pre-wrap;word-break:break-word;min-height:80px}
 
-  /* responsive */
+  /* Footer */
+  .footer{margin:18px 6px; opacity:.85; display:flex; gap:10px; justify-content:center}
+
+  /* Overlay */
+  .overlay{position:fixed;inset:0;display:none;background:rgba(5,12,20,.75);backdrop-filter:blur(2px);
+           align-items:center;justify-content:center;z-index:9999;color:#dff7ff;font-weight:900;letter-spacing:.5px}
+  .overlay .box{background:#0f1d34;border:1px solid rgba(255,255,255,.08);padding:16px 22px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+
+  /* Responsive */
   @media (max-width: 640px){
     .head, .row{grid-template-columns:1fr 140px 110px 1fr}
     .keyIcon{width:36px;height:36px}
+    .adminCard .rowAdmin{grid-template-columns:1fr;gap:6px}
   }
 </style>
 </head>
 <body>
 <div class="bg"></div>
 
-<div class="wrap pageTall">
+<div class="wrap">
   <div class="stack">
 
-    <!-- HERO -->
-    <div class="hero">
-      <div>
-        <div class="logo">
-          <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cce7cb&is=68cb964b&hm=9050a00523563e88eda267b4271a00ce2024663aae62078987e4401f5e7ce354&" alt="logo"/>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="getkey">🔑 Get Key</button>
+      <button class="tab" data-tab="keyui">🧰 Key UI (Admin)</button>
+    </div>
+
+    <!-- ============ SECTION: GET KEY (หน้าโปรโมท/รับคีย์) ============ -->
+    <section id="getkey" class="section active">
+      <!-- HERO -->
+      <div class="hero">
+        <div>
+          <div class="logo">
+            <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png" alt="logo"/>
+          </div>
+          <div class="brandText"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
         </div>
-        <div class="brandText"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
-      </div>
-    </div>
-
-    <!-- PROGRESS -->
-    <div class="card">
-      <div class="topRow">
-        <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
-        <div class="progressWrap"><div class="bar" id="bar"></div></div>
-        <button class="btn" id="stepBtn">START</button>
-      </div>
-      <div class="muted" id="progressText" style="margin-top:10px">Progress: 0/2</div>
-    </div>
-
-    <!-- TABLE (สูงขึ้น + รองรับหลายปุ่ม) -->
-    <div class="card card--tall">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px">
-        <div class="title" style="font-size:16px">🔑 Your Key</div>
-        <button class="btn" id="newBtn" disabled>＋ GET A NEW KEY</button>
       </div>
 
-      <div class="grid">
-        <div class="head"><div>YOUR KEYS (1/6)</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
+      <!-- PROGRESS -->
+      <div class="card">
+        <div class="topRow">
+          <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
+          <div class="progressWrap"><div class="bar" id="bar"></div></div>
+          <button class="btn" id="stepBtn">START</button>
+        </div>
+        <div class="muted" id="progressText" style="margin-top:10px">Progress: 0/2</div>
+      </div>
 
-        <div class="rows" id="rows">
-          <!-- แถวจริง (ของเดิม) -->
-          <div class="row" id="row" style="display:none">
-            <div class="keyCell">
-              <div class="keyIcon">🔑</div>
-              <div class="mono keyText" id="keyTxt">UFO-XXXXXXXX-48H</div>
-            </div>
-            <div class="mono timeGreen leftText" id="left">--:--:--</div>
-            <div><span class="pill active">ACTIVE</span></div>
-            <div class="actWrap">
-              <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
-              <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H</button>
-              <!-- เพิ่มปุ่มได้อีกตามต้องการ — จะขึ้นบรรทัดใหม่อัตโนมัติ -->
+      <!-- TABLE -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px">
+          <div class="title" style="font-size:16px">🔑 Your Key</div>
+          <button class="btn" id="newBtn" disabled>＋ GET A NEW KEY</button>
+        </div>
+
+        <div class="grid">
+          <div class="head"><div>YOUR KEYS (1/6)</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
+
+          <div class="rows" id="rows">
+            <div class="row" id="row" style="display:none">
+              <div class="keyCell">
+                <div class="keyIcon">🔑</div>
+                <div class="mono keyText" id="keyTxt">UFO-XXXXXXXX-48H</div>
+              </div>
+              <div class="mono timeGreen leftText" id="left">--:--:--</div>
+              <div><span class="pill active">ACTIVE</span></div>
+              <div class="actWrap">
+                <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
+                <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- spacer ดันให้ยาวขึ้นอีกนิด -->
-    <div class="spacer"></div>
+      <div class="footer">
+        <a class="muted" href="https://discord.gg/your-server" target="_blank" rel="noreferrer">Join Discord</a>
+        <span>·</span>
+        <span class="muted">Complete 2 steps, then get your key.</span>
+      </div>
+    </section>
 
-    <div class="footer">
-      <a class="muted" href="https://discord.gg/your-server" target="_blank">Join Discord</a>
-      <span>·</span>
-      <span class="muted">Complete 2 steps, then get your key.</span>
-    </div>
+    <!-- ============ SECTION: KEY UI (Admin / ทดสอบ API) ============ -->
+    <section id="keyui" class="section">
+      <div class="container">
+        <header class="header">
+          <div class="brand">
+            <div class="logoMini"></div>
+            <h1>UFO HUB X — KEY</h1>
+          </div>
+          <span id="statusPill" class="pillStat">• checking…</span>
+        </header>
+
+        <section class="card adminCard">
+          <div class="rowAdmin">
+            <label>User ID</label>
+            <input id="admin-uid" placeholder="94867612664"/>
+          </div>
+          <div class="rowAdmin">
+            <label>Place ID</label>
+            <input id="admin-place" placeholder="6252985844"/>
+          </div>
+          <div class="rowAdmin">
+            <label>Key</label>
+            <input id="admin-key" placeholder="UFO-XXXX-YYYY"/>
+          </div>
+
+          <div class="btns">
+            <button id="btnGetKey">🔐 Get Key</button>
+            <button id="btnVerify">✅ Verify</button>
+            <button id="btnCopyApi">🔗 Copy API</button>
+          </div>
+
+          <pre id="out" class="out"></pre>
+        </section>
+
+        <div class="footer">
+          <a href="#" id="openDiscord">Join Discord</a>
+        </div>
+      </div>
+    </section>
 
   </div>
 </div>
 
-<!-- overlay -->
+<!-- Overlay (สำหรับ reload แบบนุ่ม) -->
 <div class="overlay" id="overlay"><div class="box">Saving key… reloading</div></div>
 
 <script>
-  /* === logic เดิมทั้งหมด + เพิ่มความยืดหยุ่นให้รองรับหลายแถว/หลายปุ่ม === */
-  const REQUIRED_STEPS = 2;
-  const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+/* ==========================
+   Utilities & Constants
+========================== */
+const REQUIRED_STEPS = 2;
+const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
-  const LS_UID="ufox_uid_v1", LS_STEPS="ufox_steps_v1",
-        LS_CD="ufox_cooldown_until_v1", LS_DONE="ufox_done_lock_until_v1",
-        LS_RELOADED="ufox_reloaded_once_v1", LS_LAST_KEY="ufox_last_key_v1",
-        LS_LAST_EXP="ufox_last_exp_v1";
-  const COOLDOWN_MS = 10*60*1000;
+const LS_UID="ufox_uid_v1", LS_STEPS="ufox_steps_v1",
+      LS_CD="ufox_cooldown_until_v1", LS_DONE="ufox_done_lock_until_v1",
+      LS_RELOADED="ufox_reloaded_once_v1", LS_LAST_KEY="ufox_last_key_v1",
+      LS_LAST_EXP="ufox_last_exp_v1";
+const COOLDOWN_MS = 10*60*1000;
 
-  // override reload -> show overlay, delay
-  (function(){
-    const orig = location.reload.bind(location);
-    location.reload = function(){
-      try{ localStorage.setItem(LS_RELOADED, String(Date.now())); }catch(e){}
-      const ov = document.getElementById("overlay");
-      if (ov) ov.style.display = "flex";
-      setTimeout(()=>orig(), 1200);
-    };
-  })();
-  (function(){
-    const t = parseInt(localStorage.getItem(LS_RELOADED)||"0",10);
-    if (t && Date.now()-t<15000) localStorage.removeItem(LS_RELOADED);
-  })();
+/* Tabs */
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
 
-  // uid
-  let uid = localStorage.getItem(LS_UID);
-  if (!uid) { uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase(); localStorage.setItem(LS_UID, uid); }
+/* Soft reload overlay */
+(function(){
+  const orig = location.reload.bind(location);
+  location.reload = function(){
+    try{ localStorage.setItem(LS_RELOADED, String(Date.now())); }catch(e){}
+    const ov = document.getElementById("overlay");
+    if (ov) ov.style.display = "flex";
+    setTimeout(()=>orig(), 1200);
+  };
+})();
+(function(){
+  const t = parseInt(localStorage.getItem(LS_RELOADED)||"0",10);
+  if (t && Date.now()-t<15000) localStorage.removeItem(LS_RELOADED);
+})();
 
-  // DOM (อิงแถวหลักของเดิม)
-  const bar = document.getElementById("bar");
-  const stepBtn = document.getElementById("stepBtn");
-  const progressText = document.getElementById("progressText");
-  const newBtn = document.getElementById("newBtn");
-  const row = document.getElementById("row");
-  const rows = document.getElementById("rows");
-  const keyTxt = document.getElementById("keyTxt");
-  const leftEl = document.getElementById("left");
-  const copyBtn = document.getElementById("copyBtn");
-  const extBtn = document.getElementById("extBtn");
+/* UID (สำหรับหน้า Get Key) */
+let uid = localStorage.getItem(LS_UID);
+if (!uid) { uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase(); localStorage.setItem(LS_UID, uid); }
 
-  // helpers storage
-  const readSteps=()=>Math.max(0,Math.min(REQUIRED_STEPS, parseInt(localStorage.getItem(LS_STEPS)||"0",10)||0));
-  const writeSteps=(n)=>localStorage.setItem(LS_STEPS,String(Math.max(0,Math.min(REQUIRED_STEPS,n))));
-  const getCD=()=>parseInt(localStorage.getItem(LS_CD)||"0",10)||0;
-  const setCD=(ms)=>localStorage.setItem(LS_CD,String(Date.now()+ms));
-  const getDone=()=>parseInt(localStorage.getItem(LS_DONE)||"0",10)||0;
-  const setDone=(ms)=>localStorage.setItem(LS_DONE,String(Date.now()+ms));
-  const clearDone=()=>localStorage.removeItem(LS_DONE);
-  const saveLast=(k,exp)=>{localStorage.setItem(LS_LAST_KEY,k||""); localStorage.setItem(LS_LAST_EXP,String(exp||0));}
-  const loadLast=()=>({key: localStorage.getItem(LS_LAST_KEY)||"", exp: parseInt(localStorage.getItem(LS_LAST_EXP)||"0",10)||0});
+/* ======== GET KEY SECTION Logic ======== */
+const bar = document.getElementById("bar");
+const stepBtn = document.getElementById("stepBtn");
+const progressText = document.getElementById("progressText");
+const newBtn = document.getElementById("newBtn");
+const row = document.getElementById("row");
+const rows = document.getElementById("rows");
+const keyTxt = document.getElementById("keyTxt");
+const leftEl = document.getElementById("left");
+const copyBtn = document.getElementById("copyBtn");
+const extBtn = document.getElementById("extBtn");
 
-  let steps = readSteps();
-  let current = null;
+const readSteps=()=>Math.max(0,Math.min(REQUIRED_STEPS, parseInt(localStorage.getItem(LS_STEPS)||"0",10)||0));
+const writeSteps=n=>localStorage.setItem(LS_STEPS,String(Math.max(0,Math.min(REQUIRED_STEPS,n))));
+const getCD=()=>parseInt(localStorage.getItem(LS_CD)||"0",10)||0;
+const setCD=ms=>localStorage.setItem(LS_CD,String(Date.now()+ms));
+const getDone=()=>parseInt(localStorage.getItem(LS_DONE)||"0",10)||0;
+const setDone=ms=>localStorage.setItem(LS_DONE,String(Date.now()+ms));
+const saveLast=(k,exp)=>{localStorage.setItem(LS_LAST_KEY,k||""); localStorage.setItem(LS_LAST_EXP,String(exp||0));}
+const loadLast=()=>({key: localStorage.getItem(LS_LAST_KEY)||"", exp: parseInt(localStorage.getItem(LS_LAST_EXP)||"0",10)||0});
 
-  function fmtHMS(sec){
-    sec = Math.max(0, sec|0);
-    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+let steps = readSteps();
+let current = null;
+
+function fmtHMS(sec){
+  sec = Math.max(0, sec|0);
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function fmtMMSS(ms){ const s=Math.max(0,Math.floor(ms/1000)); const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
+
+function updateStepsUI(){
+  const now = Date.now();
+  const lock = getDone();
+  if (lock > now){
+    bar.style.width = "100%";
+    progressText.textContent = `Progress: 2/2`;
+    stepBtn.disabled = true;
+    stepBtn.textContent = "DONE " + fmtMMSS(lock - now);
+    newBtn.disabled = true;
+    newBtn.textContent = "＋ GET A NEW KEY";
+    return;
   }
-  function fmtMMSS(ms){ const s=Math.max(0,Math.floor(ms/1000)); const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
 
-  function updateStepsUI(){
-    const now = Date.now();
-    const lock = getDone();
-    if (lock > now){
-      bar.style.width = "100%";
-      progressText.textContent = `Progress: 2/2`;
-      stepBtn.disabled = true;
-      stepBtn.textContent = "DONE " + fmtMMSS(lock - now);
+  const pct = Math.min(100, steps/REQUIRED_STEPS*100);
+  bar.style.width = pct + "%";
+  progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
+
+  if (steps >= REQUIRED_STEPS){
+    stepBtn.textContent = "DONE";
+    stepBtn.disabled = true;
+    const cd = getCD();
+    if (cd > now){
       newBtn.disabled = true;
-      newBtn.textContent = "＋ GET A NEW KEY";
-      return;
-    }
-
-    const pct = Math.min(100, steps/REQUIRED_STEPS*100);
-    bar.style.width = pct + "%";
-    progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
-
-    if (steps >= REQUIRED_STEPS){
-      stepBtn.textContent = "DONE";
-      stepBtn.disabled = true;
-      const cd = getCD();
-      if (cd > now){
-        newBtn.disabled = true;
-        newBtn.textContent = `⏳ WAIT ${fmtMMSS(cd-now)}`;
-      }else{
-        newBtn.disabled = false;
-        newBtn.textContent = "＋ GET A NEW KEY";
-      }
+      newBtn.textContent = `⏳ WAIT ${fmtMMSS(cd-now)}`;
     }else{
-      stepBtn.textContent = (steps===0 ? "START" : "NEXT");
-      stepBtn.disabled = false;
-      newBtn.disabled = true;
+      newBtn.disabled = false;
       newBtn.textContent = "＋ GET A NEW KEY";
     }
+  }else{
+    stepBtn.textContent = (steps===0 ? "START" : "NEXT");
+    stepBtn.disabled = false;
+    newBtn.disabled = true;
+    newBtn.textContent = "＋ GET A NEW KEY";
   }
+}
+updateStepsUI();
+
+stepBtn.addEventListener("click", ()=>{
+  if (getDone() > Date.now()) return;
+  window.open(OUT_LINK, "_blank");
+  steps = Math.min(REQUIRED_STEPS, steps+1);
+  writeSteps(steps);
   updateStepsUI();
+});
 
-  stepBtn.addEventListener("click", ()=>{
-    if (getDone() > Date.now()) return;
-    window.open(OUT_LINK, "_blank");
-    steps = Math.min(REQUIRED_STEPS, steps+1);
-    writeSteps(steps);
-    updateStepsUI();
-  });
+function syncBack(){
+  const s = readSteps();
+  if (s !== steps){ steps = s; updateStepsUI(); }
+}
+window.addEventListener("focus", syncBack);
+document.addEventListener("visibilitychange", syncBack);
+window.addEventListener("pageshow", syncBack);
 
-  function syncBack(){
-    const s = readSteps();
-    if (s !== steps){ steps = s; updateStepsUI(); }
+async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
+
+function setCurrent(obj){
+  current = obj;
+  row.style.display = "grid";
+  keyTxt.textContent = obj.key;
+  tick();
+}
+function tick(){
+  if(!current) return;
+  const now = Math.floor(Date.now()/1000);
+  leftEl.textContent = fmtHMS((current.expires_at|0) - now);
+}
+setInterval(tick, 1000);
+
+copyBtn.addEventListener("click", ()=>{
+  if(!current) return;
+  navigator.clipboard?.writeText(current.key);
+  copyBtn.textContent = "✅ Copied";
+  setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
+});
+
+extBtn.addEventListener("click", async ()=>{
+  if(!current) return;
+  try{
+    const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
+    if(j && j.ok && j.expires_at){
+      setCurrent({ key: current.key, expires_at: j.expires_at });
+      saveLast(current.key, j.expires_at);
+    }
+  }catch(e){ alert("Extend failed"); }
+});
+
+// กู้คืนคีย์ล่าสุดหลังรีเฟรช
+(function(){
+  const { key, exp } = loadLast();
+  const nowU = Math.floor(Date.now()/1000);
+  if (key && exp && exp > nowU) setCurrent({ key, expires_at: exp });
+})();
+
+// get a new key
+newBtn.addEventListener("click", async ()=>{
+  const now = Date.now();
+  if (getDone() > now) return;
+  if (getCD() > now) return;
+  if (steps < REQUIRED_STEPS) return;
+  try{
+    const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=web`);
+    if(j && j.ok && j.key){
+      setCurrent({ key:j.key, expires_at:j.expires_at });
+      saveLast(j.key, j.expires_at);
+      setDone(COOLDOWN_MS);
+      setCD(COOLDOWN_MS);
+      steps = REQUIRED_STEPS; writeSteps(steps);
+      location.reload();
+    }
+  }catch(e){ alert("Get key failed"); }
+});
+
+/* ======== ADMIN KEY UI (ทดสอบ API) ======== */
+const statusPill = document.getElementById("statusPill");
+const adminUid   = document.getElementById("admin-uid");
+const adminPlace = document.getElementById("admin-place");
+const adminKey   = document.getElementById("admin-key");
+const out        = document.getElementById("out");
+const logAdmin   = (o)=>{ out.textContent = typeof o === "string" ? o : JSON.stringify(o,null,2); };
+
+async function jget(path, params){
+  const qs = new URLSearchParams(params||{}).toString();
+  const url = `${path}${qs ? ("?"+qs) : ""}`;
+  const res = await fetch(url, {credentials:"omit"});
+  const json = await res.json().catch(()=>({ok:false, reason:"json_parse_error"}));
+  return json;
+}
+
+async function refreshStatus(){
+  try{
+    const j = await jget("/status");
+    if(j.ok){
+      statusPill.textContent = "• online";
+      statusPill.style.color = "#aef3cf";
+      statusPill.style.borderColor = "#0f4130";
+      statusPill.style.background = "#14221b";
+    }else throw 0;
+  }catch{
+    statusPill.textContent = "• offline";
+    statusPill.style.color = "#ffb3b3";
+    statusPill.style.borderColor = "#512020";
+    statusPill.style.background = "#2a1515";
   }
-  window.addEventListener("focus", syncBack);
-  document.addEventListener("visibilitychange", syncBack);
-  window.addEventListener("pageshow", syncBack);
+}
+refreshStatus(); setInterval(refreshStatus, 10000);
 
-  async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
+// Prefill จาก query
+const q = new URLSearchParams(location.search);
+adminUid.value   = q.get("uid")   || "";
+adminPlace.value = q.get("place") || "";
+adminKey.value   = q.get("key")   || "";
 
-  function setCurrent(obj){
-    current = obj;
-    row.style.display = "grid";
-    keyTxt.textContent = obj.key;
-    tick();
-  }
-  function tick(){
-    if(!current) return;
-    const now = Math.floor(Date.now()/1000);
-    leftEl.textContent = fmtHMS((current.expires_at|0) - now);
-  }
-  setInterval(tick, 1000);
-
-  copyBtn.addEventListener("click", ()=>{
-    if(!current) return;
-    navigator.clipboard?.writeText(current.key);
-    copyBtn.textContent = "✅ Copied";
-    setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
-  });
-
-  extBtn.addEventListener("click", async ()=>{
-    if(!current) return;
-    try{
-      const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
-      if(j && j.ok && j.expires_at){
-        setCurrent({ key: current.key, expires_at: j.expires_at });
-        saveLast(current.key, j.expires_at);
-      }
-    }catch(e){ alert("Extend failed"); }
-  });
-
-  // กู้คืนคีย์ล่าสุดหลังรีเฟรช
-  (function(){
-    const { key, exp } = loadLast();
-    const nowU = Math.floor(Date.now()/1000);
-    if (key && exp && exp > nowU) setCurrent({ key, expires_at: exp });
-  })();
-
-  // get a new key
-  newBtn.addEventListener("click", async ()=>{
-    const now = Date.now();
-    if (getDone() > now) return;
-    if (getCD() > now) return;
-    if (steps < REQUIRED_STEPS) return;
-    try{
-      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=web`);
-      if(j && j.ok && j.key){
-        setCurrent({ key:j.key, expires_at:j.expires_at });
-        saveLast(j.key, j.expires_at);
-        setDone(COOLDOWN_MS);
-        setCD(COOLDOWN_MS);
-        steps = REQUIRED_STEPS; writeSteps(steps);
-        location.reload();
-      }
-    }catch(e){ alert("Get key failed"); }
-  });
-
-  /* ====== (พร้อมสำหรับหลายคีย์ในอนาคต) ======
-     ถ้าคุณอยากใส่หลายแถว ก็ clone #row เพิ่มแบบนี้:
-     const clone = row.cloneNode(true); clone.style.display="grid"; rows.appendChild(clone);
-     แล้วผูก event / ข้อมูลของแถวใหม่ตามต้องการ
-  ================================================= */
+// ปุ่ม Admin
+document.getElementById("btnGetKey").onclick = async ()=>{
+  const uid = adminUid.value.trim();
+  const place = adminPlace.value.trim();
+  if(!uid || !place){ logAdmin("กรอก UID และ Place ก่อน"); return; }
+  const j = await jget("/getkey", {uid, place});
+  if(j.key) adminKey.value = j.key;
+  logAdmin(j);
+};
+document.getElementById("btnVerify").onclick = async ()=>{
+  const uid = adminUid.value.trim();
+  const place = adminPlace.value.trim();
+  const key = adminKey.value.trim();
+  if(!uid || !place || !key){ logAdmin("กรอก UID / Place / Key ให้ครบ"); return; }
+  const j = await jget("/verify", {uid, place, key});
+  logAdmin(j);
+};
+document.getElementById("btnCopyApi").onclick = async ()=>{
+  const uid = adminUid.value.trim();
+  const place = adminPlace.value.trim();
+  const url = `${location.origin}/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`;
+  try{ await navigator.clipboard.writeText(url); logAdmin("Copied: " + url); }
+  catch{ logAdmin("Copy failed, url: " + url); }
+};
+document.getElementById("openDiscord").onclick = (e)=>{ e.preventDefault(); location.href = "https://discord.gg/your-server"; };
 </script>
 </body>
 </html>
