@@ -1,137 +1,101 @@
+// server.js
 import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import compression from "compression";
-import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
-import { nanoid } from "nanoid";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
-// ---------- Middlewares ----------
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors());
-app.use(compression());
-app.use(morgan("tiny"));
-app.use(express.json());
-
 // ---------- Static UI ----------
 app.use(express.static(path.join(__dirname, "public"), {
+  extensions: ["html"],
+  // ป้องกัน cache หน้า index ช่วงแก้บ่อย
   setHeaders(res, filePath) {
-    if (filePath.endsWith(".html")) {
-      res.setHeader("Cache-Control", "no-cache");
+    if (filePath.endsWith("index.html")) {
+      res.setHeader("Cache-Control", "no-store");
     }
   }
 }));
 
-// ---------- In-memory key store (ตัวอย่าง) ----------
-const DEFAULT_TTL_MS = 48 * 3600 * 1000; // 48 ชม.
-const issued = new Map(); // key -> { uid, place, expiresAt, reusable }
-
-const now = () => Date.now();
-const clampTtl = (ms) => Math.max(5 * 60 * 1000, Math.min(ms, DEFAULT_TTL_MS)); // 5m..48h
-
-function createKey(uid, place, ttlMs = DEFAULT_TTL_MS, reusable = false) {
-  const key = `UFO-${nanoid(8).toUpperCase()}-${nanoid(4).toUpperCase()}`;
-  const exp = now() + clampTtl(ttlMs);
-  issued.set(key, { uid, place, expiresAt: exp, reusable });
-  return { key, exp, reusable };
-}
-
-// ---------- Health / Status ----------
-app.get("/healthz", (_req, res) => res.status(200).send("ok"));
-app.get("/status", (_req, res) => {
-  res.json({ ok: true, service: "ufo-key", time: now() });
+// root -> index.html
+app.get("/", (_req, res) => {
+  res.type("html").sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ---------- API: getkey ----------
-app.get("/getkey", (req, res) => {
-  const uid   = String(req.query.uid || "").trim();
-  const place = String(req.query.place || "").trim();
+// helper: เช็คว่าคน “เปิดด้วยเบราว์เซอร์” ไหม
+function isHumanBrowser(req) {
+  const a = (req.headers["accept"] || "").toLowerCase();
+  // ถ้าขอ HTML เป็นหลัก ให้ถือว่าเปิดจาก address bar / ลิงก์
+  return a.includes("text/html") && !a.includes("application/json");
+}
 
-  if (!uid || !place) {
-    return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
-  }
+// ------------- API (เวอร์ชันที่ “ไม่เด้งหน้า”) -------------
+app.get("/api/status", (_req, res) => {
+  res.json({ ok: true, service: "ufo-hub-x", ts: Date.now() });
+});
 
-  // ถ้ามี key เดิมที่ยังไม่หมดอายุและผูกกับ uid/place แล้ว ให้ส่งอันเดิม
-  for (const [k, meta] of issued.entries()) {
-    if (meta.uid === uid && meta.place === place && meta.expiresAt > now()) {
-      return res.json({
-        ok: true,
-        key: k,
-        ttl: Math.floor((meta.expiresAt - now())/1000),
-        expires_at: meta.expiresAt,
-        reusable: !!meta.reusable,
-        note: "existing_active_for_uid",
-        meta: { bound_uid: uid, place }
-      });
-    }
-  }
-
-  // ออกคีย์ใหม่ (ตัวอย่าง: non-reusable)
-  const { key, exp, reusable } = createKey(uid, place, DEFAULT_TTL_MS, false);
+app.get("/api/getkey", (req, res) => {
+  const { uid = "web", place = "web" } = req.query;
+  // mock ตัวอย่าง — ใส่ลอจิกจริงของคุณแทนได้
   res.json({
     ok: true,
-    key,
-    ttl: Math.floor((exp - now())/1000),
-    expires_at: exp,
-    reusable,
-    meta: { bound_uid: uid, place }
+    key: "UFO-" + Math.random().toString(36).slice(2, 8).toUpperCase() + "-48H",
+    ttl: 172800, // 48 ชม.
+    expires_at: Math.floor(Date.now() / 1000) + 48 * 3600,
+    reusable: false,
+    meta: { bound_uid: String(uid), place: String(place) }
   });
 });
 
-// ---------- API: verify ----------
+app.get("/api/verify", (req, res) => {
+  const { key = "", uid = "web", place = "web" } = req.query;
+  // mock verify — ใส่เงื่อนไขจริงแทน
+  const valid = String(key).toUpperCase().startsWith("UFO-");
+  res.json({
+    ok: true,
+    valid,
+    reason: valid ? null : "invalid_key",
+    expires_at: Math.floor(Date.now() / 1000) + (valid ? 24 * 3600 : 0),
+    meta: { uid, place }
+  });
+});
+
+app.get("/api/extend", (req, res) => {
+  const { key = "" } = req.query;
+  // mock extend — เติมอายุ +48h
+  const now = Math.floor(Date.now() / 1000);
+  res.json({ ok: true, key, extended: true, expires_at: now + 48 * 3600 });
+});
+
+// ------------- Compatibility routes (กัน JSON โผล่จอ) -------------
+// ถ้า “เรียกด้วย fetch” -> ส่ง JSON
+// ถ้า “เปิดด้วยเบราว์เซอร์” -> เด้งกลับหน้า UI (ไม่เห็น JSON บนจอ)
+app.get("/status", (req, res) => {
+  if (isHumanBrowser(req)) return res.redirect(302, "/");
+  res.redirect(307, "/api/status"); // 307 เพื่อคง method/qs
+});
+app.get("/getkey", (req, res) => {
+  if (isHumanBrowser(req)) return res.redirect(302, "/");
+  res.redirect(307, "/api/getkey");
+});
 app.get("/verify", (req, res) => {
-  const key   = String(req.query.key || "").trim();
-  const uid   = String(req.query.uid || "").trim();
-  const place = String(req.query.place || "").trim();
-
-  if (!key || !uid || !place) {
-    return res.status(400).json({ ok:false, valid:false, reason:"missing_params" });
-  }
-
-  const meta = issued.get(key);
-  if (!meta) {
-    return res.json({ ok:true, valid:false, reason:"not_found" });
-  }
-  if (meta.expiresAt <= now()) {
-    issued.delete(key);
-    return res.json({ ok:true, valid:false, reason:"expired" });
-  }
-  if (meta.uid !== uid || meta.place !== place) {
-    return res.json({ ok:true, valid:false, reason:"bound_to_another" });
-  }
-
-  res.json({ ok:true, valid:true, expires_at: meta.expiresAt });
+  if (isHumanBrowser(req)) return res.redirect(302, "/");
+  res.redirect(307, "/api/verify");
 });
-
-// ---------- API: extend (ขยายอายุคีย์) ----------
 app.get("/extend", (req, res) => {
-  const key = String(req.query.key || "").trim();
-  const add = Number(req.query.add || 3600) * 1000; // seconds -> ms
-  const meta = issued.get(key);
-  if (!meta) return res.json({ ok:false, reason:"not_found" });
-  meta.expiresAt = meta.expiresAt + clampTtl(add);
-  res.json({ ok:true, extended:true, expires_at: meta.expiresAt });
+  if (isHumanBrowser(req)) return res.redirect(302, "/");
+  res.redirect(307, "/api/extend");
 });
 
-// ---------- Root -> index.html ----------
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// ------------- Fallback -------------
+// ให้ SPA/หน้า UI รับทุก path อื่นๆ (กัน 404 เวลา refresh)
+app.get("*", (_req, res) => {
+  res.type("html").sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ---------- 404 & Error handler ----------
-app.use((req, res) => res.status(404).json({ ok:false, reason:"not_found", path:req.path }));
-app.use((err, _req, res, _next) => {
-  console.error("[SERVER ERROR]", err);
-  res.status(500).json({ ok:false, reason:"server_error" });
-});
-
-// ---------- Start ----------
+// Render ต้องใช้ PORT
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`[KEY-SERVER] listening on ${PORT}`);
+  console.log(`[UFO-HUB-X] listening on ${PORT}`);
 });
