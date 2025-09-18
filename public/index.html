@@ -1,24 +1,24 @@
 <!doctype html>
-<html lang="en">  
-<head>  
-<meta charset="utf-8"/>  
-<meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<title>UFO HUB X — Get Key</title>  
-<style>  
-  :root{  
-    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;  
-    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;  
+<html lang="en">    
+<head>    
+<meta charset="utf-8"/>    
+<meta name="viewport" content="width=device-width,initial-scale=1"/>    
+<title>UFO HUB X — Get Key</title>    
+<style>    
+  :root{    
+    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;    
+    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;    
+  }    
+  *{box-sizing:border-box}    
+  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}    
+  .bg{  
+    position:fixed; inset:0;  
+    background:  
+      linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),  
+      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');  
+    background-size:cover; background-position:center;  
   }  
-  *{box-sizing:border-box}  
-  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}  
-  .bg{
-    position:fixed; inset:0;
-    background:
-      linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
-      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
-    background-size:cover; background-position:center;
-  }
-  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}
+  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}  
   .stack{width:min(980px,100%);display:flex;flex-direction:column;gap:18px}
 
   .hero{display:flex;justify-content:center;margin-top:8px}
@@ -56,11 +56,24 @@
   .newKey{display:flex;justify-content:center;margin:12px 0 4px}
   .newKey .btn{background:#0f1f3a;color:#dff7ff}
   .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
+
+  /* [ADD] overlay ขณะกำลังเซฟ/รีเฟรช */
+  .overlay {
+    position: fixed; inset: 0; display: none;
+    background: rgba(5,12,20,.75);
+    backdrop-filter: blur(2px);
+    align-items: center; justify-content: center;
+    z-index: 9999; color: #dff7ff; font-weight: 900; letter-spacing: .5px;
+  }
+  .overlay .box {
+    background: #0f1d34; border: 1px solid rgba(255,255,255,.08);
+    padding: 16px 22px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+  }
 </style>
-</head>  
-<body>  
-<div class="bg"></div>
-<div class="wrap">
+</head>    
+<body>    
+<div class="bg"></div>  
+<div class="wrap">  
   <div class="stack">
 
     <!-- HERO -->
@@ -114,10 +127,15 @@
   </div>
 </div>
 
+<!-- [ADD] overlay -->
+<div class="overlay" id="overlay">
+  <div class="box">Saving key… reloading</div>
+</div>
+
 <script>
   /* -------------------------------------------------
-     เพิ่ม “เฉพาะ” โหมด DONE นับถอยหลัง 10 นาที + รีเฟรชหน้า
-     (สิ่งเดิมทั้งหมดคงไว้ ไม่ลบ ไม่แก้ทิ้ง)
+     เพิ่ม “เฉพาะ” โหมด DONE นับถอยหลัง 10 นาที + รีเฟรชหน้าแบบหน่วง + กันลูป
+     (ของเดิมคงไว้ทั้งหมด)
   ------------------------------------------------- */
 
   // ===== CONFIG เดิม =====
@@ -129,9 +147,30 @@
   const LS_STEPS      = "ufox_steps_v1";
   const LS_COOLDOWN   = "ufox_cooldown_until_v1"; // เดิม: คุมปุ่ม NEW
   const LS_DONE_LOCK  = "ufox_done_lock_until_v1"; // [ADD] ล็อก DONE 10 นาที
+  const LS_RELOAD_FLAG = "ufox_reloaded_once_v1";  // [ADD] กันลูปรีเฟรช
 
   // ===== ค่าเวลา =====
-  const COOLDOWN_MS = 10 * 60 * 1000; // 10 นาที (สำหรับ DONE lock และ NEW cooldown)
+  const COOLDOWN_MS = 10 * 60 * 1000; // 10 นาที (DONE lock + NEW cooldown)
+
+  // ===== [ADD] monkey-patch location.reload ให้แสดง overlay + ดีเลย์ =====
+  (function patchReload(){
+    const orig = location.reload.bind(location);
+    location.reload = function(){
+      try { localStorage.setItem(LS_RELOAD_FLAG, String(Date.now())); } catch(e){}
+      const ov = document.getElementById("overlay");
+      if (ov) ov.style.display = "flex";
+      setTimeout(()=>orig(), 1200); // หน่วง 1.2s แล้วค่อยรีเฟรช
+    };
+  })();
+
+  // ===== [ADD] ป้องกันลูปรีเฟรช (ภายใน 15 วิหลังรีเฟรชแล้ว) =====
+  (function preventReloadLoop(){
+    const t = parseInt(localStorage.getItem(LS_RELOAD_FLAG) || "0", 10);
+    if (t && Date.now() - t < 15000) {
+      localStorage.removeItem(LS_RELOAD_FLAG);
+      // แค่ออก—จะไม่รีเฟรชซ้ำ
+    }
+  })();
 
   // ===== uid คงที่ต่อเครื่อง =====
   let uid = localStorage.getItem(LS_UID);
@@ -250,9 +289,7 @@
 
   // START/NEXT (เดิม)
   stepBtn.addEventListener("click", ()=>{
-    // ถ้าติด DONE lock ห้ามกด
-    if (getDoneLockUntil() > Date.now()) return;
-
+    if (getDoneLockUntil() > Date.now()) return; // ถ้าติด DONE lock ห้ามกด
     window.open(OUT_LINK, "_blank");
     steps = Math.min(REQUIRED_STEPS, steps+1);
     writeSteps(steps);
@@ -306,7 +343,7 @@
     }catch(e){ alert("Extend failed"); }
   });
 
-  // GET A NEW KEY
+  // GET A NEW KEY (เดิม + คงทุกอย่างไว้)
   newBtn.addEventListener("click", async ()=>{
     const now = Date.now();
     if (getDoneLockUntil() > now) return;               // ถ้าอยู่ช่วง DONE lock ห้ามกด
@@ -326,7 +363,7 @@
         steps = REQUIRED_STEPS;
         writeSteps(steps);
 
-        // รีเฟรชหน้า (ตามที่ขอ)
+        // เดิมคุณมี location.reload() ตรงนี้อยู่แล้ว → เรา override ให้แสดง overlay+ดีเลย์
         location.reload();
       }
     }catch(e){ alert("Get key failed"); }
