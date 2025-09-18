@@ -1,13 +1,13 @@
 {
-  "name": "ufo-hub-x-key-server",
+  "name": "ufo-hub-x-key",
   "version": "1.0.0",
-  "description": "UFO HUB X - Key Server + UI (48H keys)",
+  "description": "UFO HUB X Key Server",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.19.2"
   }
 }
