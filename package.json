@@ -1,17 +1,13 @@
 {
   "name": "ufo-hub-x-key-server",
   "version": "1.0.0",
-  "type": "module",
-  "main": "server.js",
+  "private": true,
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node app.js"
   },
   "dependencies": {
-    "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
-    "nanoid": "^5.0.7"
+    "express": "^4.19.2"
   }
 }
