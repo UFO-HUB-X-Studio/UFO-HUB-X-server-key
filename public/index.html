@@ -1,106 +1,166 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>UFO-HUB-X Key Server</title>
-  <link rel="stylesheet" href="/styles.css"/>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>UFO HUB X — Key Center</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#111a2e; --card2:#0f1729; --text:#e7eefc;
+    --muted:#a8b3cf; --accent:#02e3aa; --danger:#ff5a70;
+  }
+  *{box-sizing:border-box} body{margin:0;background:#000;color:var(--text);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+  .bg{
+    position:fixed; inset:0;
+    background:linear-gradient(0deg, rgba(11,18,32,.9), rgba(11,18,32,.7)), url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop');
+    background-size:cover; background-position:center;
+    filter:saturate(1) contrast(1.05);
+  }
+  .wrap{position:relative;min-height:100dvh;display:flex;align-items:flex-start;justify-content:center;padding:32px}
+  .panel{width:min(880px,100%);background:linear-gradient(180deg,var(--card),var(--card2));border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px 20px}
+  .row{display:flex;gap:18px;align-items:center;justify-content:space-between}
+  .brand{font-weight:800;font-size:22px;letter-spacing:.3px}
+  .progress{flex:1;height:10px;background:#0b1220;border-radius:999px;position:relative;margin:0 16px}
+  .bar{position:absolute;inset:0;height:100%;width:0;background:linear-gradient(90deg,#0cf6a9,#58ffd1);border-radius:999px;transition:width .3s ease}
+  .btn{border:0;border-radius:12px;padding:10px 16px;background:#1b2a4a;color:var(--text);cursor:pointer;font-weight:700}
+  .btn:hover{filter:brightness(1.05)}
+  .btn-acc{background:linear-gradient(90deg,#0cf6a9,#58ffd1);color:#07231a}
+  .grid{margin-top:14px;background:#0e1528;border-radius:14px;padding:14px}
+  .gridhead{display:grid;grid-template-columns:1fr 160px 120px 150px;gap:12px;padding:10px 12px;color:var(--muted);font-weight:700}
+  .item{display:grid;grid-template-columns:1fr 160px 120px 150px;gap:12px;align-items:center;padding:12px;border-radius:12px;background:#0f1a2f}
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-weight:700}
+  .pill.active{background:rgba(2,227,170,.12);color:var(--accent)}
+  .pill.danger{background:rgba(255,90,112,.12);color:var(--danger)}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .footer{display:flex;gap:10px;justify-content:center;color:var(--muted);margin-top:14px}
+  .copy{background:#0e1b34}
+  .extend{background:#133c2f}
+  .newkey{display:flex;justify-content:center;margin-top:14px}
+  .newkey .btn{background:#0e1b34}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <img src="/logo.png" alt="UFO HUB X" class="logo"/>
-      <h1>UFO-HUB-X Key Server</h1>
-      <p class="muted">Generate & verify 48H keys</p>
-    </header>
+<div class="bg"></div>
+<div class="wrap">
+  <div class="panel">
+    <div class="row">
+      <div>
+        <div class="brand">UFO HUB X — Key Center</div>
+        <div class="small muted" id="progressText">Progress: 0/2</div>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <button class="btn btn-acc" id="startBtn">START</button>
+    </div>
 
-    <section class="card">
-      <h2>Get your key</h2>
-      <div class="row">
-        <div class="col">
-          <label>UserId (uid)</label>
-          <input id="uid" placeholder="Your Roblox userId (optional)"/>
+    <div class="grid">
+      <div class="gridhead">
+        <div>YOUR KEYS</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
+      </div>
+      <div class="item" id="row" style="display:none">
+        <div>
+          <button class="btn copy small" id="copyBtn">📋 Copy</button>
+          <span class="mono" id="keyTxt">UFO-xxxxxxxx-48H</span>
         </div>
-        <div class="col">
-          <label>PlaceId (place)</label>
-          <input id="place" placeholder="Game PlaceId (optional)"/>
+        <div class="mono" id="left">--:--:--</div>
+        <div><span class="pill active" id="status">ACTIVE</span></div>
+        <div>
+          <button class="btn extend small" id="extBtn">⏳ +48H</button>
         </div>
       </div>
-
-      <button id="btnGet">🔐 Get Key</button>
-
-      <div id="result" class="result hide">
-        <p><b>Key:</b> <span id="keyText">-</span></p>
-        <p><b>Expires:</b> <span id="expText">-</span></p>
-        <div class="actions">
-          <button id="btnCopy">Copy Key</button>
-          <a id="verifyLink" href="#" target="_blank">Open Verify</a>
-        </div>
-        <p class="muted small">
-          Keep your key safe. It will expire in 48 hours unless your server config says otherwise.
-        </p>
+      <div class="newkey">
+        <button class="btn" id="newBtn">＋ GET A NEW KEY</button>
       </div>
-    </section>
+    </div>
 
-    <section class="links">
-      <a class="discord" href="https://discord.gg/your-server" target="_blank">💬 Join our Discord</a>
-      <a class="muted" href="https://ufo-hub-x-key-umoq.onrender.com/issued" target="_blank">Admin: issued (debug)</a>
-    </section>
+    <div class="footer small">
+      <a class="muted" id="discord" href="#" target="_blank">Join Discord</a>
+      <span>·</span>
+      <span class="muted">If key expires you can get a new one anytime.</span>
+    </div>
   </div>
+</div>
 
-  <script>
-    const btnGet   = document.getElementById('btnGet');
-    const btnCopy  = document.getElementById('btnCopy');
-    const keyText  = document.getElementById('keyText');
-    const expText  = document.getElementById('expText');
-    const verifyLink = document.getElementById('verifyLink');
-    const resultEl = document.getElementById('result');
+<script>
+  // ====== CONFIG ======
+  const DISCORD_URL = "https://discord.gg/your-server"; // เปลี่ยนได้
+  document.getElementById("discord").href = DISCORD_URL;
 
-    function tsToLocal(ts){
-      try {
-        const d = new Date(ts*1000);
-        return d.toLocaleString();
-      } catch(e){ return String(ts); }
-    }
+  const uid   = (typeof Roblox !== "undefined" && Roblox?.UserId) || Math.floor(Math.random()*1e9).toString();
+  const place = (typeof game !== "undefined" && game?.PlaceId) || "web";
 
-    btnGet.addEventListener('click', async () => {
-      const uid   = encodeURIComponent(document.getElementById('uid').value || "");
-      const place = encodeURIComponent(document.getElementById('place').value || "");
+  const row   = document.getElementById("row");
+  const keyTxt= document.getElementById("keyTxt");
+  const leftEl= document.getElementById("left");
+  const bar   = document.getElementById("bar");
+  const progressText = document.getElementById("progressText");
+  const copyBtn= document.getElementById("copyBtn");
+  const extBtn = document.getElementById("extBtn");
+  const newBtn = document.getElementById("newBtn");
 
-      btnGet.disabled = true;
-      btnGet.textContent = 'Working...';
+  let current = null; // {key, expires_at}
 
-      try {
-        const u = `/getkey?uid=${uid}&place=${place}`;
-        const r = await fetch(u);
-        const j = await r.json();
+  async function api(url){
+    const r = await fetch(url);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return await r.json();
+  }
 
-        if (j && j.ok && j.key) {
-          keyText.textContent = j.key;
-          expText.textContent = j.expires_at ? tsToLocal(j.expires_at) : 'unknown';
-          verifyLink.href = `/verify?key=${encodeURIComponent(j.key)}&uid=${uid}&place=${place}`;
-          resultEl.classList.remove('hide');
-        } else {
-          alert('No key returned (out_of_stock or server error).');
-        }
-      } catch (e) {
-        console.error(e);
-        alert('Request failed. Try again later.');
-      } finally {
-        btnGet.disabled = false;
-        btnGet.textContent = '🔐 Get Key';
-      }
-    });
+  function fmtLeft(sec){
+    sec = Math.max(0, sec|0);
+    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function setCurrent(obj){
+    current = obj;
+    row.style.display = "grid";
+    keyTxt.textContent = obj.key;
+    tick();
+  }
+  function tick(){
+    if(!current) return;
+    const now = Math.floor(Date.now()/1000);
+    const left = Math.max(0, (current.expires_at|0) - now);
+    leftEl.textContent = fmtLeft(left);
 
-    btnCopy.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(keyText.textContent);
-        btnCopy.textContent = 'Copied!';
-        setTimeout(()=> btnCopy.textContent='Copy Key', 1200);
-      } catch(e){
-        alert('Copy failed, select text manually.');
-      }
-    });
-  </script>
+    // 48h bar
+    const pct = Math.min(100, (left/(48*3600))*100);
+    bar.style.width = pct + "%";
+    progressText.textContent = `Progress: ${pct.toFixed(0)}/100`;
+  }
+  setInterval(tick, 1000);
+
+  // actions
+  copyBtn.addEventListener("click", ()=>{
+    if(!current) return;
+    navigator.clipboard?.writeText(current.key);
+    copyBtn.textContent = "✅ Copied";
+    setTimeout(()=> copyBtn.textContent = "📋 Copy", 1200);
+  });
+
+  extBtn.addEventListener("click", async ()=>{
+    if(!current) return;
+    try{
+      const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
+      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); }
+    }catch(e){ console.error(e); alert("Extend failed"); }
+  });
+
+  newBtn.addEventListener("click", async ()=>{
+    try{
+      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+      if(j && j.ok && j.key){ setCurrent({key: j.key, expires_at: j.expires_at}); }
+    }catch(e){ console.error(e); alert("Get key failed"); }
+  });
+
+  // auto: ดึงคีย์เดิมถ้ามี
+  (async ()=>{
+    try{
+      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+      if(j && j.ok && j.key){ setCurrent({key: j.key, expires_at: j.expires_at}); }
+    }catch(e){ console.error(e); }
+  })();
+</script>
 </body>
 </html>
