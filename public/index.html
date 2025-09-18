@@ -134,7 +134,10 @@
 
 <script>
   /* -------------------------------------------------
-     เพิ่ม “เฉพาะ” โหมด DONE นับถอยหลัง 10 นาที + รีเฟรชหน้าแบบหน่วง + กันลูป
+     เพิ่ม “เฉพาะ”:
+     1) DONE lock 10 นาที + คูลดาวน์ NEW
+     2) overlay + ดีเลย์ก่อนรีเฟรช
+     3) **กู้คืนคีย์ล่าสุดหลังรีเฟรช** (แก้ปัญหา “คีย์โชว์แล้วหาย”)
      (ของเดิมคงไว้ทั้งหมด)
   ------------------------------------------------- */
 
@@ -143,14 +146,16 @@
   const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
   // ===== keys ใน localStorage (เดิม + เพิ่ม) =====
-  const LS_UID        = "ufox_uid_v1";
-  const LS_STEPS      = "ufox_steps_v1";
-  const LS_COOLDOWN   = "ufox_cooldown_until_v1"; // เดิม: คุมปุ่ม NEW
-  const LS_DONE_LOCK  = "ufox_done_lock_until_v1"; // [ADD] ล็อก DONE 10 นาที
-  const LS_RELOAD_FLAG = "ufox_reloaded_once_v1";  // [ADD] กันลูปรีเฟรช
+  const LS_UID         = "ufox_uid_v1";
+  const LS_STEPS       = "ufox_steps_v1";
+  const LS_COOLDOWN    = "ufox_cooldown_until_v1";  // คุมปุ่ม NEW
+  const LS_DONE_LOCK   = "ufox_done_lock_until_v1";  // ล็อก DONE 10 นาที
+  const LS_RELOAD_FLAG = "ufox_reloaded_once_v1";    // กันลูปรีเฟรช
+  const LS_LAST_KEY    = "ufox_last_key_v1";         // [ADD] เก็บคีย์ล่าสุด
+  const LS_LAST_EXP    = "ufox_last_exp_v1";         // [ADD] เก็บหมดอายุคีย์ล่าสุด (unix)
 
   // ===== ค่าเวลา =====
-  const COOLDOWN_MS = 10 * 60 * 1000; // 10 นาที (DONE lock + NEW cooldown)
+  const COOLDOWN_MS = 10 * 60 * 1000; // 10 นาที
 
   // ===== [ADD] monkey-patch location.reload ให้แสดง overlay + ดีเลย์ =====
   (function patchReload(){
@@ -220,6 +225,19 @@
   }
   function clearDoneLock() {
     localStorage.removeItem(LS_DONE_LOCK);
+  }
+
+  // ===== helpers: key persist =====
+  function saveLastKey(key, expUnix){
+    try {
+      localStorage.setItem(LS_LAST_KEY, String(key || ""));
+      localStorage.setItem(LS_LAST_EXP, String(expUnix || 0));
+    } catch(e){}
+  }
+  function loadLastKey(){
+    const key = localStorage.getItem(LS_LAST_KEY) || "";
+    const exp = parseInt(localStorage.getItem(LS_LAST_EXP) || "0", 10);
+    return { key, exp: Number.isFinite(exp) ? exp : 0 };
   }
 
   let steps = readSteps();
@@ -339,9 +357,18 @@
     if(!current) return;
     try{
       const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
-      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); }
+      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); saveLastKey(current.key, j.expires_at); } // [ADD] อัพเดต cache
     }catch(e){ alert("Extend failed"); }
   });
+
+  // ===== [ADD] กู้คืนคีย์ล่าสุดเมื่อโหลดหน้า =====
+  (function restoreLastKeyOnLoad(){
+    const { key, exp } = loadLastKey();
+    const nowUnix = Math.floor(Date.now()/1000);
+    if (key && exp && exp > nowUnix) {
+      setCurrent({ key, expires_at: exp });
+    }
+  })();
 
   // GET A NEW KEY (เดิม + คงทุกอย่างไว้)
   newBtn.addEventListener("click", async ()=>{
@@ -354,6 +381,7 @@
       const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent("web")}`);
       if(j && j.ok && j.key){
         setCurrent({key:j.key, expires_at:j.expires_at});
+        saveLastKey(j.key, j.expires_at); // [ADD] เก็บคีย์ล่าสุดไว้ก่อนรีเฟรช
 
         // ตั้ง DONE lock 10 นาที และคูลดาวน์ปุ่ม NEW 10 นาที
         setDoneLock(COOLDOWN_MS);
@@ -363,7 +391,7 @@
         steps = REQUIRED_STEPS;
         writeSteps(steps);
 
-        // เดิมคุณมี location.reload() ตรงนี้อยู่แล้ว → เรา override ให้แสดง overlay+ดีเลย์
+        // เดิมคุณเรียก reload → ตอนนี้จะเห็น overlay แล้วค่อยรีเฟรช
         location.reload();
       }
     }catch(e){ alert("Get key failed"); }
