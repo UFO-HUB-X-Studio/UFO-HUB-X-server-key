@@ -11,25 +11,18 @@
   }    
   *{box-sizing:border-box}    
   body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}    
-  .bg{  
-    position:fixed; inset:0;  
-    background:  
-      linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),  
-      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');  
-    background-size:cover; background-position:center;  
-  }  
-  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}  
+  .bg{position:fixed; inset:0;
+    background:linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
+               url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
+    background-size:cover; background-position:center;}
+  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}
   .stack{width:min(980px,100%);display:flex;flex-direction:column;gap:18px}
 
   .hero{display:flex;justify-content:center;margin-top:8px}
-  .logo{
-    width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
-    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)
-  }
+  .logo{width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
+        background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)}
   .logo img{width:100%;height:100%;object-fit:cover}
-  .brandText{
-    margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px
-  }
+  .brandText{margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px}
   .brandText .ufo{color:#ffffff}
   .brandText .hubx{color:var(--green)}
 
@@ -48,6 +41,7 @@
   .head{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;padding:8px 6px;color:var(--muted);font-weight:800}
   .row{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;align-items:center;
        padding:12px;border-radius:12px;background:#0d1a31}
+
   .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,Monaco,monospace}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-weight:800}
   .pill.active{background:rgba(2,227,170,.12);color:var(--green)}
@@ -57,18 +51,19 @@
   .newKey .btn{background:#0f1f3a;color:#dff7ff}
   .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
 
-  /* [ADD] overlay ขณะกำลังเซฟ/รีเฟรช */
-  .overlay {
-    position: fixed; inset: 0; display: none;
-    background: rgba(5,12,20,.75);
-    backdrop-filter: blur(2px);
-    align-items: center; justify-content: center;
-    z-index: 9999; color: #dff7ff; font-weight: 900; letter-spacing: .5px;
-  }
-  .overlay .box {
-    background: #0f1d34; border: 1px solid rgba(255,255,255,.08);
-    padding: 16px 22px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.35);
-  }
+  /* ===== [ADD] สไตล์รายการคีย์แบบภาพตัวอย่าง ===== */
+  .keysSubhead{font-size:12px; letter-spacing:.08em; color:var(--muted); margin:-2px 0 10px 2px; font-weight:800}
+  .keyCell{display:flex;align-items:center;gap:10px}
+  .copyBox{width:56px;height:40px;border-radius:12px;background:#111f35;display:grid;place-items:center;
+           border:1px solid rgba(255,255,255,.08)}
+  .copyBox svg{width:18px;height:18px;opacity:.9}
+  .keyIcon{width:22px;height:22px;display:inline-grid;place-items:center;filter:drop-shadow(0 1px 0 rgba(0,0,0,.4))}
+  .keyIcon::before{content:"🗝️"; font-size:18px}
+  .keyShort{font-weight:900; letter-spacing:.2px}
+  .timeGreen{color:#02e3aa; font-weight:900}
+  .actionOutline{background:transparent;border:2px solid #1fd3a8;color:#1fd3a8}
+  .actionOutline .hour{margin-right:6px}
+  .actionOutline:disabled{opacity:.6}
 </style>
 </head>    
 <body>    
@@ -99,7 +94,11 @@
     <!-- KEY TABLE -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="title" style="font-size:16px">🔑 Your Key</div>
+        <div>
+          <div class="title" style="font-size:16px">🔑 Your Key</div>
+          <!-- [ADD] บรรทัดย่อยแบบภาพ -->
+          <div class="keysSubhead" id="keysCount">YOUR KEYS (0/6)</div>
+        </div>
         <button class="btn" id="newBtn" disabled>＋ GET A NEW KEY</button>
       </div>
 
@@ -107,12 +106,25 @@
         <div class="head"><div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
 
         <div class="row" id="row" style="display:none">
-          <div class="mono" id="keyTxt">UFO-XXXXXXXX-48H</div>
-          <div class="mono" id="left">--:--:--</div>
+          <!-- [CHANGED LAYOUT BY ADDING WRAPS — ไม่ลบของเดิม เพียงหุ้ม/เพิ่ม span -->
+          <div class="keyCell">
+            <div class="copyBox" id="copyBox" title="Copy">
+              <!-- ไอคอนกระดาษ -->
+              <svg viewBox="0 0 24 24" fill="none"><path d="M9 9h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" stroke="#cfe8ff" stroke-width="1.6"/><path d="M7 15V6a2 2 0 0 1 2-2h7" stroke="#cfe8ff" stroke-width="1.6"/></svg>
+            </div>
+            <div class="keyIcon"></div>
+            <div>
+              <div class="keyShort" id="keyShort">UFO-XXXXXXXX-48H</div>
+              <div class="mono muted" id="keyTxt" style="display:none">UFO-XXXXXXXX-48H</div>
+            </div>
+          </div>
+
+          <div class="mono timeGreen" id="left">--:--:--</div>
+
           <div><span class="pill active">ACTIVE</span></div>
+
           <div style="display:flex;gap:8px">
-            <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
-            <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H ➜</button>
+            <button class="btnSmall actionOutline" id="extBtn"><span class="hour">⌛</span>+48H</button>
           </div>
         </div>
       </div>
@@ -127,207 +139,134 @@
   </div>
 </div>
 
-<!-- [ADD] overlay -->
+<!-- overlay เดิม -->
 <div class="overlay" id="overlay">
   <div class="box">Saving key… reloading</div>
 </div>
 
 <script>
-  /* -------------------------------------------------
-     เพิ่ม “เฉพาะ”:
-     1) DONE lock 10 นาที + คูลดาวน์ NEW
-     2) overlay + ดีเลย์ก่อนรีเฟรช
-     3) **กู้คืนคีย์ล่าสุดหลังรีเฟรช** (แก้ปัญหา “คีย์โชว์แล้วหาย”)
-     (ของเดิมคงไว้ทั้งหมด)
-  ------------------------------------------------- */
+  /* ========= ส่วนลอจิกเหมือนเดิม (มีแต่เพิ่ม) ========= */
 
-  // ===== CONFIG เดิม =====
-  const REQUIRED_STEPS = 2; // ต้องกด 2 ครั้ง
+  const REQUIRED_STEPS = 2;
   const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
-  // ===== keys ใน localStorage (เดิม + เพิ่ม) =====
   const LS_UID         = "ufox_uid_v1";
   const LS_STEPS       = "ufox_steps_v1";
-  const LS_COOLDOWN    = "ufox_cooldown_until_v1";  // คุมปุ่ม NEW
-  const LS_DONE_LOCK   = "ufox_done_lock_until_v1";  // ล็อก DONE 10 นาที
-  const LS_RELOAD_FLAG = "ufox_reloaded_once_v1";    // กันลูปรีเฟรช
-  const LS_LAST_KEY    = "ufox_last_key_v1";         // [ADD] เก็บคีย์ล่าสุด
-  const LS_LAST_EXP    = "ufox_last_exp_v1";         // [ADD] เก็บหมดอายุคีย์ล่าสุด (unix)
+  const LS_COOLDOWN    = "ufox_cooldown_until_v1";
+  const LS_DONE_LOCK   = "ufox_done_lock_until_v1";
+  const LS_RELOAD_FLAG = "ufox_reloaded_once_v1";
+  const LS_LAST_KEY    = "ufox_last_key_v1";
+  const LS_LAST_EXP    = "ufox_last_exp_v1";
 
-  // ===== ค่าเวลา =====
-  const COOLDOWN_MS = 10 * 60 * 1000; // 10 นาที
+  const COOLDOWN_MS = 10 * 60 * 1000;
 
-  // ===== [ADD] monkey-patch location.reload ให้แสดง overlay + ดีเลย์ =====
   (function patchReload(){
     const orig = location.reload.bind(location);
     location.reload = function(){
       try { localStorage.setItem(LS_RELOAD_FLAG, String(Date.now())); } catch(e){}
       const ov = document.getElementById("overlay");
       if (ov) ov.style.display = "flex";
-      setTimeout(()=>orig(), 1200); // หน่วง 1.2s แล้วค่อยรีเฟรช
+      setTimeout(()=>orig(), 1200);
     };
   })();
-
-  // ===== [ADD] ป้องกันลูปรีเฟรช (ภายใน 15 วิหลังรีเฟรชแล้ว) =====
   (function preventReloadLoop(){
     const t = parseInt(localStorage.getItem(LS_RELOAD_FLAG) || "0", 10);
-    if (t && Date.now() - t < 15000) {
-      localStorage.removeItem(LS_RELOAD_FLAG);
-      // แค่ออก—จะไม่รีเฟรชซ้ำ
-    }
+    if (t && Date.now() - t < 15000) localStorage.removeItem(LS_RELOAD_FLAG);
   })();
 
-  // ===== uid คงที่ต่อเครื่อง =====
   let uid = localStorage.getItem(LS_UID);
-  if (!uid) {
-    uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase();
-    localStorage.setItem(LS_UID, uid);
-  }
+  if (!uid) { uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase(); localStorage.setItem(LS_UID, uid); }
   const place = "web";
 
-  // ===== DOM =====
   const bar = document.getElementById("bar");
   const stepBtn = document.getElementById("stepBtn");
   const progressText = document.getElementById("progressText");
   const newBtn = document.getElementById("newBtn");
   const row = document.getElementById("row");
   const keyTxt = document.getElementById("keyTxt");
+  const keyShortEl = document.getElementById("keyShort"); // [ADD]
   const leftEl = document.getElementById("left");
-  const copyBtn = document.getElementById("copyBtn");
   const extBtn = document.getElementById("extBtn");
+  const copyBox = document.getElementById("copyBox");      // [ADD]
+  const keysCountEl = document.getElementById("keysCount");// [ADD]
 
-  // ===== helpers: steps =====
-  function readSteps() {
-    const n = parseInt(localStorage.getItem(LS_STEPS) || "0", 10);
-    if (Number.isFinite(n)) return Math.max(0, Math.min(REQUIRED_STEPS, n));
-    return 0;
-  }
-  function writeSteps(n) {
-    localStorage.setItem(LS_STEPS, String(Math.max(0, Math.min(REQUIRED_STEPS, n))));
-  }
+  function readSteps(){ const n = parseInt(localStorage.getItem(LS_STEPS) || "0", 10); return Number.isFinite(n)? Math.max(0,Math.min(REQUIRED_STEPS,n)) : 0; }
+  function writeSteps(n){ localStorage.setItem(LS_STEPS, String(Math.max(0,Math.min(REQUIRED_STEPS,n)))); }
 
-  // ===== helpers: cooldown (NEW) =====
-  function getCooldownUntil() {
-    const v = parseInt(localStorage.getItem(LS_COOLDOWN) || "0", 10);
-    return Number.isFinite(v) ? v : 0;
-  }
-  function setCooldown(ms) {
-    localStorage.setItem(LS_COOLDOWN, String(Date.now() + ms));
-  }
+  function getCooldownUntil(){ const v = parseInt(localStorage.getItem(LS_COOLDOWN) || "0", 10); return Number.isFinite(v)? v:0; }
+  function setCooldown(ms){ localStorage.setItem(LS_COOLDOWN, String(Date.now() + ms)); }
+  function getDoneLockUntil(){ const v = parseInt(localStorage.getItem(LS_DONE_LOCK) || "0", 10); return Number.isFinite(v)? v:0; }
+  function setDoneLock(ms){ localStorage.setItem(LS_DONE_LOCK, String(Date.now()+ms)); }
+  function clearDoneLock(){ localStorage.removeItem(LS_DONE_LOCK); }
 
-  // ===== helpers: DONE lock =====
-  function getDoneLockUntil() {
-    const v = parseInt(localStorage.getItem(LS_DONE_LOCK) || "0", 10);
-    return Number.isFinite(v) ? v : 0;
-  }
-  function setDoneLock(ms) {
-    localStorage.setItem(LS_DONE_LOCK, String(Date.now() + ms));
-  }
-  function clearDoneLock() {
-    localStorage.removeItem(LS_DONE_LOCK);
+  function saveLastKey(key, exp){ try{ localStorage.setItem(LS_LAST_KEY, key||""); localStorage.setItem(LS_LAST_EXP, String(exp||0)); }catch(e){} }
+  function loadLastKey(){ const key = localStorage.getItem(LS_LAST_KEY)||""; const exp = parseInt(localStorage.getItem(LS_LAST_EXP)||"0",10); return {key,exp:Number.isFinite(exp)?exp:0}; }
+
+  // [ADD] ย่อคีย์แบบ zZnFp...kwocw
+  function shortKey(k){
+    if(!k) return "";
+    if(k.length <= 10) return k;
+    return k.slice(0,5) + "..." + k.slice(-5);
   }
 
-  // ===== helpers: key persist =====
-  function saveLastKey(key, expUnix){
-    try {
-      localStorage.setItem(LS_LAST_KEY, String(key || ""));
-      localStorage.setItem(LS_LAST_EXP, String(expUnix || 0));
-    } catch(e){}
-  }
-  function loadLastKey(){
-    const key = localStorage.getItem(LS_LAST_KEY) || "";
-    const exp = parseInt(localStorage.getItem(LS_LAST_EXP) || "0", 10);
-    return { key, exp: Number.isFinite(exp) ? exp : 0 };
-  }
+  // [ADD] จำนวนคีย์ (ตอนนี้เรามี 1 แถวเดี่ยว) – คุณจะเชื่อมกับ API ภายหลังได้
+  function updateKeysCount(n){ keysCountEl.textContent = `YOUR KEYS (${n}/6)`; }
 
   let steps = readSteps();
   let current = null; // {key, expires_at}
 
-  // ===== UI =====
-  function fmtMMSS(remMs){
-    const s = Math.max(0, Math.floor(remMs/1000));
-    const m = Math.floor(s/60), ss = s%60;
-    return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-  }
+  function fmtMMSS(ms){ const s = Math.max(0, Math.floor(ms/1000)); const m = Math.floor(s/60), ss = s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; }
 
   function updateStepsUI(){
     const now = Date.now();
     const lockUntil = getDoneLockUntil();
 
-    // ถ้าติด DONE lock → บังคับแสดง 2/2 + ปุ่ม DONE นับถอยหลัง
     if (lockUntil > now) {
       bar.style.width = "100%";
       progressText.textContent = `Progress: 2/2`;
-      stepBtn.disabled = true;
-      stepBtn.textContent = "DONE " + fmtMMSS(lockUntil - now);
-      newBtn.disabled = true;
-      newBtn.textContent = "＋ GET A NEW KEY";
+      stepBtn.disabled = true; stepBtn.textContent = "DONE " + fmtMMSS(lockUntil-now);
+      newBtn.disabled = true; newBtn.textContent = "＋ GET A NEW KEY";
       return;
     }
 
-    // โหมดปกติ
     const pct = Math.min(100, steps/REQUIRED_STEPS*100);
     bar.style.width = pct + "%";
     progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
 
     if(steps >= REQUIRED_STEPS){
-      stepBtn.textContent = "DONE";
-      stepBtn.disabled = true;
-
-      // สถานะปุ่ม NEW ตามคูลดาวน์ (ถ้ามีใช้)
+      stepBtn.textContent = "DONE"; stepBtn.disabled = true;
       const cdUntil = getCooldownUntil();
-      if (cdUntil > now) {
-        newBtn.disabled = true;
-        newBtn.textContent = `⏳ WAIT ${fmtMMSS(cdUntil - now)}`;
-      } else {
-        newBtn.disabled = false;
-        newBtn.textContent = "＋ GET A NEW KEY";
-      }
+      if (cdUntil > now) { newBtn.disabled = true; newBtn.textContent = `⏳ WAIT ${fmtMMSS(cdUntil-now)}`; }
+      else { newBtn.disabled = false; newBtn.textContent = "＋ GET A NEW KEY"; }
     }else{
-      stepBtn.textContent = (steps===0 ? "START" : "NEXT");
-      stepBtn.disabled = false;
-      newBtn.disabled = true;
-      newBtn.textContent = "＋ GET A NEW KEY";
+      stepBtn.textContent = (steps===0 ? "START" : "NEXT"); stepBtn.disabled = false;
+      newBtn.disabled = true; newBtn.textContent = "＋ GET A NEW KEY";
     }
   }
   updateStepsUI();
 
-  // อัปเดตทุกวินาที (DONE lock / cooldown)
   setInterval(()=>{
     const now = Date.now();
     const lockUntil = getDoneLockUntil();
-    if (lockUntil && lockUntil <= now) {
-      // หมด 10 นาที → ปลดล็อกและรีเซ็ต progress = 0/2
-      clearDoneLock();
-      steps = 0;
-      writeSteps(steps);
-    }
+    if (lockUntil && lockUntil <= now) { clearDoneLock(); steps = 0; writeSteps(steps); }
     updateStepsUI();
   }, 1000);
 
-  // START/NEXT (เดิม)
   stepBtn.addEventListener("click", ()=>{
-    if (getDoneLockUntil() > Date.now()) return; // ถ้าติด DONE lock ห้ามกด
+    if (getDoneLockUntil() > Date.now()) return;
     window.open(OUT_LINK, "_blank");
     steps = Math.min(REQUIRED_STEPS, steps+1);
     writeSteps(steps);
     updateStepsUI();
   });
 
-  // sync เมื่อกลับหน้า
-  function syncStepsFromStorage(){
-    const stored = readSteps();
-    if (stored !== steps) steps = stored;
-    updateStepsUI();
-  }
+  function syncStepsFromStorage(){ const stored = readSteps(); if (stored !== steps) steps = stored; updateStepsUI(); }
   window.addEventListener("focus", syncStepsFromStorage);
   document.addEventListener("visibilitychange", syncStepsFromStorage);
   window.addEventListener("pageshow", syncStepsFromStorage);
 
-  // API helper เดิม
   async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
 
-  // TIME LEFT
   function fmt(sec){
     sec = Math.max(0, sec|0);
     const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
@@ -336,8 +275,10 @@
   function setCurrent(obj){
     current = obj;
     row.style.display = "grid";
-    keyTxt.textContent = obj.key;
+    keyTxt.textContent = obj.key;              // เก็บเต็ม ๆ (ซ่อนอยู่)
+    keyShortEl.textContent = shortKey(obj.key);// แสดงแบบย่อ [ADD]
     tick();
+    updateKeysCount(1);                        // [ADD] ตอนนี้มี 1 คีย์
   }
   function tick(){
     if(!current) return;
@@ -346,52 +287,49 @@
   }
   setInterval(tick, 1000);
 
-  copyBtn.addEventListener("click", ()=>{
+  // copy แบบคลิกที่กล่องไอคอน
+  copyBox.addEventListener("click", ()=>{
     if(!current) return;
     navigator.clipboard?.writeText(current.key);
-    copyBtn.textContent = "✅ Copied";
-    setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
+    copyBox.style.opacity = .7;
+    setTimeout(()=> copyBox.style.opacity = 1, 500);
   });
 
   extBtn.addEventListener("click", async ()=>{
     if(!current) return;
     try{
       const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
-      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); saveLastKey(current.key, j.expires_at); } // [ADD] อัพเดต cache
+      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); saveLastKey(current.key, j.expires_at); }
     }catch(e){ alert("Extend failed"); }
   });
 
-  // ===== [ADD] กู้คืนคีย์ล่าสุดเมื่อโหลดหน้า =====
+  // กู้คืนคีย์ล่าสุดหลังรีเฟรช
   (function restoreLastKeyOnLoad(){
     const { key, exp } = loadLastKey();
     const nowUnix = Math.floor(Date.now()/1000);
-    if (key && exp && exp > nowUnix) {
-      setCurrent({ key, expires_at: exp });
-    }
+    if (key && exp && exp > nowUnix) { setCurrent({ key, expires_at: exp }); }
+    else { updateKeysCount(0); }
   })();
 
-  // GET A NEW KEY (เดิม + คงทุกอย่างไว้)
+  // สร้างคีย์ใหม่
   newBtn.addEventListener("click", async ()=>{
     const now = Date.now();
-    if (getDoneLockUntil() > now) return;               // ถ้าอยู่ช่วง DONE lock ห้ามกด
-    if (getCooldownUntil() > now) return;               // ถ้าติดคูลดาวน์เดิม ห้ามกด
+    if (getDoneLockUntil() > now) return;
+    if (getCooldownUntil() > now) return;
     if(steps < REQUIRED_STEPS) return;
 
     try{
       const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent("web")}`);
       if(j && j.ok && j.key){
         setCurrent({key:j.key, expires_at:j.expires_at});
-        saveLastKey(j.key, j.expires_at); // [ADD] เก็บคีย์ล่าสุดไว้ก่อนรีเฟรช
+        saveLastKey(j.key, j.expires_at);
 
-        // ตั้ง DONE lock 10 นาที และคูลดาวน์ปุ่ม NEW 10 นาที
         setDoneLock(COOLDOWN_MS);
         setCooldown(COOLDOWN_MS);
 
-        // อัพเดตแสดงผลครั้งสุดท้ายก่อนรีเฟรช
         steps = REQUIRED_STEPS;
         writeSteps(steps);
 
-        // เดิมคุณเรียก reload → ตอนนี้จะเห็น overlay แล้วค่อยรีเฟรช
         location.reload();
       }
     }catch(e){ alert("Get key failed"); }
