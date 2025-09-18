@@ -1,205 +1,159 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>UFO HUB X — Get Key</title>
-<style>
-  :root{
-    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;
-    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
-  .bg{
-    position:fixed; inset:0;
-    background:
-      linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
-      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
-    background-size:cover; background-position:center;
-  }
-  .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}
-  .stack{width:min(980px,100%);display:flex;flex-direction:column;gap:18px}
-
-  .hero{display:flex;justify-content:center;margin-top:8px}
-  .logo{
-    width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
-    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)
-  }
-  .logo img{width:100%;height:100%;object-fit:cover}
-  .brandText{
-    margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px
-  }
-  .brandText .ufo{color:#ffffff}
-  .brandText .hubx{color:var(--green)}
-
-  .card{background:linear-gradient(180deg,var(--card),var(--card2));
-        border-radius:16px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-  .topRow{display:flex;align-items:center;gap:16px}
-  .title{font-weight:900}
-  .title .ufo{color:#fff}.title .hubx{color:var(--green)}
-  .progressWrap{flex:1;background:#0a1324;height:9px;border-radius:999px;position:relative;margin:0 16px}
-  .bar{position:absolute;inset:0;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#28ffbf,#70ffe0);transition:width .25s}
-  .btn{border:0;border-radius:12px;background:linear-gradient(90deg,#12f3b3,#62ffd5);color:#05251a;
-       padding:10px 16px;font-weight:900;cursor:pointer}
-  .muted{color:var(--muted)}
-
-  .grid{background:#0b172c;border-radius:14px;padding:10px 12px}
-  .head{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;padding:8px 6px;color:var(--muted);font-weight:800}
-  .row{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;align-items:center;
-       padding:12px;border-radius:12px;background:#0d1a31}
-  .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,Monaco,monospace}
-  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-weight:800}
-  .pill.active{background:rgba(2,227,170,.12);color:var(--green)}
-  .btnIcon{background:#0f1f3a;color:#cfe8ff}
-  .btnSmall{padding:8px 10px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
-  .newKey{display:flex;justify-content:center;margin:12px 0 4px}
-  .newKey .btn{background:#0f1f3a;color:#dff7ff}
-  .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UFO HUB X - Key System</title>
+  <style>
+    body {
+      margin:0; font-family:sans-serif; color:white;
+      background: url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png") no-repeat center center fixed;
+      background-size:cover;
+    }
+    .card {background:rgba(0,0,0,0.7); padding:20px; margin:20px auto; max-width:700px; border-radius:12px;}
+    .progress-bar {width:100%; height:8px; background:#333; border-radius:4px; overflow:hidden;}
+    .progress-fill {height:100%; background:#00ff88; width:0%;}
+    .btn {padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:bold;}
+    .btn-main {background:#00ff88; color:black;}
+    .btn-disabled {background:#555; color:#aaa; cursor:not-allowed;}
+    .key-row {display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:12px; align-items:center; margin-top:12px;}
+    .key {font-weight:bold;}
+    .status {color:#0f0; font-weight:bold;}
+  </style>
 </head>
 <body>
-<div class="bg"></div>
-
-<div class="wrap">
-  <div class="stack">
-
-    <!-- HERO -->
-    <div class="hero">
-      <div>
-        <div class="logo">
-          <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cce7cb&is=68cb964b&hm=9050a00523563e88eda267b4271a00ce2024663aae62078987e4401f5e7ce354&" alt="logo"/>
-        </div>
-        <div class="brandText"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
-      </div>
-    </div>
-
-    <!-- PROGRESS + START/NEXT -->
-    <div class="card">
-      <div class="topRow">
-        <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
-        <div class="progressWrap"><div class="bar" id="bar"></div></div>
-        <button class="btn" id="stepBtn">START</button>
-      </div>
-      <div class="muted" id="progressText" style="margin-top:10px">Progress: 0/2</div>
-    </div>
-
-    <!-- KEY TABLE -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="title" style="font-size:16px">🔑 Your Key</div>
-        <button class="btn" id="newBtn" disabled>＋ GET A NEW KEY</button>
-      </div>
-
-      <div class="grid">
-        <div class="head"><div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
-
-        <div class="row" id="row" style="display:none">
-          <div class="mono" id="keyTxt">UFO-XXXXXXXX-48H</div>
-          <div class="mono" id="left">--:--:--</div>
-          <div><span class="pill active">ACTIVE</span></div>
-          <div style="display:flex;gap:8px">
-            <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
-            <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H ➜</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <a class="muted" href="https://discord.gg/your-server" target="_blank">Join Discord</a>
-      <span>·</span>
-      <span class="muted">Complete 2 steps, then get your key.</span>
-    </div>
-
+  <div class="card" style="text-align:center;">
+    <img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png"
+         alt="Logo" style="max-width:160px;border-radius:12px;">
+    <h1><span style="color:white;">UFO</span> <span style="color:#00ff88;">HUB X</span></h1>
+    <button id="stepBtn" class="btn btn-main">START</button>
+    <p id="progressText">Progress: 0/2</p>
+    <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
   </div>
-</div>
 
-<script>
-  // ===== CONFIG =====
-  const REQUIRED_STEPS = 2; // ต้องกด 2 ครั้ง
-  const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const uid   = Math.floor(Math.random()*1e9).toString();
-  const place = "web";
+  <div class="card">
+    <h2>🔑 Your Key</h2>
+    <button id="newBtn" class="btn btn-main" disabled>+ GET A NEW KEY</button>
+    <div id="row" class="key-row" style="display:none;">
+      <div id="keyTxt" class="key"></div>
+      <div id="left">--:--:--</div>
+      <div id="stat" class="status">ACTIVE</div>
+      <div>
+        <button id="copyBtn" class="btn">📋 Copy</button>
+        <button id="extBtn" class="btn">+5H ⏩</button>
+      </div>
+    </div>
+  </div>
 
-  // ===== EL =====
-  const bar = document.getElementById("bar");
-  const stepBtn = document.getElementById("stepBtn");
-  const progressText = document.getElementById("progressText");
-  const newBtn = document.getElementById("newBtn");
-  const row = document.getElementById("row");
-  const keyTxt = document.getElementById("keyTxt");
-  const leftEl = document.getElementById("left");
-  const copyBtn = document.getElementById("copyBtn");
-  const extBtn = document.getElementById("extBtn");
+  <!-- SCRIPT -->
+  <script>
+    // ===== CONFIG =====
+    const REQUIRED_STEPS = 2;
+    const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
-  let steps = 0;
-  let current = null; // {key, expires_at}
+    // ===== localStorage keys =====
+    const LS_UID   = "ufox_uid_v1";
+    const LS_STEPS = "ufox_steps_v1";
 
-  function updateStepsUI(){
-    const pct = Math.min(100, steps/REQUIRED_STEPS*100);
-    bar.style.width = pct + "%";
-    progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
-    if(steps >= REQUIRED_STEPS){
-      stepBtn.textContent = "DONE";
-      stepBtn.disabled = true;
-      newBtn.disabled = false;
-    }else{
-      stepBtn.textContent = (steps===0 ? "START" : "NEXT");
-      stepBtn.disabled = false;
-      newBtn.disabled = true;
+    // uid (คงที่ต่อเครื่อง) — ใช้ต่อคีย์กับคนเดิม
+    let uid = localStorage.getItem(LS_UID);
+    if (!uid) {
+      uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase();
+      localStorage.setItem(LS_UID, uid);
     }
-  }
-  updateStepsUI();
+    const place = "web";
 
-  stepBtn.addEventListener("click", ()=>{
-    window.open(OUT_LINK, "_blank");
-    steps = Math.min(REQUIRED_STEPS, steps+1);
+    // ===== EL =====
+    const bar = document.getElementById("bar");
+    const stepBtn = document.getElementById("stepBtn");
+    const progressText = document.getElementById("progressText");
+    const newBtn = document.getElementById("newBtn");
+    const row = document.getElementById("row");
+    const keyTxt = document.getElementById("keyTxt");
+    const leftEl = document.getElementById("left");
+    const copyBtn = document.getElementById("copyBtn");
+    const extBtn = document.getElementById("extBtn");
+
+    // โหลด progress จาก localStorage
+    let steps = Math.max(0, Math.min(REQUIRED_STEPS, parseInt(localStorage.getItem(LS_STEPS) || "0", 10) || 0));
+    let current = null;
+
+    function updateStepsUI(){
+      const pct = Math.min(100, steps/REQUIRED_STEPS*100);
+      bar.style.width = pct + "%";
+      progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
+      if(steps >= REQUIRED_STEPS){
+        stepBtn.textContent = "DONE";
+        stepBtn.disabled = true;
+        newBtn.disabled = false;
+      }else{
+        stepBtn.textContent = (steps===0 ? "START" : "NEXT");
+        stepBtn.disabled = false;
+        newBtn.disabled = true;
+      }
+    }
     updateStepsUI();
-  });
 
-  async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
+    stepBtn.addEventListener("click", ()=>{
+      steps = Math.min(REQUIRED_STEPS, steps+1);
+      localStorage.setItem(LS_STEPS, String(steps));
+      updateStepsUI();
+      window.open(OUT_LINK, "_blank");
+    });
 
-  function fmt(sec){
-    sec = Math.max(0, sec|0);
-    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  }
-  function setCurrent(obj){
-    current = obj;
-    row.style.display = "grid";
-    keyTxt.textContent = obj.key;
-    tick();
-  }
-  function tick(){
-    if(!current) return;
-    const now = Math.floor(Date.now()/1000);
-    leftEl.textContent = fmt((current.expires_at|0) - now);
-  }
-  setInterval(tick, 1000);
+    window.addEventListener("focus", ()=>{
+      const s = Math.max(0, Math.min(REQUIRED_STEPS, parseInt(localStorage.getItem(LS_STEPS) || "0", 10) || 0));
+      if (s !== steps) { steps = s; updateStepsUI(); }
+    });
 
-  copyBtn.addEventListener("click", ()=>{
-    if(!current) return;
-    navigator.clipboard?.writeText(current.key);
-    copyBtn.textContent = "✅ Copied";
-    setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
-  });
+    async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
 
-  extBtn.addEventListener("click", async ()=>{
-    if(!current) return;
-    try{
-      const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
-      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); }
-    }catch(e){ alert("Extend failed"); }
-  });
+    function fmt(sec){
+      sec = Math.max(0, sec|0);
+      const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+    function setCurrent(obj){
+      current = obj;
+      row.style.display = "grid";
+      keyTxt.textContent = obj.key;
+      tick();
+    }
+    function tick(){
+      if(!current) return;
+      const now = Math.floor(Date.now()/1000);
+      leftEl.textContent = fmt((current.expires_at|0) - now);
+    }
+    setInterval(tick, 1000);
 
-  newBtn.addEventListener("click", async ()=>{
-    if(steps < REQUIRED_STEPS) return;
-    try{
-      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
-      if(j && j.ok && j.key){ setCurrent({key:j.key, expires_at:j.expires_at}); }
-    }catch(e){ alert("Get key failed"); }
-  });
-</script>
+    copyBtn.addEventListener("click", ()=>{
+      if(!current) return;
+      navigator.clipboard?.writeText(current.key);
+      copyBtn.textContent = "✅ Copied";
+      setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
+    });
+
+    extBtn.addEventListener("click", async ()=>{
+      if(!current) return;
+      try{
+        const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
+        if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); }
+      }catch(e){ alert("Extend failed"); }
+    });
+
+    newBtn.addEventListener("click", async ()=>{
+      if(steps < REQUIRED_STEPS) return;
+      try{
+        const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+        if(j && j.ok && j.key){
+          setCurrent({key:j.key, expires_at:j.expires_at});
+          // ถ้าอยาก reset progress หลังได้ key ให้ปลดคอมเมนต์ข้างล่าง:
+          // steps = 0;
+          // localStorage.setItem(LS_STEPS, "0");
+          // updateStepsUI();
+        }
+      }catch(e){ alert("Get key failed"); }
+    });
+  </script>
 </body>
 </html>
