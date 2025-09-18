@@ -115,23 +115,25 @@
 </div>
 
 <script>
-  /* -----------------------------------------
-     เพิ่ม “เฉพาะ” ความจำ Progress + uid + คูลดาวน์ 10 นาที (ไม่ลบของเดิม)
-  ----------------------------------------- */
+  /* -------------------------------------------------
+     เพิ่ม “เฉพาะ” โหมด DONE นับถอยหลัง 10 นาที + รีเฟรชหน้า
+     (สิ่งเดิมทั้งหมดคงไว้ ไม่ลบ ไม่แก้ทิ้ง)
+  ------------------------------------------------- */
 
-  // ===== CONFIG (ของเดิม) =====
+  // ===== CONFIG เดิม =====
   const REQUIRED_STEPS = 2; // ต้องกด 2 ครั้ง
   const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
-  // ===== เพิ่ม: localStorage keys =====
+  // ===== keys ใน localStorage (เดิม + เพิ่ม) =====
   const LS_UID        = "ufox_uid_v1";
   const LS_STEPS      = "ufox_steps_v1";
-  const LS_COOLDOWN   = "ufox_cooldown_until_v1"; // [ADD] เวลาที่หมดคูลดาวน์ (ms)
+  const LS_COOLDOWN   = "ufox_cooldown_until_v1"; // เดิม: คุมปุ่ม NEW
+  const LS_DONE_LOCK  = "ufox_done_lock_until_v1"; // [ADD] ล็อก DONE 10 นาที
 
-  // ===== [ADD] ตั้งคูลดาวน์ (10 นาที) =====
-  const COOLDOWN_MS = 10 * 60 * 1000;
+  // ===== ค่าเวลา =====
+  const COOLDOWN_MS = 10 * 60 * 1000; // 10 นาที (สำหรับ DONE lock และ NEW cooldown)
 
-  // ===== uid คงที่ต่อเครื่อง (เพิ่ม) =====
+  // ===== uid คงที่ต่อเครื่อง =====
   let uid = localStorage.getItem(LS_UID);
   if (!uid) {
     uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase();
@@ -139,7 +141,7 @@
   }
   const place = "web";
 
-  // ===== EL (ของเดิม) =====
+  // ===== DOM =====
   const bar = document.getElementById("bar");
   const stepBtn = document.getElementById("stepBtn");
   const progressText = document.getElementById("progressText");
@@ -150,7 +152,7 @@
   const copyBtn = document.getElementById("copyBtn");
   const extBtn = document.getElementById("extBtn");
 
-  // ===== โหลด progress จาก localStorage (เพิ่ม) =====
+  // ===== helpers: steps =====
   function readSteps() {
     const n = parseInt(localStorage.getItem(LS_STEPS) || "0", 10);
     if (Number.isFinite(n)) return Math.max(0, Math.min(REQUIRED_STEPS, n));
@@ -160,90 +162,117 @@
     localStorage.setItem(LS_STEPS, String(Math.max(0, Math.min(REQUIRED_STEPS, n))));
   }
 
-  // [ADD] จัดการคูลดาวน์
+  // ===== helpers: cooldown (NEW) =====
   function getCooldownUntil() {
     const v = parseInt(localStorage.getItem(LS_COOLDOWN) || "0", 10);
     return Number.isFinite(v) ? v : 0;
   }
-  function setCooldown(minutesMs) {
-    const until = Date.now() + minutesMs;
-    localStorage.setItem(LS_COOLDOWN, String(until));
+  function setCooldown(ms) {
+    localStorage.setItem(LS_COOLDOWN, String(Date.now() + ms));
   }
-  function clearCooldown() {
-    localStorage.removeItem(LS_COOLDOWN);
+
+  // ===== helpers: DONE lock =====
+  function getDoneLockUntil() {
+    const v = parseInt(localStorage.getItem(LS_DONE_LOCK) || "0", 10);
+    return Number.isFinite(v) ? v : 0;
+  }
+  function setDoneLock(ms) {
+    localStorage.setItem(LS_DONE_LOCK, String(Date.now() + ms));
+  }
+  function clearDoneLock() {
+    localStorage.removeItem(LS_DONE_LOCK);
   }
 
   let steps = readSteps();
   let current = null; // {key, expires_at}
 
+  // ===== UI =====
+  function fmtMMSS(remMs){
+    const s = Math.max(0, Math.floor(remMs/1000));
+    const m = Math.floor(s/60), ss = s%60;
+    return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
+
   function updateStepsUI(){
+    const now = Date.now();
+    const lockUntil = getDoneLockUntil();
+
+    // ถ้าติด DONE lock → บังคับแสดง 2/2 + ปุ่ม DONE นับถอยหลัง
+    if (lockUntil > now) {
+      bar.style.width = "100%";
+      progressText.textContent = `Progress: 2/2`;
+      stepBtn.disabled = true;
+      stepBtn.textContent = "DONE " + fmtMMSS(lockUntil - now);
+      newBtn.disabled = true;
+      newBtn.textContent = "＋ GET A NEW KEY";
+      return;
+    }
+
+    // โหมดปกติ
     const pct = Math.min(100, steps/REQUIRED_STEPS*100);
     bar.style.width = pct + "%";
     progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
+
     if(steps >= REQUIRED_STEPS){
       stepBtn.textContent = "DONE";
       stepBtn.disabled = true;
-      // newBtn จะถูกคุมด้วยคูลดาวน์อีกชั้นหนึ่ง
+
+      // สถานะปุ่ม NEW ตามคูลดาวน์ (ถ้ามีใช้)
+      const cdUntil = getCooldownUntil();
+      if (cdUntil > now) {
+        newBtn.disabled = true;
+        newBtn.textContent = `⏳ WAIT ${fmtMMSS(cdUntil - now)}`;
+      } else {
+        newBtn.disabled = false;
+        newBtn.textContent = "＋ GET A NEW KEY";
+      }
     }else{
       stepBtn.textContent = (steps===0 ? "START" : "NEXT");
       stepBtn.disabled = false;
-      // ยังไม่ผ่าน 2/2 กด new ไม่ได้
       newBtn.disabled = true;
       newBtn.textContent = "＋ GET A NEW KEY";
     }
   }
   updateStepsUI();
 
-  // ===== [ADD] อัปเดตปุ่ม NEW ตามคูลดาวน์ =====
-  function updateNewBtnByCooldown(){
+  // อัปเดตทุกวินาที (DONE lock / cooldown)
+  setInterval(()=>{
     const now = Date.now();
-    const until = getCooldownUntil();
-    if (steps >= REQUIRED_STEPS) {
-      if (until > now) {
-        // ยังติดคูลดาวน์
-        newBtn.disabled = true;
-        const sec = Math.max(0, Math.floor((until - now)/1000));
-        const m = Math.floor(sec/60);
-        const s = sec%60;
-        newBtn.textContent = `⏳ WAIT ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      } else {
-        // ไม่ติดแล้ว
-        newBtn.disabled = false;
-        newBtn.textContent = "＋ GET A NEW KEY";
-      }
+    const lockUntil = getDoneLockUntil();
+    if (lockUntil && lockUntil <= now) {
+      // หมด 10 นาที → ปลดล็อกและรีเซ็ต progress = 0/2
+      clearDoneLock();
+      steps = 0;
+      writeSteps(steps);
     }
-  }
-  // เรียกตอนเริ่ม
-  updateNewBtnByCooldown();
-  // อัปเดตทุกวินาที
-  setInterval(updateNewBtnByCooldown, 1000);
+    updateStepsUI();
+  }, 1000);
 
-  // ===== ปุ่ม START/NEXT (ของเดิม + เพิ่ม save) =====
+  // START/NEXT (เดิม)
   stepBtn.addEventListener("click", ()=>{
+    // ถ้าติด DONE lock ห้ามกด
+    if (getDoneLockUntil() > Date.now()) return;
+
     window.open(OUT_LINK, "_blank");
     steps = Math.min(REQUIRED_STEPS, steps+1);
     writeSteps(steps);
     updateStepsUI();
-    updateNewBtnByCooldown(); // [ADD]
   });
 
-  // ===== เพิ่ม: sync เมื่อกลับมาหน้าเว็บ (focus/visibility/pageshow) =====
+  // sync เมื่อกลับหน้า
   function syncStepsFromStorage(){
     const stored = readSteps();
-    if (stored !== steps) {
-      steps = stored;
-      updateStepsUI();
-      updateNewBtnByCooldown(); // [ADD]
-    }
+    if (stored !== steps) steps = stored;
+    updateStepsUI();
   }
   window.addEventListener("focus", syncStepsFromStorage);
   document.addEventListener("visibilitychange", syncStepsFromStorage);
   window.addEventListener("pageshow", syncStepsFromStorage);
 
-  // ===== API helper (ของเดิม) =====
+  // API helper เดิม
   async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
 
-  // ===== UI helpers (ของเดิม) =====
+  // TIME LEFT
   function fmt(sec){
     sec = Math.max(0, sec|0);
     const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
@@ -277,26 +306,28 @@
     }catch(e){ alert("Extend failed"); }
   });
 
-  // ===== ปุ่ม GET A NEW KEY (เพิ่ม Reset Progress + ตั้งคูลดาวน์ 10 นาที) =====
+  // GET A NEW KEY
   newBtn.addEventListener("click", async ()=>{
-    // กันกดช่วงคูลดาวน์
     const now = Date.now();
-    if (getCooldownUntil() > now) return;
-
+    if (getDoneLockUntil() > now) return;               // ถ้าอยู่ช่วง DONE lock ห้ามกด
+    if (getCooldownUntil() > now) return;               // ถ้าติดคูลดาวน์เดิม ห้ามกด
     if(steps < REQUIRED_STEPS) return;
+
     try{
-      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent("web")}`);
       if(j && j.ok && j.key){
         setCurrent({key:j.key, expires_at:j.expires_at});
 
-        // ✅ รีเซ็ต progress หลังได้ key
-        steps = 0;
-        writeSteps(steps);
-        updateStepsUI();
-
-        // ✅ ตั้งคูลดาวน์ 10 นาที
+        // ตั้ง DONE lock 10 นาที และคูลดาวน์ปุ่ม NEW 10 นาที
+        setDoneLock(COOLDOWN_MS);
         setCooldown(COOLDOWN_MS);
-        updateNewBtnByCooldown();
+
+        // อัพเดตแสดงผลครั้งสุดท้ายก่อนรีเฟรช
+        steps = REQUIRED_STEPS;
+        writeSteps(steps);
+
+        // รีเฟรชหน้า (ตามที่ขอ)
+        location.reload();
       }
     }catch(e){ alert("Get key failed"); }
   });
