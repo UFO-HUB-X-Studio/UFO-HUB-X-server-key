@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>UFO HUB X — Get Key</title>
-<style>
-  :root{
-    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;
-    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
+<html lang="en">  
+<head>  
+<meta charset="utf-8"/>  
+<meta name="viewport" content="width=device-width,initial-scale=1"/>  
+<title>UFO HUB X — Get Key</title>  
+<style>  
+  :root{  
+    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;  
+    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;  
+  }  
+  *{box-sizing:border-box}  
+  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}  
   .bg{
     position:fixed; inset:0;
     background:
@@ -57,10 +57,9 @@
   .newKey .btn{background:#0f1f3a;color:#dff7ff}
   .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
 </style>
-</head>
-<body>
+</head>  
+<body>  
 <div class="bg"></div>
-
 <div class="wrap">
   <div class="stack">
 
@@ -117,7 +116,7 @@
 
 <script>
   /* -----------------------------------------
-     เพิ่ม “เฉพาะ” ความจำ Progress + uid (ไม่ลบของเดิม)
+     เพิ่ม “เฉพาะ” ความจำ Progress + uid + คูลดาวน์ 10 นาที (ไม่ลบของเดิม)
   ----------------------------------------- */
 
   // ===== CONFIG (ของเดิม) =====
@@ -125,8 +124,12 @@
   const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
   // ===== เพิ่ม: localStorage keys =====
-  const LS_UID   = "ufox_uid_v1";
-  const LS_STEPS = "ufox_steps_v1";
+  const LS_UID        = "ufox_uid_v1";
+  const LS_STEPS      = "ufox_steps_v1";
+  const LS_COOLDOWN   = "ufox_cooldown_until_v1"; // [ADD] เวลาที่หมดคูลดาวน์ (ms)
+
+  // ===== [ADD] ตั้งคูลดาวน์ (10 นาที) =====
+  const COOLDOWN_MS = 10 * 60 * 1000;
 
   // ===== uid คงที่ต่อเครื่อง (เพิ่ม) =====
   let uid = localStorage.getItem(LS_UID);
@@ -157,7 +160,19 @@
     localStorage.setItem(LS_STEPS, String(Math.max(0, Math.min(REQUIRED_STEPS, n))));
   }
 
-  // ใช้ค่าเดิมที่เคยเก็บไว้
+  // [ADD] จัดการคูลดาวน์
+  function getCooldownUntil() {
+    const v = parseInt(localStorage.getItem(LS_COOLDOWN) || "0", 10);
+    return Number.isFinite(v) ? v : 0;
+  }
+  function setCooldown(minutesMs) {
+    const until = Date.now() + minutesMs;
+    localStorage.setItem(LS_COOLDOWN, String(until));
+  }
+  function clearCooldown() {
+    localStorage.removeItem(LS_COOLDOWN);
+  }
+
   let steps = readSteps();
   let current = null; // {key, expires_at}
 
@@ -168,21 +183,48 @@
     if(steps >= REQUIRED_STEPS){
       stepBtn.textContent = "DONE";
       stepBtn.disabled = true;
-      newBtn.disabled = false;
+      // newBtn จะถูกคุมด้วยคูลดาวน์อีกชั้นหนึ่ง
     }else{
       stepBtn.textContent = (steps===0 ? "START" : "NEXT");
       stepBtn.disabled = false;
+      // ยังไม่ผ่าน 2/2 กด new ไม่ได้
       newBtn.disabled = true;
+      newBtn.textContent = "＋ GET A NEW KEY";
     }
   }
-  updateStepsUI(); // แสดงครั้งแรก
+  updateStepsUI();
+
+  // ===== [ADD] อัปเดตปุ่ม NEW ตามคูลดาวน์ =====
+  function updateNewBtnByCooldown(){
+    const now = Date.now();
+    const until = getCooldownUntil();
+    if (steps >= REQUIRED_STEPS) {
+      if (until > now) {
+        // ยังติดคูลดาวน์
+        newBtn.disabled = true;
+        const sec = Math.max(0, Math.floor((until - now)/1000));
+        const m = Math.floor(sec/60);
+        const s = sec%60;
+        newBtn.textContent = `⏳ WAIT ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      } else {
+        // ไม่ติดแล้ว
+        newBtn.disabled = false;
+        newBtn.textContent = "＋ GET A NEW KEY";
+      }
+    }
+  }
+  // เรียกตอนเริ่ม
+  updateNewBtnByCooldown();
+  // อัปเดตทุกวินาที
+  setInterval(updateNewBtnByCooldown, 1000);
 
   // ===== ปุ่ม START/NEXT (ของเดิม + เพิ่ม save) =====
   stepBtn.addEventListener("click", ()=>{
     window.open(OUT_LINK, "_blank");
     steps = Math.min(REQUIRED_STEPS, steps+1);
-    writeSteps(steps);           // <-- เก็บลง localStorage (เพิ่ม)
+    writeSteps(steps);
     updateStepsUI();
+    updateNewBtnByCooldown(); // [ADD]
   });
 
   // ===== เพิ่ม: sync เมื่อกลับมาหน้าเว็บ (focus/visibility/pageshow) =====
@@ -191,6 +233,7 @@
     if (stored !== steps) {
       steps = stored;
       updateStepsUI();
+      updateNewBtnByCooldown(); // [ADD]
     }
   }
   window.addEventListener("focus", syncStepsFromStorage);
@@ -234,11 +277,27 @@
     }catch(e){ alert("Extend failed"); }
   });
 
+  // ===== ปุ่ม GET A NEW KEY (เพิ่ม Reset Progress + ตั้งคูลดาวน์ 10 นาที) =====
   newBtn.addEventListener("click", async ()=>{
+    // กันกดช่วงคูลดาวน์
+    const now = Date.now();
+    if (getCooldownUntil() > now) return;
+
     if(steps < REQUIRED_STEPS) return;
     try{
       const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
-      if(j && j.ok && j.key){ setCurrent({key:j.key, expires_at:j.expires_at}); }
+      if(j && j.ok && j.key){
+        setCurrent({key:j.key, expires_at:j.expires_at});
+
+        // ✅ รีเซ็ต progress หลังได้ key
+        steps = 0;
+        writeSteps(steps);
+        updateStepsUI();
+
+        // ✅ ตั้งคูลดาวน์ 10 นาที
+        setCooldown(COOLDOWN_MS);
+        updateNewBtnByCooldown();
+      }
     }catch(e){ alert("Get key failed"); }
   });
 </script>
