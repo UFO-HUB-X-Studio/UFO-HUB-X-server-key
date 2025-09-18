@@ -1,33 +1,37 @@
 <!doctype html>
-<html lang="en">    
-<head>    
-<meta charset="utf-8"/>    
-<meta name="viewport" content="width=device-width,initial-scale=1"/>    
-<title>UFO HUB X — Get Key</title>    
-<style>    
-  :root{    
-    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;    
-    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;    
-  }    
-  *{box-sizing:border-box}    
-  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}    
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>UFO HUB X — Get Key</title>
+<style>
+  :root{
+    --bg:#0a1324; --card:#0e1a30; --card2:#0c182b; --text:#e9f0ff;
+    --muted:#97a6c6; --white:#ffffff; --green:#02e3aa; --blue:#1a2b4f;
+    --accent:#12f3b3; --accent2:#62ffd5; --row:#0d1a31; --chip:#113222;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#000;color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
   .bg{position:fixed; inset:0;
-    background:linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
-               url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
-    background-size:cover; background-position:center;}
+    background:
+      linear-gradient(0deg, rgba(10,19,36,.92), rgba(10,19,36,.78)),
+      url('https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cce81a&is=68cb969a&hm=af9d0c2517a91914f3942f157dedc3324c0e07d3464e2cf57d034dd6cf25b897&');
+    background-size:cover; background-position:center;
+  }
   .wrap{position:relative;min-height:100dvh;display:flex;justify-content:center;padding:24px}
   .stack{width:min(980px,100%);display:flex;flex-direction:column;gap:18px}
 
   .hero{display:flex;justify-content:center;margin-top:8px}
-  .logo{width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
-        background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .logo{
+    width:280px;height:280px;border-radius:24px;overflow:hidden;display:grid;place-items:center;
+    background:#0f1d34;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 40px rgba(0,0,0,.35)
+  }
   .logo img{width:100%;height:100%;object-fit:cover}
   .brandText{margin-top:8px;text-align:center;font-weight:900;font-size:28px;letter-spacing:.5px}
   .brandText .ufo{color:#ffffff}
   .brandText .hubx{color:var(--green)}
 
-  .card{background:linear-gradient(180deg,var(--card),var(--card2));
-        border-radius:16px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2)); border-radius:16px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
   .topRow{display:flex;align-items:center;gap:16px}
   .title{font-weight:900}
   .title .ufo{color:#fff}.title .hubx{color:var(--green)}
@@ -35,40 +39,36 @@
   .bar{position:absolute;inset:0;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#28ffbf,#70ffe0);transition:width .25s}
   .btn{border:0;border-radius:12px;background:linear-gradient(90deg,#12f3b3,#62ffd5);color:#05251a;
        padding:10px 16px;font-weight:900;cursor:pointer}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
   .muted{color:var(--muted)}
 
   .grid{background:#0b172c;border-radius:14px;padding:10px 12px}
   .head{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;padding:8px 6px;color:var(--muted);font-weight:800}
-  .row{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;align-items:center;
-       padding:12px;border-radius:12px;background:#0d1a31}
-
+  .row{display:grid;grid-template-columns:1fr 160px 120px 140px;gap:12px;align-items:center; padding:12px;border-radius:12px;background:var(--row)}
   .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,Monaco,monospace}
-  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-weight:800}
-  .pill.active{background:rgba(2,227,170,.12);color:var(--green)}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-weight:900}
+  .pill.active{background:var(--chip); color:#86ffc8; border:1px solid #1e5f46}
+  .keyCell{display:flex;align-items:center;gap:14px}
+  .keyIcon{width:36px;height:36px;border-radius:12px;background:#0f1f3a;display:grid;place-items:center;color:#cfe8ff;font-size:18px}
+  .timeGreen{color:#19ff7c; font-weight:900}
+  .actWrap{display:flex;gap:8px}
   .btnIcon{background:#0f1f3a;color:#cfe8ff}
-  .btnSmall{padding:8px 10px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+  .btnSmall{padding:8px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
   .newKey{display:flex;justify-content:center;margin:12px 0 4px}
   .newKey .btn{background:#0f1f3a;color:#dff7ff}
   .footer{display:flex;gap:10px;justify-content:center;color:var(--muted)}
 
-  /* ===== [ADD] สไตล์รายการคีย์แบบภาพตัวอย่าง ===== */
-  .keysSubhead{font-size:12px; letter-spacing:.08em; color:var(--muted); margin:-2px 0 10px 2px; font-weight:800}
-  .keyCell{display:flex;align-items:center;gap:10px}
-  .copyBox{width:56px;height:40px;border-radius:12px;background:#111f35;display:grid;place-items:center;
-           border:1px solid rgba(255,255,255,.08)}
-  .copyBox svg{width:18px;height:18px;opacity:.9}
-  .keyIcon{width:22px;height:22px;display:inline-grid;place-items:center;filter:drop-shadow(0 1px 0 rgba(0,0,0,.4))}
-  .keyIcon::before{content:"🗝️"; font-size:18px}
-  .keyShort{font-weight:900; letter-spacing:.2px}
-  .timeGreen{color:#02e3aa; font-weight:900}
-  .actionOutline{background:transparent;border:2px solid #1fd3a8;color:#1fd3a8}
-  .actionOutline .hour{margin-right:6px}
-  .actionOutline:disabled{opacity:.6}
+  /* overlay ขณะกำลังรีเฟรช */
+  .overlay { position: fixed; inset: 0; display: none; background: rgba(5,12,20,.75);
+    backdrop-filter: blur(2px); align-items: center; justify-content: center; z-index: 9999; color: #dff7ff; font-weight: 900; letter-spacing: .5px; }
+  .overlay .box { background: #0f1d34; border: 1px solid rgba(255,255,255,.08);
+    padding: 16px 22px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
 </style>
-</head>    
-<body>    
-<div class="bg"></div>  
-<div class="wrap">  
+</head>
+<body>
+<div class="bg"></div>
+
+<div class="wrap">
   <div class="stack">
 
     <!-- HERO -->
@@ -81,7 +81,7 @@
       </div>
     </div>
 
-    <!-- PROGRESS + START/NEXT -->
+    <!-- PROGRESS -->
     <div class="card">
       <div class="topRow">
         <div class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
@@ -91,40 +91,26 @@
       <div class="muted" id="progressText" style="margin-top:10px">Progress: 0/2</div>
     </div>
 
-    <!-- KEY TABLE -->
+    <!-- TABLE -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div class="title" style="font-size:16px">🔑 Your Key</div>
-          <!-- [ADD] บรรทัดย่อยแบบภาพ -->
-          <div class="keysSubhead" id="keysCount">YOUR KEYS (0/6)</div>
-        </div>
+        <div class="title" style="font-size:16px">🔑 Your Key</div>
         <button class="btn" id="newBtn" disabled>＋ GET A NEW KEY</button>
       </div>
 
       <div class="grid">
-        <div class="head"><div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
+        <div class="head"><div>YOUR KEYS (1/6)</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div></div>
 
         <div class="row" id="row" style="display:none">
-          <!-- [CHANGED LAYOUT BY ADDING WRAPS — ไม่ลบของเดิม เพียงหุ้ม/เพิ่ม span -->
           <div class="keyCell">
-            <div class="copyBox" id="copyBox" title="Copy">
-              <!-- ไอคอนกระดาษ -->
-              <svg viewBox="0 0 24 24" fill="none"><path d="M9 9h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" stroke="#cfe8ff" stroke-width="1.6"/><path d="M7 15V6a2 2 0 0 1 2-2h7" stroke="#cfe8ff" stroke-width="1.6"/></svg>
-            </div>
-            <div class="keyIcon"></div>
-            <div>
-              <div class="keyShort" id="keyShort">UFO-XXXXXXXX-48H</div>
-              <div class="mono muted" id="keyTxt" style="display:none">UFO-XXXXXXXX-48H</div>
-            </div>
+            <div class="keyIcon">🔑</div>
+            <div class="mono" id="keyTxt">UFO-XXXXXXXX-48H</div>
           </div>
-
           <div class="mono timeGreen" id="left">--:--:--</div>
-
           <div><span class="pill active">ACTIVE</span></div>
-
-          <div style="display:flex;gap:8px">
-            <button class="btnSmall actionOutline" id="extBtn"><span class="hour">⌛</span>+48H</button>
+          <div class="actWrap">
+            <button class="btnSmall btnIcon" id="copyBtn">📋 Copy</button>
+            <button class="btnSmall" style="background:#133c2f;color:#baffea" id="extBtn">⏳ +48H</button>
           </div>
         </div>
       </div>
@@ -139,93 +125,83 @@
   </div>
 </div>
 
-<!-- overlay เดิม -->
-<div class="overlay" id="overlay">
-  <div class="box">Saving key… reloading</div>
-</div>
+<!-- overlay -->
+<div class="overlay" id="overlay"><div class="box">Saving key… reloading</div></div>
 
 <script>
-  /* ========= ส่วนลอจิกเหมือนเดิม (มีแต่เพิ่ม) ========= */
-
+  /* เพิ่ม: จำ progress/uid, DONE lock 10m, cooldown NEW 10m, overlay reload,
+           กู้คืนคีย์ล่าสุดหลังรีเฟรช, ต่ออายุ +48H */
   const REQUIRED_STEPS = 2;
   const OUT_LINK = "https://direct-link.net/1398143/IGoZdaaTcIHW";
 
-  const LS_UID         = "ufox_uid_v1";
-  const LS_STEPS       = "ufox_steps_v1";
-  const LS_COOLDOWN    = "ufox_cooldown_until_v1";
-  const LS_DONE_LOCK   = "ufox_done_lock_until_v1";
-  const LS_RELOAD_FLAG = "ufox_reloaded_once_v1";
-  const LS_LAST_KEY    = "ufox_last_key_v1";
-  const LS_LAST_EXP    = "ufox_last_exp_v1";
+  const LS_UID="ufox_uid_v1", LS_STEPS="ufox_steps_v1",
+        LS_CD="ufox_cooldown_until_v1", LS_DONE="ufox_done_lock_until_v1",
+        LS_RELOADED="ufox_reloaded_once_v1", LS_LAST_KEY="ufox_last_key_v1",
+        LS_LAST_EXP="ufox_last_exp_v1";
+  const COOLDOWN_MS = 10*60*1000;
 
-  const COOLDOWN_MS = 10 * 60 * 1000;
-
-  (function patchReload(){
+  // override reload -> show overlay, delay
+  (function(){
     const orig = location.reload.bind(location);
     location.reload = function(){
-      try { localStorage.setItem(LS_RELOAD_FLAG, String(Date.now())); } catch(e){}
+      try{ localStorage.setItem(LS_RELOADED, String(Date.now())); }catch(e){}
       const ov = document.getElementById("overlay");
       if (ov) ov.style.display = "flex";
       setTimeout(()=>orig(), 1200);
     };
   })();
-  (function preventReloadLoop(){
-    const t = parseInt(localStorage.getItem(LS_RELOAD_FLAG) || "0", 10);
-    if (t && Date.now() - t < 15000) localStorage.removeItem(LS_RELOAD_FLAG);
+
+  (function(){
+    const t = parseInt(localStorage.getItem(LS_RELOADED)||"0",10);
+    if (t && Date.now()-t<15000) localStorage.removeItem(LS_RELOADED);
   })();
 
+  // uid คงที่
   let uid = localStorage.getItem(LS_UID);
   if (!uid) { uid = Math.floor(Math.random()*1e12).toString(36).toUpperCase(); localStorage.setItem(LS_UID, uid); }
-  const place = "web";
 
+  // DOM
   const bar = document.getElementById("bar");
   const stepBtn = document.getElementById("stepBtn");
   const progressText = document.getElementById("progressText");
   const newBtn = document.getElementById("newBtn");
   const row = document.getElementById("row");
   const keyTxt = document.getElementById("keyTxt");
-  const keyShortEl = document.getElementById("keyShort"); // [ADD]
   const leftEl = document.getElementById("left");
+  const copyBtn = document.getElementById("copyBtn");
   const extBtn = document.getElementById("extBtn");
-  const copyBox = document.getElementById("copyBox");      // [ADD]
-  const keysCountEl = document.getElementById("keysCount");// [ADD]
 
-  function readSteps(){ const n = parseInt(localStorage.getItem(LS_STEPS) || "0", 10); return Number.isFinite(n)? Math.max(0,Math.min(REQUIRED_STEPS,n)) : 0; }
-  function writeSteps(n){ localStorage.setItem(LS_STEPS, String(Math.max(0,Math.min(REQUIRED_STEPS,n)))); }
-
-  function getCooldownUntil(){ const v = parseInt(localStorage.getItem(LS_COOLDOWN) || "0", 10); return Number.isFinite(v)? v:0; }
-  function setCooldown(ms){ localStorage.setItem(LS_COOLDOWN, String(Date.now() + ms)); }
-  function getDoneLockUntil(){ const v = parseInt(localStorage.getItem(LS_DONE_LOCK) || "0", 10); return Number.isFinite(v)? v:0; }
-  function setDoneLock(ms){ localStorage.setItem(LS_DONE_LOCK, String(Date.now()+ms)); }
-  function clearDoneLock(){ localStorage.removeItem(LS_DONE_LOCK); }
-
-  function saveLastKey(key, exp){ try{ localStorage.setItem(LS_LAST_KEY, key||""); localStorage.setItem(LS_LAST_EXP, String(exp||0)); }catch(e){} }
-  function loadLastKey(){ const key = localStorage.getItem(LS_LAST_KEY)||""; const exp = parseInt(localStorage.getItem(LS_LAST_EXP)||"0",10); return {key,exp:Number.isFinite(exp)?exp:0}; }
-
-  // [ADD] ย่อคีย์แบบ zZnFp...kwocw
-  function shortKey(k){
-    if(!k) return "";
-    if(k.length <= 10) return k;
-    return k.slice(0,5) + "..." + k.slice(-5);
-  }
-
-  // [ADD] จำนวนคีย์ (ตอนนี้เรามี 1 แถวเดี่ยว) – คุณจะเชื่อมกับ API ภายหลังได้
-  function updateKeysCount(n){ keysCountEl.textContent = `YOUR KEYS (${n}/6)`; }
+  // storage helpers
+  const readSteps=()=>Math.max(0,Math.min(REQUIRED_STEPS, parseInt(localStorage.getItem(LS_STEPS)||"0",10)||0));
+  const writeSteps=(n)=>localStorage.setItem(LS_STEPS,String(Math.max(0,Math.min(REQUIRED_STEPS,n))));
+  const getCD=()=>parseInt(localStorage.getItem(LS_CD)||"0",10)||0;
+  const setCD=(ms)=>localStorage.setItem(LS_CD,String(Date.now()+ms));
+  const getDone=()=>parseInt(localStorage.getItem(LS_DONE)||"0",10)||0;
+  const setDone=(ms)=>localStorage.setItem(LS_DONE,String(Date.now()+ms));
+  const clearDone=()=>localStorage.removeItem(LS_DONE);
+  const saveLast=(k,exp)=>{localStorage.setItem(LS_LAST_KEY,k||""); localStorage.setItem(LS_LAST_EXP,String(exp||0));}
+  const loadLast=()=>({key: localStorage.getItem(LS_LAST_KEY)||"", exp: parseInt(localStorage.getItem(LS_LAST_EXP)||"0",10)||0});
 
   let steps = readSteps();
-  let current = null; // {key, expires_at}
+  let current = null;
 
-  function fmtMMSS(ms){ const s = Math.max(0, Math.floor(ms/1000)); const m = Math.floor(s/60), ss = s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; }
+  function fmtHMS(sec){
+    sec = Math.max(0, sec|0);
+    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function fmtMMSS(ms){ const s=Math.max(0,Math.floor(ms/1000)); const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
 
   function updateStepsUI(){
     const now = Date.now();
-    const lockUntil = getDoneLockUntil();
-
-    if (lockUntil > now) {
+    const lock = getDone();
+    if (lock > now){
       bar.style.width = "100%";
       progressText.textContent = `Progress: 2/2`;
-      stepBtn.disabled = true; stepBtn.textContent = "DONE " + fmtMMSS(lockUntil-now);
-      newBtn.disabled = true; newBtn.textContent = "＋ GET A NEW KEY";
+      stepBtn.disabled = true;
+      stepBtn.textContent = "DONE " + fmtMMSS(lock - now);
+      newBtn.disabled = true;
+      newBtn.textContent = "＋ GET A NEW KEY";
       return;
     }
 
@@ -233,107 +209,102 @@
     bar.style.width = pct + "%";
     progressText.textContent = `Progress: ${steps}/${REQUIRED_STEPS}`;
 
-    if(steps >= REQUIRED_STEPS){
-      stepBtn.textContent = "DONE"; stepBtn.disabled = true;
-      const cdUntil = getCooldownUntil();
-      if (cdUntil > now) { newBtn.disabled = true; newBtn.textContent = `⏳ WAIT ${fmtMMSS(cdUntil-now)}`; }
-      else { newBtn.disabled = false; newBtn.textContent = "＋ GET A NEW KEY"; }
+    if (steps >= REQUIRED_STEPS){
+      stepBtn.textContent = "DONE";
+      stepBtn.disabled = true;
+      const cd = getCD();
+      if (cd > now){
+        newBtn.disabled = true;
+        newBtn.textContent = `⏳ WAIT ${fmtMMSS(cd-now)}`;
+      }else{
+        newBtn.disabled = false;
+        newBtn.textContent = "＋ GET A NEW KEY";
+      }
     }else{
-      stepBtn.textContent = (steps===0 ? "START" : "NEXT"); stepBtn.disabled = false;
-      newBtn.disabled = true; newBtn.textContent = "＋ GET A NEW KEY";
+      stepBtn.textContent = (steps===0 ? "START" : "NEXT");
+      stepBtn.disabled = false;
+      newBtn.disabled = true;
+      newBtn.textContent = "＋ GET A NEW KEY";
     }
   }
   updateStepsUI();
 
-  setInterval(()=>{
-    const now = Date.now();
-    const lockUntil = getDoneLockUntil();
-    if (lockUntil && lockUntil <= now) { clearDoneLock(); steps = 0; writeSteps(steps); }
-    updateStepsUI();
-  }, 1000);
-
+  // progress step
   stepBtn.addEventListener("click", ()=>{
-    if (getDoneLockUntil() > Date.now()) return;
+    if (getDone() > Date.now()) return;
     window.open(OUT_LINK, "_blank");
     steps = Math.min(REQUIRED_STEPS, steps+1);
     writeSteps(steps);
     updateStepsUI();
   });
 
-  function syncStepsFromStorage(){ const stored = readSteps(); if (stored !== steps) steps = stored; updateStepsUI(); }
-  window.addEventListener("focus", syncStepsFromStorage);
-  document.addEventListener("visibilitychange", syncStepsFromStorage);
-  window.addEventListener("pageshow", syncStepsFromStorage);
+  function syncBack(){
+    const s = readSteps();
+    if (s !== steps){ steps = s; updateStepsUI(); }
+  }
+  window.addEventListener("focus", syncBack);
+  document.addEventListener("visibilitychange", syncBack);
+  window.addEventListener("pageshow", syncBack);
 
   async function api(u){ const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); }
 
-  function fmt(sec){
-    sec = Math.max(0, sec|0);
-    const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  }
   function setCurrent(obj){
     current = obj;
     row.style.display = "grid";
-    keyTxt.textContent = obj.key;              // เก็บเต็ม ๆ (ซ่อนอยู่)
-    keyShortEl.textContent = shortKey(obj.key);// แสดงแบบย่อ [ADD]
+    keyTxt.textContent = obj.key;
     tick();
-    updateKeysCount(1);                        // [ADD] ตอนนี้มี 1 คีย์
   }
   function tick(){
     if(!current) return;
     const now = Math.floor(Date.now()/1000);
-    leftEl.textContent = fmt((current.expires_at|0) - now);
+    leftEl.textContent = fmtHMS((current.expires_at|0) - now);
   }
   setInterval(tick, 1000);
 
-  // copy แบบคลิกที่กล่องไอคอน
-  copyBox.addEventListener("click", ()=>{
+  copyBtn.addEventListener("click", ()=>{
     if(!current) return;
     navigator.clipboard?.writeText(current.key);
-    copyBox.style.opacity = .7;
-    setTimeout(()=> copyBox.style.opacity = 1, 500);
+    copyBtn.textContent = "✅ Copied";
+    setTimeout(()=> copyBtn.textContent="📋 Copy", 1200);
   });
 
   extBtn.addEventListener("click", async ()=>{
     if(!current) return;
     try{
       const j = await api(`/extend?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(uid)}`);
-      if(j && j.ok && j.expires_at){ setCurrent({key: current.key, expires_at: j.expires_at}); saveLastKey(current.key, j.expires_at); }
+      if(j && j.ok && j.expires_at){
+        setCurrent({ key: current.key, expires_at: j.expires_at });
+        saveLast(current.key, j.expires_at);
+      }
     }catch(e){ alert("Extend failed"); }
   });
 
   // กู้คืนคีย์ล่าสุดหลังรีเฟรช
-  (function restoreLastKeyOnLoad(){
-    const { key, exp } = loadLastKey();
-    const nowUnix = Math.floor(Date.now()/1000);
-    if (key && exp && exp > nowUnix) { setCurrent({ key, expires_at: exp }); }
-    else { updateKeysCount(0); }
+  (function(){
+    const { key, exp } = loadLast();
+    const nowU = Math.floor(Date.now()/1000);
+    if (key && exp && exp > nowU) setCurrent({ key, expires_at: exp });
   })();
 
-  // สร้างคีย์ใหม่
+  // get a new key
   newBtn.addEventListener("click", async ()=>{
     const now = Date.now();
-    if (getDoneLockUntil() > now) return;
-    if (getCooldownUntil() > now) return;
-    if(steps < REQUIRED_STEPS) return;
-
+    if (getDone() > now) return;
+    if (getCD() > now) return;
+    if (steps < REQUIRED_STEPS) return;
     try{
-      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent("web")}`);
+      const j = await api(`/getkey?uid=${encodeURIComponent(uid)}&place=web`);
       if(j && j.ok && j.key){
-        setCurrent({key:j.key, expires_at:j.expires_at});
-        saveLastKey(j.key, j.expires_at);
-
-        setDoneLock(COOLDOWN_MS);
-        setCooldown(COOLDOWN_MS);
-
-        steps = REQUIRED_STEPS;
-        writeSteps(steps);
-
-        location.reload();
+        setCurrent({ key:j.key, expires_at:j.expires_at });
+        saveLast(j.key, j.expires_at);
+        // ล็อก DONE + คูลดาวน์ NEW 10 นาที
+        setDone(COOLDOWN_MS);
+        setCD(COOLDOWN_MS);
+        steps = REQUIRED_STEPS; writeSteps(steps);
+        location.reload(); // จะเห็น overlay แล้วรีเฟรช
       }
     }catch(e){ alert("Get key failed"); }
   });
 </script>
 </body>
-</html>
+  </html>
