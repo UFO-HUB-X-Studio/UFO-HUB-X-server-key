@@ -1,118 +1,176 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
-// โหลดคีย์จากไฟล์
-const KEY_FILE = path.join(__dirname, "keys.json");
-function loadKeyConfig() {
-  try {
-    const raw = fs.readFileSync(KEY_FILE, "utf8");
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("[KEY-SERVER] Cannot read keys.json", e);
-    return { expires_default: 172800, keys: [] }; // default 48h
-  }
-}
-let config = loadKeyConfig();
+const PORT = process.env.PORT || 3000;
+const KEY_FILE = path.join(__dirname, "keys.json");      // optional pre-seeded keys (not required)
+const ISSUED_FILE = path.join(__dirname, "issued.json"); // persistent issued map
 
-// in-memory: จดสถานะคีย์ที่จ่าย/ใช้แล้ว
-// keyString -> { usedBy, expiresAt, reusable }
-const issued = new Map();
+const EXPIRES_DEFAULT = 48 * 3600; // 48 hours TTL (seconds)
+const KEY_PREFIX = "UFO-";
+const KEY_SUFFIX = "-48H";
+const RAND_LEN = 8; // length of the random middle part (adjustable)
+const MAX_GEN_ATTEMPTS = 8;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// health check
+function loadJSON(p, fallback) {
+  try {
+    if (!fs.existsSync(p)) return fallback;
+    return JSON.parse(fs.readFileSync(p, "utf8") || "null") || fallback;
+  } catch (e) {
+    console.error("loadJSON error", p, e);
+    return fallback;
+  }
+}
+function saveJSON(p, obj) {
+  try {
+    fs.writeFileSync(p, JSON.stringify(obj, null, 2), "utf8");
+  } catch (e) {
+    console.error("saveJSON error", p, e);
+  }
+}
+
+// issued: { "<KEY>": { usedBy: "<uid>", expiresAt: <unix>, reusable: bool } }
+const issued = loadJSON(ISSUED_FILE, {});
+
+// helper: random alnum uppercase
+function randPart(len) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const buf = crypto.randomBytes(len);
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[buf[i] % chars.length];
+  return out;
+}
+
+function makeKey() {
+  return KEY_PREFIX + randPart(RAND_LEN) + KEY_SUFFIX;
+}
+
+function isExpired(meta) {
+  if (!meta || !meta.expiresAt) return true;
+  return Math.floor(Date.now() / 1000) > meta.expiresAt;
+}
+
+// If uid already has an active key, return it
+function findActiveKeyForUid(uid) {
+  for (const k of Object.keys(issued)) {
+    const m = issued[k];
+    if (m.usedBy && String(m.usedBy) === String(uid) && !isExpired(m)) {
+      return { key: k, meta: m };
+    }
+  }
+  return null;
+}
+
+// generate unique key (avoid existing issued keys)
+function generateUniqueKey() {
+  for (let attempt = 0; attempt < MAX_GEN_ATTEMPTS; attempt++) {
+    const k = makeKey();
+    if (!issued[k]) return k;
+  }
+  // final fallback: linear search with appended counter
+  let i = 0;
+  while (true) {
+    const k = KEY_PREFIX + randPart(RAND_LEN - 2) + ("Z" + i) + KEY_SUFFIX;
+    if (!issued[k]) return k;
+    i++;
+  }
+}
+
+// health
 app.get("/", (req, res) => {
   res.json({ ok: true, service: "UFO-HUB-X key server", time: Date.now() });
 });
 
-// (ทางเลือก) แจกคีย์แบบสุ่ม สำหรับหน้าเว็บ "กดรับคีย์"
+// GET /getkey?uid=...&place=...
 app.get("/getkey", (req, res) => {
-  const available = config.keys.filter(k => {
-    const st = issued.get(k.key);
-    if (!st) return true;               // ยังไม่เคยออก
-    if (k.reusable) return true;        // ออกซ้ำได้
-    return (Date.now()/1000) > (st.expiresAt || 0); // หมดอายุแล้ว -> วนกลับมาแจกได้
-  });
+  const uid = String(req.query.uid || "").trim() || null;
+  const place = String(req.query.place || "").trim() || null;
 
-  if (available.length === 0) {
-    return res.json({ ok: true, key: null, message: "out_of_stock" });
-  }
-  const pick = available[Math.floor(Math.random() * available.length)];
-  res.json({
-    ok: true,
-    key: pick.key,
-    ttl: pick.ttl ?? config.expires_default,
-    reusable: !!pick.reusable
-  });
-});
-
-// ยืนยันคีย์ (Roblox ฝั่ง UI Key จะเรียก endpoint นี้)
-app.get("/verify", (req, res) => {
-  const key   = String(req.query.key || "").trim();
-  const uid   = String(req.query.uid || "").trim();    // Roblox userId (ควรส่งมา)
-  const place = String(req.query.place || "").trim();  // PlaceId (optional)
-
-  if (!key) return res.status(400).json({ ok:false, valid:false, reason:"no_key" });
-
-  // หาในฐานคีย์
-  const kMeta = config.keys.find(k => k.key === key);
-  if (!kMeta) {
-    return res.json({ ok:true, valid:false, reason:"not_found" });
-  }
-
-  const ttl      = typeof kMeta.ttl === "number" ? kMeta.ttl : (config.expires_default || 172800);
-  const reusable = !!kMeta.reusable;
-  const now      = Math.floor(Date.now()/1000);
-
-  const st = issued.get(key);
-  if (!st) {
-    // ยังไม่เคยใช้ -> ออกตั๋วให้
-    const exp = now + ttl;
-    issued.set(key, { usedBy: uid || null, expiresAt: exp, reusable });
-    return res.json({
-      ok:true, valid:true, reusable, expires_at: exp, reason:null,
-      meta: { bound_uid: uid || null, place: place || null }
-    });
-  }
-
-  // เคยมีแล้ว
-  if (reusable) {
-    // ใช้ซ้ำได้ -> ต่ออายุให้
-    const exp = now + ttl;
-    issued.set(key, { usedBy: st.usedBy || uid || null, expiresAt: exp, reusable });
-    return res.json({
-      ok:true, valid:true, reusable:true, expires_at: exp, reason:null,
-      meta: { bound_uid: st.usedBy || uid || null, place: place || null }
-    });
-  } else {
-    // ไม่ reusable
-    if (now > (st.expiresAt || 0)) {
-      // หมดอายุ -> โอนสิทธิ์ให้รายใหม่
-      const exp = now + ttl;
-      issued.set(key, { usedBy: uid || st.usedBy || null, expiresAt: exp, reusable:false });
+  // if uid already has active key, return same (so one person won't get 2 active keys)
+  if (uid) {
+    const found = findActiveKeyForUid(uid);
+    if (found) {
       return res.json({
-        ok:true, valid:true, reusable:false, expires_at: exp, reason:null,
-        meta: { bound_uid: uid || st.usedBy || null, place: place || null }
-      });
-    } else {
-      // ยังไม่หมดอายุ
-      if (st.usedBy && uid && st.usedBy !== uid) {
-        return res.json({ ok:true, valid:false, reason:"already_used_by_someone", expires_at: st.expiresAt });
-      }
-      // uid เดิมยังใช้ได้
-      return res.json({
-        ok:true, valid:true, reusable:false, expires_at: st.expiresAt, reason:null,
-        meta: { bound_uid: st.usedBy || null }
+        ok: true,
+        key: found.key,
+        ttl: found.meta.expiresAt - Math.floor(Date.now()/1000),
+        expires_at: found.meta.expiresAt,
+        reusable: !!found.meta.reusable,
+        note: "existing_active_for_uid"
       });
     }
   }
+
+  // generate
+  const key = generateUniqueKey();
+  const now = Math.floor(Date.now() / 1000);
+  const ttl = EXPIRES_DEFAULT;
+  const exp = now + ttl;
+
+  // issued record
+  issued[key] = { usedBy: uid || null, expiresAt: exp, reusable: false };
+  saveJSON(ISSUED_FILE, issued);
+
+  return res.json({ ok: true, key, ttl, expires_at: exp, reusable: false });
 });
 
-const PORT = process.env.PORT || 3000;
+// GET /verify?key=...&uid=...&place=...
+app.get("/verify", (req, res) => {
+  const key = String(req.query.key || "").trim();
+  const uid = String(req.query.uid || "").trim() || null;
+  const place = String(req.query.place || "").trim() || null;
+
+  if (!key) return res.status(400).json({ ok:false, valid:false, reason:"no_key" });
+
+  const meta = issued[key];
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!meta) {
+    // not found -> invalid
+    return res.json({ ok:true, valid:false, reason:"not_found" });
+  }
+
+  if (meta.reusable) {
+    // reusable keys always valid; refresh expiry
+    meta.expiresAt = now + EXPIRES_DEFAULT;
+    if (uid) meta.usedBy = uid;
+    saveJSON(ISSUED_FILE, issued);
+    return res.json({ ok:true, valid:true, reusable:true, expires_at: meta.expiresAt, reason:null, meta:{bound_uid:meta.usedBy, place:place}});
+  }
+
+  // not reusable
+  if (now > (meta.expiresAt || 0)) {
+    // expired -> allow reassign to this uid (give fresh TTL)
+    meta.usedBy = uid || meta.usedBy || null;
+    meta.expiresAt = now + EXPIRES_DEFAULT;
+    saveJSON(ISSUED_FILE, issued);
+    return res.json({ ok:true, valid:true, reusable:false, expires_at: meta.expiresAt, reason:"reissued_after_expire", meta:{bound_uid:meta.usedBy, place:place}});
+  }
+
+  // still active
+  if (meta.usedBy && uid && meta.usedBy !== uid) {
+    // taken by someone else
+    return res.json({ ok:true, valid:false, reason:"already_used_by_someone", expires_at: meta.expiresAt });
+  }
+
+  // allowed (either usedBy matches or not set)
+  if (uid and not nil) then end -- placeholder
+  return res.json({ ok:true, valid:true, reusable:false, expires_at: meta.expiresAt, reason:null, meta:{bound_uid:meta.usedBy || uid}});
+});
+
+// small admin endpoints (optional, for debugging)
+// GET /issued -> list issued map (NOT FOR PUBLIC IN PROD)
+app.get("/issued", (req, res) => {
+  res.json({ ok:true, count: Object.keys(issued).length, issued });
+});
+
 app.listen(PORT, () => {
-  console.log(`[KEY-SERVER] running on port ${PORT}`);
+  console.log(`[KEY-SERVER] listening on ${PORT}`);
 });
