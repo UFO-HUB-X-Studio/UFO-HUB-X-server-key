@@ -6,48 +6,48 @@ const path = require("path");
 const crypto = require("crypto");
 
 const PORT = process.env.PORT || 3000;
+const ISSUED_FILE = path.join(__dirname, "issued.json"); // เก็บคีย์
 
-// ====== PATHS ======
-const DATA_DIR    = path.join(__dirname);
-const ISSUED_FILE = path.join(DATA_DIR, "issued.json"); // เก็บคีย์ที่ออกไปแล้ว
-const PUBLIC_DIR  = path.join(__dirname, "public");     // หน้าเว็บ UI
-
-// ====== CONFIG (48 ชั่วโมง) ======
-const EXPIRES_DEFAULT = 48 * 3600; // วินาที
+const EXPIRES_DEFAULT = 48 * 3600; // 48 ชั่วโมง
 const KEY_PREFIX = "UFO-";
 const KEY_SUFFIX = "-48H";
-const RAND_LEN   = 8;   // ความยาวสุ่มตรงกลาง
+const RAND_LEN = 8;
 const MAX_GEN_ATTEMPTS = 8;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(PUBLIC_DIR)); // เสิร์ฟหน้าเว็บที่ /
 
 // ---------- helpers ----------
-function ensureFile(p, fallback) {
+function safeParseJSON(str, fallback) {
   try {
-    if (!fs.existsSync(p)) fs.writeFileSync(p, JSON.stringify(fallback ?? {}, null, 2), "utf8");
-  } catch (e) { console.error("ensureFile error", p, e); }
+    if (!str || !str.trim()) return fallback;
+    return JSON.parse(str);
+  } catch {
+    return fallback;
+  }
 }
 function loadJSON(p, fallback) {
   try {
     if (!fs.existsSync(p)) return fallback;
     const raw = fs.readFileSync(p, "utf8");
-    return (raw && JSON.parse(raw)) || fallback;
+    return safeParseJSON(raw, fallback);
   } catch (e) {
     console.error("loadJSON error", p, e);
     return fallback;
   }
 }
 function saveJSON(p, obj) {
-  try { fs.writeFileSync(p, JSON.stringify(obj, null, 2), "utf8"); }
-  catch (e) { console.error("saveJSON error", p, e); }
+  try {
+    fs.writeFileSync(p, JSON.stringify(obj, null, 2), "utf8");
+  } catch (e) {
+    console.error("saveJSON error", p, e);
+  }
 }
 
 // โครงสร้าง: issued = { "<KEY>": { usedBy:"<uid>", expiresAt:<unix>, reusable:false } }
-ensureFile(ISSUED_FILE, {});
 const issued = loadJSON(ISSUED_FILE, {});
+if (!fs.existsSync(ISSUED_FILE)) saveJSON(ISSUED_FILE, issued); // ensure file exists
 
 // สุ่มตัวอักษร A-Z0-9
 function randPart(len) {
@@ -57,8 +57,9 @@ function randPart(len) {
   for (let i = 0; i < len; i++) out += chars[buf[i] % chars.length];
   return out;
 }
-function makeKey() { return KEY_PREFIX + randPart(RAND_LEN) + KEY_SUFFIX; }
-
+function makeKey() {
+  return KEY_PREFIX + randPart(RAND_LEN) + KEY_SUFFIX;
+}
 function isExpired(meta) {
   if (!meta || !meta.expiresAt) return true;
   return Math.floor(Date.now() / 1000) > meta.expiresAt;
@@ -77,7 +78,6 @@ function generateUniqueKey() {
     const k = makeKey();
     if (!issued[k]) return k;
   }
-  // fallback (ไม่น่าถึง)
   let i = 0;
   while (true) {
     const k = KEY_PREFIX + randPart(RAND_LEN - 2) + ("Z" + i) + KEY_SUFFIX;
@@ -86,21 +86,18 @@ function generateUniqueKey() {
   }
 }
 
-// ---------- APIs ----------
-
-// Health (ไว้เช็คสถานะ)
-app.get("/health", (req, res) => {
+// ---------- routes ----------
+app.get("/", (req, res) => {
   res.json({ ok: true, service: "UFO-HUB-X key server", time: Date.now() });
 });
+// health check path สำหรับ Render
+app.get("/healthz", (req, res) => res.status(200).send("ok"));
 
-// แจกคีย์: /getkey?uid=...&place=...
+/** แจกคีย์ใหม่ (ถ้า uid มีคีย์ที่ยังไม่หมดอายุ จะคืนคีย์เดิม) */
 app.get("/getkey", (req, res) => {
-  const uid   = String(req.query.uid || "").trim() || null;
-  const place = String(req.query.place || "").trim() || null;
-
+  const uid = String(req.query.uid || "").trim() || null;
   const now = Math.floor(Date.now() / 1000);
 
-  // ถ้ามีคีย์ที่ยัง Active สำหรับ uid นี้อยู่แล้ว -> คืนคีย์เดิม
   if (uid) {
     const found = findActiveKeyForUid(uid);
     if (found) {
@@ -110,89 +107,79 @@ app.get("/getkey", (req, res) => {
         ttl: Math.max(0, found.meta.expiresAt - now),
         expires_at: found.meta.expiresAt,
         reusable: !!found.meta.reusable,
-        note: "existing_active_for_uid"
+        note: "existing_active_for_uid",
       });
     }
   }
 
-  // สร้างคีย์ใหม่
   const key = generateUniqueKey();
   const exp = now + EXPIRES_DEFAULT;
-
   issued[key] = { usedBy: uid || null, expiresAt: exp, reusable: false };
   saveJSON(ISSUED_FILE, issued);
 
-  res.json({ ok: true, key, ttl: EXPIRES_DEFAULT, expires_at: exp, reusable: false, place });
+  res.json({ ok: true, key, ttl: EXPIRES_DEFAULT, expires_at: exp, reusable: false });
 });
 
-// ตรวจคีย์: /verify?key=...&uid=...&place=...
-app.get("/verify", (req, res) => {
-  const key   = String(req.query.key || "").trim();
-  const uid   = String(req.query.uid || "").trim() || null;
-  const place = String(req.query.place || "").trim() || null;
+/** ขยายอายุคีย์ +48H (UI ของคุณกดปุ่มนี้) */
+app.get("/extend", (req, res) => {
+  const key = String(req.query.key || "").trim();
+  const uid = String(req.query.uid || "").trim() || null;
+  if (!key) return res.status(400).json({ ok: false, reason: "no_key" });
 
+  const meta = issued[key];
+  if (!meta) return res.json({ ok: false, reason: "not_found" });
+
+  // อนุญาตต่ออายุเมื่อคีย์นี้เป็นของ uid นี้ (หรือยังไม่ผูกใคร)
+  if (uid && meta.usedBy && meta.usedBy !== uid) {
+    return res.json({ ok: false, reason: "owned_by_other" });
+  }
+  const now = Math.floor(Date.now() / 1000);
+  meta.usedBy = uid || meta.usedBy || null;
+  meta.expiresAt = Math.max(meta.expiresAt || now, now) + EXPIRES_DEFAULT;
+  saveJSON(ISSUED_FILE, issued);
+  res.json({ ok: true, expires_at: meta.expiresAt });
+});
+
+/** ตรวจคีย์ */
+app.get("/verify", (req, res) => {
+  const key = String(req.query.key || "").trim();
+  const uid = String(req.query.uid || "").trim() || null;
   if (!key) return res.status(400).json({ ok:false, valid:false, reason:"no_key" });
 
   const meta = issued[key];
-  const now  = Math.floor(Date.now() / 1000);
-
+  const now = Math.floor(Date.now() / 1000);
   if (!meta) return res.json({ ok:true, valid:false, reason:"not_found" });
 
   if (meta.reusable) {
-    // คีย์แบบ reusable (ถ้าอนาคตอยากมี) ต่ออายุเสมอ
     meta.expiresAt = now + EXPIRES_DEFAULT;
     if (uid) meta.usedBy = uid;
     saveJSON(ISSUED_FILE, issued);
-    return res.json({ ok:true, valid:true, reusable:true, expires_at: meta.expiresAt, meta:{bound_uid:meta.usedBy, place} });
+    return res.json({ ok:true, valid:true, reusable:true, expires_at: meta.expiresAt, meta:{bound_uid:meta.usedBy}});
   }
 
-  // หมดอายุแล้ว -> อนุญาต re-issue
   if (now > (meta.expiresAt || 0)) {
-    meta.usedBy   = uid || meta.usedBy || null;
-    meta.expiresAt= now + EXPIRES_DEFAULT;
+    meta.usedBy = uid || meta.usedBy || null;
+    meta.expiresAt = now + EXPIRES_DEFAULT;
     saveJSON(ISSUED_FILE, issued);
-    return res.json({ ok:true, valid:true, reusable:false, expires_at: meta.expiresAt, reason:"reissued_after_expire", meta:{bound_uid:meta.usedBy, place} });
+    return res.json({ ok:true, valid:true, reusable:false, expires_at: meta.expiresAt, reason:"reissued_after_expire", meta:{bound_uid:meta.usedBy}});
   }
 
-  // ยัง active อยู่
   if (meta.usedBy && uid && meta.usedBy !== uid) {
     return res.json({ ok:true, valid:false, reason:"already_used_by_someone", expires_at: meta.expiresAt });
   }
 
-  return res.json({ ok:true, valid:true, reusable:false, expires_at: meta.expiresAt, meta:{bound_uid:meta.usedBy || uid, place} });
+  return res.json({ ok:true, valid:true, reusable:false, expires_at: meta.expiresAt, meta:{bound_uid:meta.usedBy || uid}});
 });
 
-// ต่ออายุ 48 ชั่วโมง/ครั้ง: /extend?key=...&uid=...
-app.get("/extend", (req, res) => {
-  const key = String(req.query.key || "").trim();
-  const uid = String(req.query.uid || "").trim() || null;
-  if (!key) return res.status(400).json({ ok:false, reason:"no_key" });
-
-  const meta = issued[key];
-  if (!meta) return res.json({ ok:false, reason:"not_found" });
-
-  const now = Math.floor(Date.now()/1000);
-
-  // ผูก UID ให้ตรงกัน
-  if (uid && meta.usedBy && meta.usedBy !== uid) {
-    return res.json({ ok:false, reason:"bound_to_another_uid" });
-  }
-
-  // บังคับต่ออายุ +48 ชั่วโมง เสมอ
-  const add = 48 * 3600;
-  meta.expiresAt = Math.max(meta.expiresAt || now, now) + add;
-  if (uid) meta.usedBy = uid;
-  saveJSON(ISSUED_FILE, issued);
-
-  res.json({ ok:true, expires_at: meta.expiresAt, added_seconds: add });
-});
-
-// DEBUG: อย่าเปิดในโปรดักชันจริง
+// debug
 app.get("/issued", (req, res) => {
   res.json({ ok:true, count:Object.keys(issued).length, issued });
 });
 
-// ====== START ======
+// กันโปรเซสตายเงียบ ๆ
+process.on("uncaughtException", (e) => console.error("uncaughtException", e));
+process.on("unhandledRejection", (e) => console.error("unhandledRejection", e));
+
 app.listen(PORT, () => {
   console.log(`[KEY-SERVER] listening on ${PORT}`);
 });
