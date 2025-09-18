@@ -1,7 +1,0 @@
-{
-  "expires_default": 60,
-  "keys": [
-    { "key": "UFO-KEY-AAA111", "reusable": false, "ttl": 60 },
-    { "key": "UFO-KEY-BBB222", "reusable": true,  "ttl": 60 }
-  ]
-}
