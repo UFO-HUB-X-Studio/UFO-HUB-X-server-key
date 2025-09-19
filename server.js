@@ -1,75 +1,89 @@
+// server.js
 const express = require("express");
-const cors = require("cors");
 const fs = require("fs");
+const path = require("path");
 
-const app = express();
-app.use(cors());
+const app  = express();
+const PORT = process.env.PORT || 3000;
 
-let cfg = { expires_default: 172800, keys: [] };
-try {
-  cfg = JSON.parse(fs.readFileSync("./config.json", "utf8"));
-} catch (e) {
-  console.error("Cannot read config.json, using defaults:", e.message);
+// ----- helpers -----
+function readConfig() {
+  const configPath = path.join(__dirname, "config.json");
+  try {
+    return JSON.parse(fs.readFileSync(configPath, "utf8"));
+  } catch (_) {
+    return { expires_default: 172800, keys: [] };
+  }
 }
 
-// หน่วยความจำเล็กๆ บันทึกว่า key ไหนถูกใช้ไปกับ uid ไหนแล้ว (เฉพาะ reusable=false)
-const usedOnce = new Map(); // key => Set<uid>
-
-function nowSec() { return Math.floor(Date.now() / 1000); }
-function findKeyMeta(k) {
-  const nk = String(k || "").trim().toUpperCase();
-  return cfg.keys.find(x => String(x.key || "").trim().toUpperCase() === nk) || null;
-}
-
-app.get("/getkey", (req, res) => {
-  const uid   = String(req.query.uid || "");
-  const place = String(req.query.place || "");
-  return res.json({
+// ----- root: แนะนำการใช้ -----
+app.get("/", (req, res) => {
+  const uid   = req.query.uid   || "<UID>";
+  const place = req.query.place || "<PLACE>";
+  res.json({
     ok: true,
     message: "Use /verify?key=&uid=&place=&format=json",
-    uid, place
+    uid: String(uid),
+    place: String(place),
   });
 });
 
+// ----- GETKEY: ดึงคีย์แรกใน config.json -----
+app.get("/getkey", (req, res) => {
+  const uid   = req.query.uid   || "";
+  const place = req.query.place || "";
+
+  try {
+    const cfg = readConfig();
+    const firstKey = cfg.keys[0] ? cfg.keys[0].key : null;
+
+    res.json({
+      ok: true,
+      uid,
+      place,
+      key: firstKey,                           // <— จะเห็นคีย์ตรงนี้
+      expires_in: cfg.expires_default || 172800
+    });
+  } catch (err) {
+    console.error("getkey error:", err);
+    res.status(500).json({ ok: false, error: "server_error" });
+  }
+});
+
+// ----- VERIFY: ตรวจคีย์ -----
 app.get("/verify", (req, res) => {
-  const key   = String(req.query.key || "");
-  const uid   = String(req.query.uid || "");
-  const place = String(req.query.place || "");
-  const wantsJson = String(req.query.format || "").toLowerCase() === "json";
+  const key   = (req.query.key || "").trim();
+  const uid   = req.query.uid   || "";
+  const place = req.query.place || "";
 
-  const meta = findKeyMeta(key);
-  if (!meta) {
-    if (wantsJson) return res.json({ ok: true, valid: false, reason: "invalid_key" });
-    return res.send("INVALID");
-  }
+  try {
+    const cfg = readConfig();
+    const found = cfg.keys.find(k => String(k.key).trim() === key);
 
-  // ถ้าเป็นคีย์ใช้ครั้งเดียว และ uid นี้ใช้แล้ว → invalid
-  if (meta.reusable === false) {
-    const usedSet = usedOnce.get(meta.key) || new Set();
-    if (usedSet.has(uid)) {
-      if (wantsJson) return res.json({ ok: true, valid: false, reason: "used_already" });
-      return res.send("INVALID");
+    if (!found) {
+      return res.json({ ok: true, valid: false, reason: "invalid_key" });
     }
-    // มาร์กว่าใช้แล้ว (ครั้งแรก)
-    usedSet.add(uid);
-    usedOnce.set(meta.key, usedSet);
-  }
 
-  const ttl = Number(meta.ttl) || Number(cfg.expires_default) || 172800;
-  const expires_at = nowSec() + ttl;
+    const ttl = Number(found.ttl || cfg.expires_default || 172800);
+    const now = Math.floor(Date.now() / 1000);
 
-  if (wantsJson) {
-    return res.json({ ok: true, valid: true, expires_at, reason: null, uid, place });
-  } else {
-    return res.send("VALID");
+    res.json({
+      ok: true,
+      valid: true,
+      uid,
+      place,
+      expires_at: now + ttl
+    });
+  } catch (err) {
+    console.error("verify error:", err);
+    res.status(500).json({ ok: false, error: "server_error" });
   }
 });
 
-// สาธิตหน้า root
-app.get("/", (_req, res) => {
-  res.send("UFO HUB X key server is running.");
-});
+// ----- 404 -----
+app.use((req, res) => res.status(404).json({ ok:false, error:"not_found" }));
 
-// เริ่มเซิร์ฟเวอร์
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server listening on port", PORT));
+// ----- start -----
+app.listen(PORT, () => {
+  console.log(`[KEY SERVER] listening on ${PORT}`);
+});
