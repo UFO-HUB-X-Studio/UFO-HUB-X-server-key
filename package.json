@@ -1,16 +1,14 @@
 {
-  "name": "ufo-hub-x-server-key-gateway",
+  "name": "ufo-hub-x-server-key",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
   "scripts": {
     "start": "node src/server.mjs"
   },
   "dependencies": {
-    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "morgan": "^1.10.0",
-    "undici": "^6.19.8"
+    "node-fetch": "^3.3.2",
+    "path-to-regexp": "^6.2.2"
   }
 }
