@@ -1,4 +1,4 @@
-// Minimal UFO-HUB-X key server (Express)
+// UFO-HUB-X Key Server (Persist issued keys + real expiry)
 // Endpoints:
 //   GET /getkey?uid=123
 //   GET /verify?key=UFO-KEY-AAA111&uid=123
@@ -10,22 +10,28 @@ const path = require("path");
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS + JSON header (ให้ Roblox/Executor เรียกได้สบาย)
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   next();
 });
 
+const CONFIG_PATH = path.join(__dirname, "config.json");
+const ISSUED_PATH = path.join(__dirname, "issued.json");
+
 function loadConfig() {
-  const p = path.join(__dirname, "config.json");
-  return JSON.parse(fs.readFileSync(p, "utf8"));
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+}
+function loadIssued() {
+  if (!fs.existsSync(ISSUED_PATH)) return {};
+  try { return JSON.parse(fs.readFileSync(ISSUED_PATH, "utf8") || "{}"); }
+  catch { return {}; }
+}
+function saveIssued(obj) {
+  fs.writeFileSync(ISSUED_PATH, JSON.stringify(obj, null, 2), "utf8");
 }
 
-// Health check (บางโฮสต์ใช้เช็ค)
-app.get("/", (req, res) => {
-  res.json({ ok: true, service: "ufo-hub-x-key-server" });
-});
+app.get("/", (req, res) => res.json({ ok: true, service: "ufo-hub-x-key-server" }));
 
 // ---------------------- GETKEY ----------------------
 app.get("/getkey", (req, res) => {
@@ -40,8 +46,8 @@ app.get("/getkey", (req, res) => {
       ok: true,
       uid,
       place,
-      key: firstKey,                                  // ส่งคีย์แรกออกไป
-      expires_in: config.expires_default || 172800    // บอก TTL เริ่มต้น
+      key: firstKey,
+      expires_in: config.expires_default || 172800
     });
   } catch (err) {
     console.error("getkey error:", err);
@@ -51,8 +57,8 @@ app.get("/getkey", (req, res) => {
 
 // ---------------------- VERIFY ----------------------
 app.get("/verify", (req, res) => {
-  const uid = (req.query.uid || "").trim();
-  const key = (req.query.key || "").trim();
+  const uid = String(req.query.uid || "").trim();
+  const key = String(req.query.key || "").trim();
 
   try {
     const config = loadConfig();
@@ -62,17 +68,42 @@ app.get("/verify", (req, res) => {
       return res.json({ ok: true, valid: false, reason: "invalid_key" });
     }
 
-    // หมดอายุ = ตอนนี้ + ttl (ถ้าไม่ได้ใส่ ttl ใช้ expires_default)
-    const now       = Math.floor(Date.now() / 1000);
-    const ttl       = Number(found.ttl || config.expires_default || 172800);
-    const expiresAt = now + ttl;
+    const now    = Math.floor(Date.now() / 1000);
+    const ttl    = Number(found.ttl || config.expires_default || 172800);
 
-    res.json({
+    // ออก "บัตรคีย์" ครั้งแรก แล้วใช้บัตรเดิมในครั้งต่อ ๆ ไป
+    const issued = loadIssued();
+    const ticketId = `${uid}:${key}`; // ผูกกับ UID (จะได้ไม่ลามไปทั้งโลก)
+    let ticket = issued[ticketId];
+
+    if (!ticket) {
+      // ออกบัตรใหม่
+      ticket = {
+        key: found.key,
+        uid,
+        issued_at: now,
+        expires_at: now + ttl,
+        reusable: !!found.reusable
+      };
+      issued[ticketId] = ticket;
+      saveIssued(issued);
+    }
+
+    // ตรวจหมดอายุจาก "บัตร" ไม่ใช่คำนวณใหม่ทุกครั้ง
+    if (now > ticket.expires_at) {
+      return res.json({ ok: true, valid: false, reason: "expired", expired_at: ticket.expires_at });
+    }
+
+    // ถ้าอยาก “non-reusable” แบบใช้ได้ครั้งเดียวต่อ UID
+    // ให้เพิ่มเงื่อนไขที่จะ “mark used” และ “ไม่ให้ verify ซ้ำ”
+    // แต่ตาม requirement ของคุณคือ ใช้ได้จนหมดอายุ จึงปล่อยผ่าน
+
+    return res.json({
       ok: true,
       valid: true,
-      key: found.key,
-      reusable: !!found.reusable,
-      expires_at: expiresAt    // unix time ที่จะหมดอายุ
+      key: ticket.key,
+      expires_at: ticket.expires_at,
+      reusable: ticket.reusable
     });
   } catch (err) {
     console.error("verify error:", err);
