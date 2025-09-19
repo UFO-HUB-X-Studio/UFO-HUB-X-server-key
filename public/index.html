@@ -1,1 +1,47 @@
+-- UFO HUB X – Simple Key UI (รุ่นง่าย เซิร์ฟเวอร์เดียว)
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
 
+-- ใส่โดเมนเซิร์ฟเวอร์ที่ deploy ไว้
+local BASE = "https://<your-service>.onrender.com"
+
+local function http_get(url)
+    local ok, body = pcall(function() return game:HttpGet(url) end)
+    if ok and body then return true, body end
+    return false, nil
+end
+
+-- เปิดลิงก์ขอคีย์ (คุณแจก URL นี้ให้ผู้ใช้กดในเบราว์เซอร์)
+local function getKeyUrl()
+    local uid = tostring(LP and LP.UserId or "")
+    local place = tostring(game.PlaceId or "")
+    return string.format("%s/getkey?uid=%s&place=%s",
+        BASE, uid, place
+    )
+end
+
+-- ฟังก์ชันตรวจคีย์
+local function verifyKey(k)
+    local uid = tostring(LP and LP.UserId or "")
+    local place = tostring(game.PlaceId or "")
+    local url = string.format("%s/verify?key=%s&uid=%s&place=%s",
+        BASE,
+        HttpService:UrlEncode(k),
+        HttpService:UrlEncode(uid),
+        HttpService:UrlEncode(place)
+    )
+    local ok, body = http_get(url)
+    if not ok or not body then return false end
+    body = tostring(body):gsub("^%s+",""):gsub("%s+$",""):upper()
+    return body == "VALID"
+end
+
+-- ==== ตัวอย่างการใช้งาน (คุณเอาไปผูกกับ UI ของคุณเองได้) ====
+-- print("Get Key URL:", getKeyUrl())
+-- local k = "คีย์ที่ผู้ใช้วาง"
+-- if verifyKey(k) then
+--     print("KEY OK")
+-- else
+--     print("KEY INVALID")
+-- end
