@@ -1,47 +1,68 @@
--- UFO HUB X – Simple Key UI (รุ่นง่าย เซิร์ฟเวอร์เดียว)
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
 
--- ใส่โดเมนเซิร์ฟเวอร์ที่ deploy ไว้
-local BASE = "https://<your-service>.onrender.com"
+const app  = express();
+const PORT = process.env.PORT || 3000;
 
-local function http_get(url)
-    local ok, body = pcall(function() return game:HttpGet(url) end)
-    if ok and body then return true, body end
-    return false, nil
-end
+function loadConfig() {
+  const configPath = path.join(__dirname, "config.json");
+  return JSON.parse(fs.readFileSync(configPath, "utf8"));
+}
 
--- เปิดลิงก์ขอคีย์ (คุณแจก URL นี้ให้ผู้ใช้กดในเบราว์เซอร์)
-local function getKeyUrl()
-    local uid = tostring(LP and LP.UserId or "")
-    local place = tostring(game.PlaceId or "")
-    return string.format("%s/getkey?uid=%s&place=%s",
-        BASE, uid, place
-    )
-end
+// health
+app.get("/", (req, res) => {
+  res.json({ ok: true, service: "UFO-HUB-X key server" });
+});
 
--- ฟังก์ชันตรวจคีย์
-local function verifyKey(k)
-    local uid = tostring(LP and LP.UserId or "")
-    local place = tostring(game.PlaceId or "")
-    local url = string.format("%s/verify?key=%s&uid=%s&place=%s",
-        BASE,
-        HttpService:UrlEncode(k),
-        HttpService:UrlEncode(uid),
-        HttpService:UrlEncode(place)
-    )
-    local ok, body = http_get(url)
-    if not ok or not body then return false end
-    body = tostring(body):gsub("^%s+",""):gsub("%s+$",""):upper()
-    return body == "VALID"
-end
+// ---------------------- GETKEY ----------------------
+// รับ uid (ไม่บังคับ) แล้วส่ง key ตัวแรก + ttl กลับไปแบบง่าย ๆ
+app.get("/getkey", (req, res) => {
+  const uid = req.query.uid || "";
+  try {
+    const config = loadConfig();
+    const firstKey = config.keys[0] ? config.keys[0].key : null;
 
--- ==== ตัวอย่างการใช้งาน (คุณเอาไปผูกกับ UI ของคุณเองได้) ====
--- print("Get Key URL:", getKeyUrl())
--- local k = "คีย์ที่ผู้ใช้วาง"
--- if verifyKey(k) then
---     print("KEY OK")
--- else
---     print("KEY INVALID")
--- end
+    res.json({
+      ok: true,
+      uid,
+      key: firstKey,
+      ttl: (config.expires_default || 172800)
+    });
+  } catch (err) {
+    console.error("getkey error:", err);
+    res.status(500).json({ ok: false, error: "server_error" });
+  }
+});
+
+// ---------------------- VERIFY ----------------------
+// ตรวจว่า key ตรงใน config ไหม (ไม่ตัดอายุฝั่งเซิร์ฟเวอร์เพื่อความง่าย)
+// ให้ client เป็นฝ่าย “ตั้งหมดอายุครั้งแรก” แล้วใช้อายุเดิมจนหมดอายุจริง ๆ
+app.get("/verify", (req, res) => {
+  const uid = (req.query.uid || "").trim();
+  const key = (req.query.key || "").trim();
+
+  try {
+    const config = loadConfig();
+    const found = config.keys.find(k => k.key === key);
+
+    if (!found) {
+      return res.json({ ok: true, valid: false, reason: "invalid" });
+    }
+
+    // ส่งกลับว่า valid + ttl ที่ควรใช้สร้าง expires_at ฝั่ง client (ครั้งแรกที่ยืนยัน)
+    res.json({
+      ok: true,
+      valid: true,
+      ttl: found.ttl || config.expires_default || 172800,
+      reusable: !!found.reusable
+    });
+  } catch (err) {
+    console.error("verify error:", err);
+    res.status(500).json({ ok: false, error: "server_error" });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
