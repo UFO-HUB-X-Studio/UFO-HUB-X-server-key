@@ -12,6 +12,8 @@
 <!-- เร่งโหลดรูป -->
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
+<!-- เพิ่ม: พรีโหลดรูป Hero ใหม่ -->
+<link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
 
 <style>
   :root{
@@ -21,6 +23,8 @@
     --panel1:rgba(9,16,23,.88);
     --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
+    /* เพิ่ม: ตัวแปรรูป hero (ใช้แทน /img/profile เฉพาะตรง hero-box) */
+    --hero-img:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
   }
 
   /* ===== Base & BG (กันหน้าขาว) ===== */
@@ -39,17 +43,18 @@
   .hero{
     width:100%;
     display:flex; justify-content:center;
-    margin:6px 0 18px 0;            /* ช่องว่างจากขอบ และเว้นก่อนการ์ดถัดไป */
+    margin:6px 0 18px 0;
   }
   .hero-box{
-    width:min(520px, 92vw);
-    aspect-ratio:1/1;               /* เป็นสี่เหลี่ยมจัตุรัส */
-    border-radius:22px;
-    background:#0b1a15 url("/img/profile") center/cover no-repeat; /* มีพื้นมืดก่อนรูปมา */
+    /* ปรับ: ให้เล็กลงและเป็นอัตราส่วนแนวนอนเหมือนตัวอย่าง */
+    width:min(420px, 90vw);
+    aspect-ratio:16/9;
+    border-radius:18px;
+    background:#0b1a15 var(--hero-img) center/cover no-repeat; /* ใช้รูปใหม่ */
     box-shadow:
       0 0 0 2px rgba(34,255,200,.16) inset,
-      0 0 60px rgba(0,255,160,.20),
-      0 20px 50px rgba(0,0,0,.55);
+      0 0 40px rgba(0,255,160,.18),
+      0 16px 44px rgba(0,0,0,.55);
   }
 
   /* ===== Card wrapper (2 การ์ดด้านล่าง) ===== */
@@ -74,7 +79,7 @@
   }
   .head-logo{
     width:74px; height:74px; border-radius:14px;
-    background:#0b1a15 url("/img/profile") center/cover no-repeat;
+    background:#0b1a15 url("/img/profile") center/cover no-repeat; /* โลโก้เดิม */
     box-shadow:0 0 18px rgba(0,255,170,.45);
   }
   .head-title{
@@ -189,10 +194,11 @@
     barLabel.textContent = 'Progress: 1/1';
   });
 
-  // ป้องกันรูป BG กระพริบ: ถ้ารูปโหลดเสร็จค่อยเติม class (ถ้าต้องการ effect เพิ่ม)
-  const bgImg = new Image();
-  bgImg.src = '/img/bg';
-  bgImg.decode?.().catch(()=>{}); // เฉย ๆ แค่กระตุ้นโหลดล่วงหน้า
+  // กระตุ้นให้รูป BG และรูป hero โหลดเร็ว (กันแฟลช/ว่าง)
+  const bgImg = new Image(); bgImg.src = '/img/bg';
+  const heroImg = new Image();
+  heroImg.src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  heroImg.decode?.().catch(()=>{});
 </script>
 </body>
 </html>
