@@ -99,6 +99,7 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
+      <!-- เดิมมี is-hidden แต่เราจะปลดซ้อนด้วยแพตช์ด้านล่างแบบ add-only -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
@@ -133,12 +134,12 @@
   </div>
 
 <script>
-  /* ===== CONFIG ===== */
+  /* ===== CONFIG (ของเดิมยังอยู่) ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY   = 23000;  // (ค่าเดิมยังอยู่ แต่เราจะโชว์ทันทีด้วยแพตช์ด้านล่าง)
+  const ARM_DELAY   = 23000;
   const MIN_VISIT   = 5000;
   const DL_TOTAL_MS = 20000;
   const IMG_TIMEOUT = 20000;
@@ -157,7 +158,7 @@
 
   let raf = null;
 
-  /* ===== Progress / UFO (ของเดิม) ===== */
+  /* ===== Progress / UFO (เดิม) ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
@@ -182,7 +183,7 @@
       const p = pStart + (pTarget - pStart) * t;
       setProgress(p);
       if(t < 1){ raf = requestAnimationFrame(tick); }
-      else if (pTarget === 100) setTimeout(()=>barUfo.classList.remove('on'), 300); // จบแล้วซ่อน UFO
+      else if (pTarget === 100) setTimeout(()=>barUfo.classList.remove('on'), 300);
     }
     raf = requestAnimationFrame(tick);
   }
@@ -191,7 +192,7 @@
     setTimeout(()=>{
       progressMeta.classList.remove('is-hidden');
       barWrap.classList.remove('is-hidden');
-      barUfo.classList.add('on');
+      // ไม่เปิด UFO ที่นี่ เพื่อให้มันโผล่ "พร้อมหลอดสีเขียว" เท่านั้น
       setProgress(parseFloat(bar.style.width) || 0);
       autoCompleteIfReturned(true);
     }, ARM_DELAY);
@@ -246,7 +247,7 @@
   });
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    // ของเดิม: ซ่อนก่อน แล้วค่อย showBarAfterDelay()
+    // เดิมซ่อน — เราจะปลดด้วยแพตช์ด้านล่าง
     progressMeta.classList.add('is-hidden');
     barWrap.classList.add('is-hidden');
 
@@ -263,56 +264,48 @@
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- ========= ADD-ONLY PATCH: โชว์ขอบทันที + ตั้งชื่อเป็น Progress: 1/1 + ซิงก์ UFO ========= -->
+<!-- ========== ADD-ONLY PATCH (ไม่ลบของเดิม): 
+     - แสดง "ขอบดาวน์โหลด" ทันทีเมื่อเข้าเว็บครั้งแรก
+     - ตั้งชื่อเป็น Progress: 1/1 ทันที
+     - ซ่อน UFO จนกว่า progress > 0 (UFO โผล่พร้อมหลอดสีเขียว)
+========== -->
 <script>
-(function(){
-  // 1) โชว์ "ขอบดาวน์โหลด" ทันที (ทับค่า ARM_DELAY โดยไม่ลบของเดิม)
+(function firstVisitBorderOnly(){
   const progressMeta = document.getElementById('progressMeta');
   const barWrap      = document.getElementById('barWrap');
+  const bar          = document.getElementById('bar');
+  const barUfo       = document.getElementById('barUfo');
+  const pText        = document.getElementById('progressText');
+
+  // 1) แสดงกรอบ/หัวข้อทันที (ทับ ARM_DELAY โดยไม่ลบของเดิม)
   if (progressMeta) progressMeta.classList.remove('is-hidden');
   if (barWrap)      barWrap.classList.remove('is-hidden');
 
-  // 2) ตั้งชื่อเป็น Progress: 1/1 ตลอด (กันไม่ให้ setProgress เปลี่ยนกลับ)
-  const pText = document.getElementById('progressText');
+  // 2) ชื่อบังคับเป็น 1/1
   if (pText) pText.textContent = "Progress: 1/1";
-  const _origSetProgress = window.setProgress;
-  if (typeof _origSetProgress === 'function') {
+
+  // 3) UFO ยังไม่ต้องโผล่จนกว่าจะมี progress จริง
+  if (barUfo) barUfo.classList.remove('on'); // ให้ซ่อนไว้ก่อน
+  // ถ้าบาร์ยัง 0% ให้แน่ใจว่าแทบสีเขียวไม่โผล่ (ความกว้าง 0 อยู่แล้ว)
+
+  // 4) ครอบ setProgress เพื่อ:
+  //    - อัปเดตชื่อเป็น 1/1 เสมอ
+  //    - เมื่อ p>0 ⇒ เปิด UFO พร้อมหลอด, p==0 ⇒ ซ่อน UFO
+  const _origSet = window.setProgress;
+  if (typeof _origSet === 'function') {
     window.setProgress = function(p){
-      _origSetProgress(p);
-      // บังคับให้ชื่อคงเป็น 1/1 ตามที่ต้องการ
+      _origSet(p);
       if (pText) pText.textContent = "Progress: 1/1";
-    };
-  }
-
-  // 3) บังคับภาพ UFO เป็นลิงก์เต็ม และให้ขึ้นพร้อม progress (p>0) แล้วหายตอนครบ 100%
-  const barUfo = document.getElementById('barUfo');
-  const bar    = document.getElementById('bar');
-  const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
-  if (barUfo){ barUfo.style.backgroundImage = `url("${UFO_EXACT}")`; }
-
-  // ให้ UFO โผล่เมื่อมี progress > 0 และซ่อนเมื่อแตะ 100%
-  if (typeof _origSetProgress === 'function') {
-    const _wrap = window.setProgress;
-    window.setProgress = function(p){
-      _wrap(p);
       if (!barUfo) return;
-      if (p > 0 && p < 100){
-        barUfo.classList.add('on');
-      }else if (p >= 100){
-        // ให้เวลา fade-out 300ms ตามของเดิม
-        setTimeout(()=>barUfo.classList.remove('on'), 300);
+      if (p > 0) {
+        barUfo.classList.add('on');    // UFO โผล่พร้อมหลอด
+      } else {
+        barUfo.classList.remove('on'); // ไม่มีหลอด ⇒ ไม่มียาน
       }
     };
   }
-
-  // เผื่อหน้าเพิ่งเปิดและยังไม่วิ่ง progress: วาง UFO ไว้ต้นหลอดให้มองเห็นกรอบชัด
-  requestAnimationFrame(()=>{
-    if (!barUfo || !barWrap) return;
-    const ufoHalf = (barUfo.offsetWidth||50)/2;
-    barUfo.style.left = (ufoHalf + 2) + 'px';
-  });
 })();
 </script>
-<!-- ========= /ADD-ONLY PATCH ========= -->
+<!-- ========== /ADD-ONLY PATCH ========== -->
 </body>
 </html>
