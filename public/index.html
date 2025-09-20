@@ -99,7 +99,6 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- เดิมมี is-hidden -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
@@ -139,7 +138,7 @@
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY   = 23000;
+  const ARM_DELAY   = 23000;  // ของเดิมยังอยู่ แต่แพตช์ด้านล่างจะโชว์ทันที
   const MIN_VISIT   = 5000;
   const DL_TOTAL_MS = 20000;
   const IMG_TIMEOUT = 20000;
@@ -158,7 +157,7 @@
 
   let raf = null;
 
-  /* ===== Progress / UFO (เดิม) ===== */
+  /* ===== ของเดิม: Progress / UFO ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
@@ -166,7 +165,7 @@
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-    const LEAD = 8; // px
+    const LEAD = 8;
     barUfo.style.left = (tipInside + LEAD) + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
@@ -262,51 +261,58 @@
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- ========== ADD-ONLY PATCH: Show border immediately + lock title 1/1 + sync UFO with bar ========== -->
-<style>
-  /* ให้กรอบดาวน์โหลดขึ้นตลอดเลย */
-  .bar-wrap.always-on{opacity:1!important;pointer-events:auto!important;}
-</style>
+<!-- ========== SAFE RESCUE ADD-ONLY PATCH (แปะเพิ่มอย่างเดียว) ========== -->
 <script>
-(function(){
+(function PATCH_ALWAYS_SHOW_BORDER_AND_NAME(){
+  // 1) โชว์ขอบ + หัว progress ตั้งแต่เปิดหน้า
   const progressMeta = document.getElementById('progressMeta');
   const barWrap      = document.getElementById('barWrap');
-  const bar          = document.getElementById('bar');
-  const barUfo       = document.getElementById('barUfo');
-  const pText        = document.getElementById('progressText');
-
-  // ขอบดาวน์โหลด/หัวข้อขึ้นทันที
   if (progressMeta) progressMeta.classList.remove('is-hidden');
-  if (barWrap){ barWrap.classList.remove('is-hidden'); barWrap.classList.add('always-on'); }
+  if (barWrap)      barWrap.classList.remove('is-hidden');
 
-  // ชื่อเป็น Progress: 1/1 เสมอ
-  if (pText) pText.textContent = 'Progress: 1/1';
-
-  // หุ้ม setProgress เดิม: คงชื่อ 1/1 และทำให้ UFO โผล่เมื่อ p>0
-  const _origSet = window.setProgress;
-  if (typeof _origSet === 'function') {
+  // 2) บังคับข้อความชื่อเป็น 1/1 เสมอ (กันเด้งกลับ 0/1)
+  const pText = document.getElementById('progressText');
+  if (pText) pText.textContent = "Progress: 1/1";
+  const _origSetProgress = window.setProgress;
+  if (typeof _origSetProgress === 'function') {
     window.setProgress = function(p){
-      _origSet(p);
-      if (pText) pText.textContent = 'Progress: 1/1';
-      if (barUfo){
-        if (p > 0) barUfo.classList.add('on'); else barUfo.classList.remove('on');
-      }
+      _origSetProgress(p);
+      if (pText) pText.textContent = "Progress: 1/1";
     };
   }
 
-  // กันโดนซ่อนกลับ
-  const keepVisible = (el)=> new MutationObserver(()=>{ el.classList.remove('is-hidden'); });
-  if (progressMeta) keepVisible(progressMeta).observe(progressMeta,{attributes:true,attributeFilter:['class']});
-  if (barWrap)      keepVisible(barWrap).observe(barWrap,{attributes:true,attributeFilter:['class']});
+  // 3) UFO ขึ้น "พร้อม" แท่งสีเขียว (p>0) และหายเมื่อครบ 100
+  const barUfo = document.getElementById('barUfo');
+  const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  if (barUfo) {
+    // บังคับใช้รูปยานที่มี query ครบ
+    barUfo.style.backgroundImage = `url("${UFO_EXACT}")`;
+  }
+  if (typeof _origSetProgress === 'function') {
+    const _wrap = window.setProgress;
+    window.setProgress = function(p){
+      _wrap(p);
+      if (!barUfo) return;
+      if (p > 0 && p < 100) barUfo.classList.add('on');
+      if (p === 0)          barUfo.classList.remove('on');
+      if (p >= 100)         setTimeout(()=>barUfo.classList.remove('on'), 300);
+    };
+  }
 
-  // จัดตำแหน่ง UFO ที่หัวหลอดให้เห็นตำแหน่งชัดตั้งแต่แรก (แม้ยัง 0%)
-  requestAnimationFrame(()=>{
-    if (!barUfo || !barWrap) return;
-    const half = (barUfo.offsetWidth||50)/2;
-    barUfo.style.left = (half + 2) + 'px';
-  });
+  // 4) ป้องกันหน้า “ค้างดำ” — ถ้าผ่านไป 30 วิแล้วยังไม่มีอะไรแสดง ให้ปลดล็อก/แสดง UI
+  setTimeout(()=>{
+    try{
+      document.body.classList.remove('locked');
+      const dl = document.getElementById('dlOverlay');
+      if (dl) dl.classList.add('hidden');
+      if (progressMeta) progressMeta.classList.remove('is-hidden');
+      if (barWrap)      barWrap.classList.remove('is-hidden');
+      if (pText)        pText.textContent = "Progress: 1/1";
+    }catch(e){}
+  }, 30000);
+
 })();
 </script>
-<!-- ========== /ADD-ONLY PATCH ========== -->
+<!-- ========== /SAFE RESCUE ADD-ONLY PATCH ========== -->
 </body>
 </html>
