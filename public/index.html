@@ -8,17 +8,14 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
-<!-- preload เดิม (คงไว้ทั้งหมด) -->
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
 
 <style>
   :root{
-    --ufo:#00ff99;
-    --text:#d9fff5;
-    --panel1:rgba(9,16,23,.88);
-    --panel2:rgba(8,13,19,.92);
+    --ufo:#00ff99; --text:#d9fff5;
+    --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
@@ -34,19 +31,17 @@
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
-  /* HERO (กรอบพอดีรูป) */
+  /* HERO */
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
   .hero-box{
-    display:inline-block;
-    max-width:320px;          /* ↓ เล็กลงอีกนิดตามที่ขอ */
-    width:90vw;
+    display:inline-block; max-width:320px; width:90vw;
     border-radius:18px; overflow:hidden; position:relative;
     background:radial-gradient(1200px 400px at 50% -200px, rgba(0,255,160,.12), transparent 70%), #0b1a15;
     box-shadow:0 0 28px rgba(0,255,160,.18), 0 16px 44px rgba(0,0,0,.55);
   }
   .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
 
-  /* การ์ด */
+  /* Cards */
   .card{
     background:linear-gradient(180deg,var(--panel1),var(--panel2));
     border-radius:18px;
@@ -56,19 +51,17 @@
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
-  .head-title .ufo{color:#fff}
-  .head-title .hubx{color:var(--ufo)}
+  .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
   .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
 
-  /* สถานะ + หลอด */
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
   .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);}
   .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
 
-  /* UFO ลอยเหนือปลายหลอด */
+  /* UFO เหนือปลายหลอด */
   .bar-ufo{
-    position:absolute; top:-28px;              /* เหนือหลอด */
-    transform:translateX(-50%);                /* จับกลางลำยานกับปลายหลอด */
+    position:absolute; top:-28px;
+    transform:translateX(-50%);
     width:48px; height:48px; opacity:0; transition:opacity .2s ease;
     background:var(--ufo-ship) center/contain no-repeat;
     filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px rgba(0,255,160,.9)) drop-shadow(0 0 18px rgba(0,255,160,.8));
@@ -76,7 +69,6 @@
   }
   .bar-ufo.on{opacity:1;}
 
-  /* ตารางคีย์ */
   .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
   .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
   .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
@@ -100,7 +92,7 @@
       </div>
     </div>
 
-    <!-- ชื่อ + ปุ่ม + สถานะ + หลอด -->
+    <!-- Title + Button + Progress -->
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
@@ -114,7 +106,7 @@
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
-        <div class="bar-ufo" id="barUfo" style="left:0%"></div>
+        <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
     </section>
 
@@ -133,7 +125,7 @@
   </div>
 
 <script>
-  // ===== Progress + UFO (ให้ยานอยู่ "กึ่งกลางปลายหลอด" เป๊ะ) =====
+  // ===== Progress + UFO (clamp ไม่ให้ยานเลยกรอบ) =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -143,12 +135,17 @@
 
   function setProgress(p){
     p = Math.max(0, Math.min(100, p));
-    // ความกว้างจริงของปลายหลอด (px)
     bar.style.width = p + '%';
-    const tipPx = bar.clientWidth;               // ปลายหลอดจริง
-    const wrapW = barWrap.clientWidth;
-    const leftPercent = (tipPx / wrapW) * 100;   // แปลงเป็น %
-    barUfo.style.left = leftPercent + '%';       // วางยานตรงปลายพอดี
+
+    // วางยานแบบ “พิกเซล” และหนีบขอบซ้าย/ขวา
+    const tipPx   = bar.clientWidth;        // ปลายหลอดจริง (px)
+    const wrapW   = barWrap.clientWidth;
+    const ufoHalf = barUfo.offsetWidth / 2;
+
+    // หนีบไม่ให้เลยกรอบ
+    const clampedPx = Math.max(ufoHalf, Math.min(tipPx, wrapW - ufoHalf));
+    barUfo.style.left = clampedPx + 'px';
+
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
@@ -167,7 +164,7 @@
     raf = requestAnimationFrame(tick);
   });
 
-  // กระตุ้นโหลดรูป (กันแฟลช)
+  // Preload images (กันแฟลช)
   new Image().src = '/img/bg';
   new Image().src = '/img/profile';
   new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
