@@ -266,67 +266,74 @@
     progressMeta.classList.add('is-hidden');
     barWrap.classList.add('is-hidden');
 
-    // โหลดภาพ (ไม่บล็อก UI) — จำกัดภายใน 20 วิ
+    // โหลดภาพ (ไม่บล็อก UI)
     preloadImages([
       '/img/bg',
       '/img/profile',
       'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png'
     ]);
 
-    showBarAfterDelay();     // โชว์หลอดหลัง 23 วิ
+    showBarAfterDelay();     // โชว์หลอดตามดีเลย์เดิม
     showDownloadOverlay();   // แสดง overlay 0-100% 20 วิ (เฉพาะโดเมน onrender)
   });
 
-  // ตรวจตอนกลับหน้า (เช่นกด Back) หลัง UI โผล่แล้ว
+  // ตรวจตอนกลับหน้า หลัง UI โผล่แล้ว
   window.addEventListener('pageshow', ()=>{
     autoCompleteIfReturned(true);
   });
 </script>
 
-<!-- ===== [ADD-ONLY] บังคับให้ "ยานมีแน่" + รูปสำรอง + เปิดยานทันทีที่พร้อม ===== -->
+<!-- ========== ADD-ONLY PATCH: Force UFO image + Show shell immediately, hide green fill until running ========== -->
 <script>
-  (function ensureUfoVisible(){
-    const FALLBACK_UFO = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png";
-    function extractCssUrl(v){
-      if(!v) return "";
-      let s = v.trim();
-      if(s.startsWith("url(")) s = s.slice(4, -1);
-      return s.replace(/^["']|["']$/g, "");
-    }
-    const cssUfoVar = getComputedStyle(document.documentElement).getPropertyValue("--ufo-ship");
-    const cssUfoUrl = extractCssUrl(cssUfoVar);
+(function () {
+  // ใช้รูปยานตามลิงก์ “ตัวเต็ม” ที่ให้ (มี query params)
+  const UFO_URL_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  const barUfo       = document.getElementById('barUfo');
+  const bar          = document.getElementById('bar');
+  const barWrap      = document.getElementById('barWrap');
+  const progressMeta = document.getElementById('progressMeta');
+  const pText        = document.getElementById('progressText');
 
-    function loadTest(src, onok, onfail){
-      const img = new Image();
-      img.onload  = onok;
-      img.onerror = onfail;
-      img.src = src;
-    }
+  // บังคับภาพยาน + พรีโหลด
+  if (barUfo) {
+    barUfo.style.backgroundImage = `url("${UFO_URL_EXACT}")`;
+    const img = new Image(); img.src = UFO_URL_EXACT;
+  }
 
-    if (cssUfoUrl) {
-      loadTest(cssUfoUrl, ()=>{}, ()=>{ barUfo.style.backgroundImage = `url("${FALLBACK_UFO}")`; });
-    } else {
-      barUfo.style.backgroundImage = `url("${FALLBACK_UFO}")`;
-    }
+  // ให้ “กรอบดาวน์โหลด + ข้อความ” โผล่ทันที (แต่ยังไม่โชว์แท่งสีเขียว)
+  if (progressMeta) progressMeta.classList.remove('is-hidden');
+  if (barWrap)      barWrap.classList.remove('is-hidden');
 
-    function turnOnUfoNow(){
-      barUfo.classList.add('on');
-      setProgress(parseFloat(bar.style.width) || 0);
-    }
+  // ตั้งชื่อเป็น Progress: 1/1 ตามที่ขอ
+  if (pText) pText.textContent = "Progress: 1/1";
 
-    // ถ้าหลอดถูกปลดซ่อนแล้ว ให้เปิดยานทันที
-    const tryTurnOn = ()=>{ if(!barWrap.classList.contains('is-hidden') && !progressMeta.classList.contains('is-hidden')) turnOnUfoNow(); };
-    // เผื่อเวลาหลัง ARM_DELAY
-    setTimeout(tryTurnOn, (typeof ARM_DELAY==='number'?ARM_DELAY:0)+60);
-    // เฝ้า transition เผื่อมีปลดซ่อนทีหลัง
-    ['transitionend','animationend'].forEach(evt=>{
-      barWrap.addEventListener(evt, tryTurnOn);
-      progressMeta.addEventListener(evt, tryTurnOn);
+  // ซ่อน “แท่งสีเขียว” ไว้ก่อนจนกว่าจะเริ่มวิ่งจริง
+  if (bar) bar.style.opacity = '0';
+
+  // โชว์ยานทันที และวางไว้ต้นหลอดชั่วคราว
+  if (barUfo) {
+    barUfo.classList.add('on');
+    requestAnimationFrame(() => {
+      try {
+        const ufoW = barUfo.offsetWidth || 50;
+        const leftX = Math.max(ufoW/2 + 2, 0);
+        barUfo.style.left = leftX + 'px';
+      } catch(e){}
     });
-    // ตอนโหลดเสร็จ
-    if (document.readyState === 'complete') { tryTurnOn(); }
-    else window.addEventListener('load', tryTurnOn);
-  })();
+  }
+
+  // ครอบ setProgress เดิม: เมื่อเริ่มมี progress จริง ค่อยให้แท่งสีเขียวโผล่
+  const _origSet = window.setProgress;
+  if (typeof _origSet === 'function') {
+    window.setProgress = function(p) {
+      _origSet(p);
+      if (bar && p > 0) {
+        bar.style.opacity = '1';
+      }
+    };
+  }
+})();
 </script>
+<!-- ========== /ADD-ONLY PATCH ========== -->
 </body>
 </html>
