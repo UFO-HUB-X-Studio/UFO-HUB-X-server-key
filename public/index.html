@@ -1,101 +1,158 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UFO HUB X — Key Portal</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UFO HUB X</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#050806; --panel:#0b1210; --panel2:#0a1612; --line:#103424;
-    --text:#eafff4; --muted:#9ad7be; --neon:#00ff8c; --neon2:#06d47a;
-    --glow0:0 0 24px rgba(0,255,140,.35), 0 0 60px rgba(0,255,140,.18);
+    --text:#eafff4; --muted:#9ad7be; --neon:#00ff8c; --neon2:#07d47a; --danger:#ff5e66;
     --shadow:0 18px 60px rgba(0,0,0,.55);
+    --glow:0 0 18px rgba(0,255,140,.35), 0 0 60px rgba(0,255,140,.18);
   }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'Orbitron',system-ui,Segoe UI,Roboto,Arial}
-  .bg1{position:fixed;inset:0;z-index:-3;background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(0,255,140,.12), transparent 60%),
-    radial-gradient(900px 520px  at 10% 110%, rgba(0,255,140,.10), transparent 60%),
-    var(--bg);}
-  .bg2{position:fixed;inset:0;z-index:-2;background:url("/img/bg") center/cover no-repeat;opacity:.26;filter:saturate(1.05) brightness(.9)}
-  .wrap{max-width:960px;margin:26px auto;padding:0 18px}
-  .hero{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center;
-        background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.18));
-        border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);backdrop-filter:blur(6px);position:relative;overflow:hidden}
-  .hero::after{content:"";position:absolute;inset:-2px;border-radius:22px;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow0)}
-  .logo{width:120px;height:120px;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:#0d1a14;box-shadow:var(--glow0)}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial;
+    -webkit-font-smoothing:antialiased
+  }
+  /* พื้นหลัง */
+  .bgA{position:fixed;inset:0;z-index:-3;background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(0,255,140,.12), transparent 60%),
+      radial-gradient(900px 520px at 10% 110%, rgba(0,255,140,.09), transparent 60%),
+      var(--bg);}
+  .bgB{position:fixed;inset:0;z-index:-2;opacity:.25;background:url("/img/bg") center/cover no-repeat;filter:saturate(1.05) brightness(.9)}
+  /* โครง */
+  .wrap{max-width:760px;margin:22px auto;padding:0 16px}
+  .card{
+    background:linear-gradient(180deg, rgba(0,0,0,.32), rgba(0,0,0,.18));
+    border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);
+    backdrop-filter:blur(6px);position:relative;overflow:hidden
+  }
+  .card::after{content:"";position:absolute;inset:-2px;border-radius:24px;pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow)}
+  /* หัวหน้า */
+  .hero{padding:22px}
+  .heroTop{display:flex;gap:18px;align-items:center}
+  .logo{
+    width:112px;height:112px;border-radius:18px;border:1px solid var(--line);
+    background:#0d1a14;overflow:hidden;box-shadow:var(--glow)
+  }
   .logo img{width:100%;height:100%;object-fit:cover;display:block}
-  .title h1{margin:0 0 6px;font-size:34px;line-height:1.05;letter-spacing:.5px}
-  .title small{color:var(--muted)}
-  .bar{height:12px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#07140e;margin-top:10px}
-  .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--neon),#67ffb8);box-shadow:var(--glow0);transition:width .35s ease}
-  .start{margin-top:10px;display:flex;gap:12px;align-items:center}
-  .btn{appearance:none;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer}
-  .btnPrimary{background:var(--neon);color:#022014;box-shadow:var(--glow0)}
+  .title{flex:1;text-align:center}
+  .title h1{
+    margin:4px 0 2px;font:700 40px 'Orbitron',sans-serif;letter-spacing:1.5px;
+    color:var(--text);text-shadow:0 0 14px rgba(0,255,140,.25)
+  }
+  .sub{color:var(--muted);font-weight:700;letter-spacing:.4px}
+  /* Progress */
+  .progWrap{margin-top:14px}
+  .bar{height:12px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#07140e}
+  .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--neon),#67ffb8);box-shadow:var(--glow);transition:width .35s ease}
+  .ctrl{margin-top:14px;display:flex;gap:12px}
+  .btn{
+    appearance:none;border:none;border-radius:14px;padding:12px 18px;
+    font-weight:900;letter-spacing:.3px;cursor:pointer;transition:.2s
+  }
+  .btnPrimary{background:var(--neon);color:#052016;box-shadow:var(--glow)}
   .btnPrimary:hover{filter:brightness(.95)}
-  .card{margin-top:18px;background:linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.18));border:1px solid var(--line);
-        border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
-  .cardHead{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.08)}
-  .cardHead h2{margin:0;font-size:18px;color:var(--neon)}
-  .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:#07150f;border:1px solid var(--line);font-weight:800}
-  .list{padding:10px}
-  .row{display:grid;grid-template-columns:1.6fr 1fr .8fr .9fr;gap:12px;align-items:center;padding:12px;border-bottom:1px dashed var(--line)}
+  .btnGhost{background:#0e1b15;border:1px solid var(--line);color:var(--text)}
+  /* การ์ด Key */
+  .keyCard{margin-top:18px}
+  .head{display:flex;justify-content:space-between;align-items:center;
+        border-bottom:1px solid var(--line);padding:14px 18px;background:rgba(0,0,0,.06)}
+  .head h2{margin:0;font:700 20px 'Orbitron',sans-serif;color:var(--neon)}
+  .table{width:100%}
+  .th,.tr{display:grid;grid-template-columns:1.6fr 1fr .9fr 1fr;gap:12px;align-items:center}
+  .th{padding:12px 18px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
+  .list{padding:8px}
+  .row{padding:12px;border-bottom:1px dashed var(--line)}
   .row:last-child{border-bottom:none}
-  .copy{width:44px;height:44px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;cursor:pointer}
-  .badge{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-weight:900;font-size:12px}
-  .ok{background:rgba(0,255,140,.12);color:var(--neon);border:1px solid rgba(0,255,140,.4)}
+  /* เซลล์ */
+  .kcell{display:flex;align-items:center;gap:10px}
+  .pill{
+    display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
+    background:#07150f;border:1px solid var(--line);font-weight:800
+  }
+  .copy{
+    width:44px;height:44px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);
+    display:grid;place-items:center;cursor:pointer;color:var(--text)
+  }
   .muted{color:var(--muted)}
-  .foot{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:14px;border-top:1px solid var(--line);background:rgba(0,0,0,.06)}
-  input.inp{background:#08140f;border:1px solid var(--line);color:var(--text);padding:12px;border-radius:12px;min-width:220px;flex:1}
-  @media (max-width:720px){.hero{grid-template-columns:1fr}.logo{margin:auto}.title{text-align:center}}
+  .badge{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;font-weight:900;font-size:12px}
+  .ok{background:rgba(0,255,140,.12);color:var(--neon);border:1px solid rgba(0,255,140,.4)}
+  .danger{background:rgba(255,94,102,.12);color:#ff9fa4;border:1px solid rgba(255,94,102,.5)}
+  .act{display:flex;gap:10px;justify-content:flex-end}
+  .btnTiny{padding:10px 12px;border-radius:12px}
+  .foot{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:16px;border-top:1px solid var(--line);background:rgba(0,0,0,.06)}
+  .inp{background:#08140f;border:1px solid var(--line);color:var(--text);padding:12px;border-radius:12px;min-width:220px;flex:1}
+  .note{color:var(--muted);font-size:12px}
+  @media (max-width:720px){
+    .title h1{font-size:34px}
+    .th{display:none}
+    .tr{grid-template-columns:1fr}
+    .act{justify-content:flex-start}
+  }
 </style>
 </head>
 <body>
-<div class="bg1"></div>
-<div class="bg2"></div>
+<div class="bgA"></div>
+<div class="bgB"></div>
 
 <div class="wrap">
   <!-- HERO -->
-  <section class="hero">
-    <div class="logo">
-      <img src="/img/profile" alt="profile"
-           onerror="this.onerror=null;this.src='';this.style.background='radial-gradient(80px 80px at 50% 50%, rgba(0,255,140,.35), transparent 60%)'">
-    </div>
-    <div class="title">
-      <h1>UFO HUB X</h1>
-      <small>Progress: <span id="ptext">0/1</span></small>
-      <div class="bar"><i id="pfill"></i></div>
-      <div class="start">
-        <button id="btnStart" class="btn btnPrimary">START</button>
+  <section class="card hero">
+    <div class="heroTop">
+      <div class="logo">
+        <img src="/img/profile" alt="logo"
+             onerror="this.onerror=null;this.src='';this.style.background='radial-gradient(70px 70px at 50% 50%, rgba(0,255,140,.35), transparent 60%)'">
+      </div>
+      <div class="title" style="flex:1">
+        <h1>UFO HUB X</h1>
+        <div class="sub">Progress: <span id="ptext">0/1</span></div>
+        <div class="progWrap">
+          <div class="bar"><i id="pfill"></i></div>
+          <div class="ctrl">
+            <button id="btnStart" class="btn btnPrimary">START</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- KEY PANEL -->
-  <section class="card">
-    <div class="cardHead">
+  <section class="card keyCard">
+    <div class="head">
       <h2>🔑 Your Key</h2>
       <button id="btnGet" class="btn btnPrimary">＋ GET A NEW KEY</button>
     </div>
 
-    <div class="list" id="list">
-      <!-- rows will be injected here -->
+    <div class="th">
+      <div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
+    </div>
+
+    <div id="list" class="list">
+      <!-- แถวจะถูกใส่มาที่นี่ -->
     </div>
 
     <div class="foot">
       <input id="uid" class="inp" placeholder="UID (e.g. 123)">
       <input id="place" class="inp" placeholder="Place (e.g. 999)">
-      <small class="muted">กรอก UID/Place แล้วกด “GET A NEW KEY”</small>
+      <div class="note">กรอก UID/Place ของคุณ แล้วกด “GET A NEW KEY”</div>
     </div>
   </section>
 </div>
 
 <script>
+  // ---------- UI logic ----------
   const $ = s => document.querySelector(s);
-  const API = ""; // โดเมนเดียวกัน
+  const API = ""; // ใช้โดเมนเดียวกัน
 
+  // Progress
   let progress = 0;
   function setProgress(v){
     progress = Math.max(0, Math.min(1, v));
@@ -105,6 +162,7 @@
   }
   $("#btnStart").onclick = () => setProgress(progress+1);
 
+  // Format HH:MM:SS
   function fmtLeft(sec){
     if (sec<=0) return "00:00:00";
     const h=String(Math.floor(sec/3600)).padStart(2,"0");
@@ -113,32 +171,38 @@
     return `${h}:${m}:${s}`;
   }
 
+  // State
   let rows = [];
+
   function render(){
     const root = $("#list"); root.innerHTML = "";
     rows.forEach((r,idx)=>{
       const left = Math.max(0, Math.floor(r.expires_at - Date.now()/1000));
-      const div = document.createElement("div"); div.className="row";
-      div.innerHTML = `
-        <div class="pill">🔑 ${r.key}</div>
-        <div class="muted" id="left-${idx}">${fmtLeft(left)}</div>
-        <div><span class="badge ok">${left>0?"ACTIVE":"EXPIRED"}</span></div>
-        <div style="display:flex;gap:8px">
+      const row = document.createElement("div"); row.className="row tr";
+      row.innerHTML = `
+        <div class="kcell">
           <button class="copy" title="Copy">📋</button>
-          <button class="btn btnPrimary" style="padding:10px 12px" disabled>＋5H ⏩</button>
+          <div class="pill">🔑 ${r.key}</div>
+        </div>
+        <div class="muted" id="left-${idx}">${fmtLeft(left)}</div>
+        <div><span class="badge ${left>0?'ok':'danger'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
+        <div class="act">
+          <button class="btn btnTiny btnGhost" disabled>＋ 5H ⏩</button>
         </div>`;
-      div.querySelector(".copy").onclick = () => navigator.clipboard.writeText(r.key);
-      root.appendChild(div);
+      row.querySelector(".copy").onclick = () => navigator.clipboard.writeText(r.key);
+      root.appendChild(row);
     });
   }
 
-  setInterval(()=> {
+  // Countdown updater
+  setInterval(()=>{
     rows.forEach((r,i)=>{
       const el = document.getElementById(`left-${i}`);
       if (el) el.textContent = fmtLeft(Math.max(0, Math.floor(r.expires_at - Date.now()/1000)));
     });
   }, 1000);
 
+  // API
   async function requestKey(){
     const uid   = $("#uid").value.trim();
     const place = $("#place").value.trim();
@@ -150,6 +214,8 @@
       const exp = data.expires_at || (Date.now()/1000 + 600);
       rows = [{ key: data.key, expires_at: exp }];
       render(); setProgress(1);
+      // เลื่อนจอไปยังตาราง (เหมือน UX เก่า)
+      document.querySelector('.keyCard').scrollIntoView({behavior:'smooth', block:'start'});
     }catch(e){ console.error(e); alert("ติดต่อเซิร์ฟเวอร์ไม่ได้"); }
   }
   $("#btnGet").onclick = requestKey;
