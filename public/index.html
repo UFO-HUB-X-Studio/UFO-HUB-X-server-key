@@ -1,287 +1,264 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>UFO HUB X — Key Portal</title>
+
 <style>
   :root{
-    --bg:#0e1721;
-    --card:#101a26;
-    --card-2:#0f1924;
-    --muted:#9fb2c5;
-    --text:#e7eef7;
-    --brand:#00ff8c;
-    --brand-dark:#00c169;
-    --accent:#2b3c53;
+    --bg:#050a08;         /* ดำอมเขียว */
+    --card:#0b1210;       /* กล่อง */
+    --card2:#0b1411;
+    --line:#13231b;
+    --text:#e9fff4;       /* ขาวอมเขียว */
+    --muted:#9cd7bd;      /* ตัวรอง */
+    --brand:#00ff8c;      /* เขียวหลัก */
+    --brand2:#00c16a;     /* เขียวเข้ม */
+    --brandGlow: 0 0 22px rgba(0,255,140,.35), 0 0 60px rgba(0,255,140,.15);
     --danger:#ff5a6a;
-    --ok:#28c76f;
-    --warn:#ffb02e;
+    --ok:#22dd88;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    background: var(--bg) no-repeat center/cover fixed;
-    color:var(--text);
+    margin:0; font-family: Inter,Segoe UI,Roboto,Arial,sans-serif;
+    color:var(--text); background:var(--bg);
   }
-  /* background image */
-  body::before{
-    content:"";
-    position:fixed; inset:0;
+
+  /* พื้นหลัง */
+  .bg{
+    position:fixed; inset:0; z-index:-2;
+    background:radial-gradient(1200px 600px at 80% -10%, rgba(0,255,140,.15), transparent 60%),
+               radial-gradient(900px 500px at 10% 110%, rgba(0,255,140,.12), transparent 60%),
+               #050a08;
+  }
+  .bg-img{
+    position:fixed; inset:0; z-index:-1; opacity:.30;
     background:url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png") center/cover no-repeat;
-    opacity:.25; filter:saturate(0.9) brightness(0.9);
-    z-index:-1;
+    filter: saturate(1.1) brightness(.9);
   }
-  .wrap{max-width:980px; margin:28px auto; padding:0 16px}
-  .topcard{
-    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:18px; padding:18px 18px 14px; position:relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  .wrap{max-width:980px; margin:26px auto; padding:0 16px}
+
+  .card{
+    background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.15));
+    border:1px solid var(--line);
+    border-radius:20px; padding:18px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.45);
     backdrop-filter: blur(6px);
   }
-  .row{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
-  .title{
-    display:flex; flex-direction:column; gap:2px; min-width:220px
+
+  /* Header */
+  .top{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+  .pf{
+    width:48px;height:48px;border-radius:50%;
+    background: #0d1a14; overflow:hidden;
+    border:1px solid var(--line); box-shadow: var(--brandGlow);
   }
-  .title b{font-size:22px; letter-spacing:.3px}
-  .title small{color:var(--muted); letter-spacing:.3px}
-  .spacer{flex:1}
-  .progress{
-    display:flex; flex-direction:column; gap:8px; min-width:220px; width:280px
-  }
-  .bar{
-    height:8px; background:#07121b; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.06)
-  }
-  .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--brand),#6effb8); transition:width .35s ease}
+  .pf img{width:100%;height:100%;object-fit:cover;display:block}
+  .title b{font-size:26px; line-height:1.1; letter-spacing:.3px; display:block; text-shadow: var(--brandGlow);}
+  .title small{color:var(--muted)}
+  .sp{flex:1}
+
+  /* Progress */
+  .progress{min-width:260px; width:300px; display:flex; flex-direction:column; gap:8px}
+  .bar{height:10px; background:#06110c; border:1px solid var(--line); border-radius:999px; overflow:hidden}
+  .bar>i{display:block;height:100%;width:0%; background:linear-gradient(90deg,#00ff8c,#6effb8); box-shadow: var(--brandGlow); transition:width .35s ease}
   .btn{
-    appearance:none; border:none; border-radius:12px; padding:12px 18px;
-    font-weight:700; cursor:pointer; color:#02120a; background:var(--ok);
-    box-shadow:0 6px 16px rgba(40,199,111,.25);
+    appearance:none;border:none;border-radius:14px;padding:12px 18px;
+    font-weight:800;cursor:pointer;color:#00190c;background:var(--brand);
+    box-shadow: var(--brandGlow);
   }
-  .btn.secondary{background:#223142; color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.08)}
-  .btn:disabled{opacity:.6; cursor:not-allowed}
-  .card{
-    margin-top:16px; background:var(--card); border:1px solid rgba(255,255,255,.06);
-    border-radius:18px; padding:16px; box-shadow:0 8px 22px rgba(0,0,0,.25)
+  .btn.secondary{background:#0e1b15;color:var(--text);border:1px solid var(--line);box-shadow:none}
+  .btn.mini{padding:8px 12px;border-radius:10px}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+
+  /* Table-ish */
+  .subhead{display:grid;grid-template-columns:1.7fr 1fr .9fr .9fr;gap:12px;color:var(--muted);font-size:14px;border-bottom:1px solid var(--line);padding:10px}
+  .row{display:grid;grid-template-columns:1.7fr 1fr .9fr .9fr;gap:12px;align-items:center;padding:12px 10px;border-bottom:1px dashed var(--line)}
+  .row:last-child{border-bottom:none}
+
+  .kcell{display:flex;align-items:center;gap:10px}
+  .copy{width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;color:var(--text);cursor:pointer}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+    background:#07140e;border:1px solid var(--line);font-weight:700
   }
-  .subhead{
-    display:flex; align-items:center; gap:16px; padding:12px 10px; color:var(--muted);
-    font-size:14px; border-bottom:1px solid rgba(255,255,255,.06)
-  }
-  .list{display:flex; flex-direction:column}
-  .rowkey{display:grid; grid-template-columns: 1.7fr 1fr .9fr .9fr; gap:12px; align-items:center; padding:12px 10px; border-bottom:1px dashed rgba(255,255,255,.06)}
-  .rowkey:last-child{border-bottom:none}
-  .kcell{display:flex; align-items:center; gap:10px}
-  .copy{
-    width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.08);
-    display:inline-grid; place-items:center; background:var(--card-2); color:var(--text); cursor:pointer
-  }
-  .keybadge{
-    display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
-    background:#0a1520; border:1px solid rgba(255,255,255,.08); color:#f7fffb; font-weight:600;
-  }
-  .keybadge i{color:#ffd24d}
-  .badge{
-    display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px;
-    font-weight:700; font-size:12px; letter-spacing:.3px
-  }
-  .active{background:rgba(40,199,111,.15); color:var(--ok); border:1px solid rgba(40,199,111,.35)}
-  .danger{background:rgba(255,90,106,.15); color:var(--danger); border:1px solid rgba(255,90,106,.35)}
+  .pill i{color:#ffd24d}
+  .badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px;letter-spacing:.3px}
+  .ok{background:rgba(0,255,140,.12); color:#00ff8c; border:1px solid rgba(0,255,140,.4)}
+  .bad{background:rgba(255,90,106,.12); color:#ff7180; border:1px solid rgba(255,90,106,.35)}
   .muted{color:var(--muted)}
-  .actions{display:flex; gap:10px; align-items:center; justify-content:flex-start}
-  .mini{padding:8px 12px; border-radius:10px; font-weight:700; background:#1a2636; color:var(--text); border:1px solid rgba(255,255,255,.08)}
-  .grid2{display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center}
-  .profile{
-    width:40px; height:40px; border-radius:50%; background:#123; overflow:hidden; border:1px solid rgba(255,255,255,.1)
-  }
-  .profile img{width:100%; height:100%; object-fit:cover}
-  .ghost{opacity:.6}
-  .inputs{display:flex; gap:8px; flex-wrap:wrap}
+  .inputs{display:flex;gap:10px;flex-wrap:wrap;padding:10px}
   .inp{
-    background:#0b1722; border:1px solid rgba(255,255,255,.08); color:var(--text);
-    padding:10px 12px; border-radius:10px; min-width:120px;
+    background:#07120d;border:1px solid var(--line);color:var(--text);
+    padding:12px;border-radius:12px;min-width:160px
   }
-  .footnote{margin-top:10px; color:var(--muted); font-size:12px}
-  @media (max-width:720px){
-    .rowkey{grid-template-columns:1.5fr 1fr .8fr 1fr}
-    .progress{width:100%; min-width:unset}
+  .foot{color:var(--muted);font-size:12px;padding:0 10px 10px}
+
+  @media (max-width:760px){
+    .subhead,.row{grid-template-columns:1.5fr 1fr .8fr 1fr}
+    .progress{width:100%;min-width:auto}
+    .title b{font-size:22px}
   }
 </style>
 </head>
 <body>
-  <div class="wrap">
+<div class="bg"></div>
+<div class="bg-img"></div>
 
-    <!-- TOP CARD -->
-    <div class="topcard">
-      <div class="row">
-        <div class="profile"><img src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png" alt="profile"></div>
-        <div class="title">
-          <b>Speed<br>Hub X<br>Linkvertise</b>
-        </div>
-        <div class="spacer"></div>
+<div class="wrap">
 
-        <div class="progress">
-          <div class="grid2">
-            <small class="muted">Progress: <span id="progress-text">0/2</span></small>
-            <button id="startBtn" class="btn" onclick="onStart()">START</button>
-          </div>
-          <div class="bar"><i id="barFill" style="width:0%"></i></div>
-        </div>
+  <!-- HEADER -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="top">
+      <div class="pf">
+        <img
+          src="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png"
+          alt="profile" referrerpolicy="no-referrer" crossorigin="anonymous" />
+      </div>
+      <div class="title">
+        <b>Speed<br>Hub X<br>Linkvertise</b>
+        <small>Progress: <span id="ptext">0/2</span></small>
+      </div>
+      <div class="sp"></div>
+      <div class="progress">
+        <button id="startBtn" class="btn" onclick="onStart()">START</button>
+        <div class="bar"><i id="fill"></i></div>
       </div>
     </div>
-
-    <!-- KEYS LIST -->
-    <div class="card">
-      <div class="subhead">
-        <div style="flex:1">YOUR KEYS (<span id="keyCount">0</span>/6)</div>
-        <div style="width:25%">TIME LEFT</div>
-        <div style="width:20%">STATUS</div>
-        <div style="width:25%">ACTIONS</div>
-      </div>
-
-      <div id="list" class="list"></div>
-
-      <div style="padding:14px 10px; display:flex; justify-content:center">
-        <button class="btn secondary" onclick="requestKey()">＋ GET A NEW KEY</button>
-      </div>
-
-      <div class="inputs" style="padding:6px 10px 0">
-        <input id="uid" class="inp" placeholder="UID (e.g. 123)" />
-        <input id="place" class="inp" placeholder="Place (e.g. 999)" />
-        <span class="footnote">กรอก UID/Place ของคุณ แล้วกด “GET A NEW KEY”</span>
-      </div>
-    </div>
-
   </div>
 
+  <!-- LIST -->
+  <div class="card">
+    <div class="subhead">
+      <div>YOUR KEYS (<span id="kcount">0</span>/6)</div>
+      <div>TIME LEFT</div>
+      <div>STATUS</div>
+      <div>ACTIONS</div>
+    </div>
+
+    <div id="list"></div>
+
+    <div style="padding:16px; display:flex; justify-content:center">
+      <button class="btn secondary" onclick="requestKey()">＋ GET A NEW KEY</button>
+    </div>
+
+    <div class="inputs">
+      <input id="uid" class="inp" placeholder="UID (e.g. 123)">
+      <input id="place" class="inp" placeholder="Place (e.g. 999)">
+    </div>
+    <div class="foot">กรอก UID/Place ของคุณ แล้วกด “GET A NEW KEY”</div>
+  </div>
+
+</div>
+
 <script>
-  // ======================= CONFIG =======================
-  const API_BASE = ""; // same origin; set to "https://your-domain" if API runs elsewhere
+  // ======= CONFIG =======
+  const API_BASE = ""; // ถ้า API อยู่โดเมนเดียวกับเว็บ ปล่อยว่างได้เลย
 
-  // ======================= STATE ========================
-  let keys = []; // [{key, expires_at, status:"active"|"expired"}]
-  let progress = 0; // 0..2 (for header demo only)
+  // ======= STATE ========
+  let keys = []; // [{key, expires_at}]
+  let progress = 0;
 
-  // ======================= UI HELPERS ===================
+  // ======= HELPERS ======
+  const $$ = sel => document.querySelector(sel);
   function fmtLeft(sec){
-    if (sec <= 0) return "00:00:00";
+    if (sec<=0) return "00:00:00";
     const h = String(Math.floor(sec/3600)).padStart(2,"0");
     const m = String(Math.floor((sec%3600)/60)).padStart(2,"0");
     const s = String(sec%60).padStart(2,"0");
     return `${h}:${m}:${s}`;
   }
-  function copy(text){
-    navigator.clipboard.writeText(text).then(()=>toast("Copied!")).catch(()=>toast("Copy failed"));
-  }
   function toast(msg){
-    // lightweight toast
     const t = document.createElement("div");
     t.textContent = msg;
-    t.style.cssText = "position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#122130;color:#e7eef7;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 20px rgba(0,0,0,.35);z-index:9999";
+    t.style.cssText =
+      "position:fixed;left:50%;bottom:26px;transform:translateX(-50%);"+
+      "background:#09150f;color:#e9fff4;padding:10px 14px;border-radius:12px;"+
+      "border:1px solid #13231b;box-shadow:0 10px 26px rgba(0,0,0,.45);z-index:9999";
     document.body.appendChild(t);
-    setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; },1200);
+    setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s'},1200);
     setTimeout(()=>t.remove(),1600);
   }
+  function copyText(s){
+    navigator.clipboard.writeText(s).then(()=>toast("Copied")).catch(()=>toast("Copy failed"));
+  }
 
-  function redraw(){
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-    document.getElementById("keyCount").textContent = Math.min(keys.length, 6);
-    keys.forEach((k, idx)=>{
-      const left = Math.max(0, Math.floor(k.expires_at - Date.now()/1000));
-      const row = document.createElement("div");
-      row.className = "rowkey";
+  // ======= RENDER ========
+  function draw(){
+    const list = $$("#list"); list.innerHTML = "";
+    $$("#kcount").textContent = Math.min(keys.length, 6);
 
-      // col1 key + copy
-      const c1 = document.createElement("div");
-      c1.className = "kcell";
-      const copyBtn = document.createElement("button");
-      copyBtn.className = "copy";
-      copyBtn.innerHTML = "📋";
-      copyBtn.onclick = ()=>copy(k.key);
-      const pill = document.createElement("span");
-      pill.className = "keybadge";
-      pill.innerHTML = `<i>🔑</i> <span>${k.key.slice(0,5)}…${k.key.slice(-5)}</span>`;
-      c1.append(copyBtn, pill);
+    keys.forEach((k, idx) => {
+      const row = document.createElement("div"); row.className="row";
 
-      // col2 time left
-      const c2 = document.createElement("div");
-      c2.className = "muted";
-      c2.id = `left-${idx}`;
-      c2.textContent = fmtLeft(left);
+      // Key + copy
+      const c1 = document.createElement("div"); c1.className="kcell";
+      const cp = document.createElement("button"); cp.className="copy"; cp.innerHTML="📋"; cp.onclick=()=>copyText(k.key);
+      const pill = document.createElement("span"); pill.className="pill"; pill.innerHTML=`<i>🔑</i> ${k.key.slice(0,6)}…${k.key.slice(-6)}`;
+      c1.append(cp, pill);
 
-      // col3 status
+      // Time left
+      const c2 = document.createElement("div"); c2.className="muted"; c2.id=`left-${idx}`;
+
+      // Status
       const c3 = document.createElement("div");
-      const badge = document.createElement("span");
-      badge.className = "badge " + (left>0 ? "active" : "danger");
-      badge.textContent = left>0 ? "ACTIVE" : "EXPIRED";
-      c3.appendChild(badge);
+      const badge = document.createElement("span"); badge.className="badge ok"; badge.textContent="ACTIVE"; c3.appendChild(badge);
 
-      // col4 actions
+      // Actions
       const c4 = document.createElement("div");
-      c4.className = "actions";
-      const extend = document.createElement("button");
-      extend.className = "mini";
-      extend.textContent = "⏳ + 24H";
-      extend.onclick = ()=>toast("ยังไม่รองรับ /extend (พร้อมเมื่อคุณมี endpoint)");
-      c4.appendChild(extend);
+      const ex = document.createElement("button"); ex.className="btn mini secondary"; ex.textContent="⏳ +24H";
+      ex.onclick = ()=>toast("ยังไม่รองรับ /extend");
+      c4.appendChild(ex);
 
       row.append(c1,c2,c3,c4);
       list.appendChild(row);
     });
+    tick(); // อัปเดตเวลาทันที
   }
 
-  // countdown tick
-  setInterval(()=>{
-    keys = keys.map(it=>{
-      if (!it.expires_at) return it;
-      const left = Math.max(0, Math.floor(it.expires_at - Date.now()/1000));
-      const idx = keys.indexOf(it);
-      const label = document.getElementById(`left-${idx}`);
-      if (label) label.textContent = fmtLeft(left);
-      return it;
+  function tick(){
+    keys.forEach((k, idx)=>{
+      const left = Math.max(0, Math.floor(k.expires_at - Date.now()/1000));
+      const el = document.getElementById(`left-${idx}`);
+      if(el) el.textContent = fmtLeft(left);
     });
-  }, 1000);
-
-  // header progress demo
-  function setProgress(val){
-    progress = Math.max(0, Math.min(2, val));
-    document.getElementById("progress-text").textContent = `${progress}/2`;
-    const pct = (progress/2)*100;
-    document.getElementById("barFill").style.width = pct + "%";
-    document.getElementById("startBtn").textContent = progress>=1 ? "NEXT" : "START";
   }
-  function onStart(){
-    setProgress(progress+1);
-  }
+  setInterval(tick, 1000);
 
-  // ======================= API CALLS ====================
+  // ======= Progress header =======
+  function setProgress(v){
+    progress = Math.max(0, Math.min(2, v));
+    $$("#ptext").textContent = `${progress}/2`;
+    $$("#fill").style.width = (progress/2*100) + "%";
+    $$("#startBtn").textContent = progress >= 1 ? "NEXT" : "START";
+  }
+  function onStart(){ setProgress(progress+1); }
+
+  // ======= API =======
   async function requestKey(){
-    const uid = document.getElementById("uid").value.trim();
-    const place = document.getElementById("place").value.trim();
+    const uid = $$("#uid").value.trim();
+    const place = $$("#place").value.trim();
     if(!uid || !place){ toast("กรอก UID และ Place ก่อน"); return; }
     try{
       const res = await fetch(`${API_BASE}/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
       const data = await res.json();
       if(!data || !data.ok){ toast("getkey ล้มเหลว"); return; }
-      if(data.key){
-        keys = [{ key: data.key, expires_at: data.expires_at || (Date.now()/1000 + 600) }];
-        redraw();
-        toast("ได้คีย์แล้ว!");
-      }else{
-        toast("ไม่มี key ในตอบกลับ");
-      }
+      const exp = data.expires_at || (Date.now()/1000 + 600);
+      keys = [{ key: data.key, expires_at: exp }];
+      draw();
+      toast("ได้คีย์แล้ว!");
+      setProgress(1);
     }catch(e){
-      console.error(e);
-      toast("ติดต่อเซิร์ฟเวอร์ไม่ได้");
+      console.error(e); toast("ติดต่อเซิร์ฟเวอร์ไม่ได้");
     }
   }
 
-  // initial state
-  setProgress(0);
-  redraw();
+  // init
+  setProgress(0); draw();
 </script>
+
 </body>
-  </html>
+</html>
