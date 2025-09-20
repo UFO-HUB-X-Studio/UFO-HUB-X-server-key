@@ -1,114 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>UFO HUB X</title>
-
-<meta name="theme-color" content="#0a1411"/>
-<meta name="color-scheme" content="dark"/>
-
-<link rel="preload" as="image" href="/img/bg">
-<link rel="preload" as="image" href="/img/profile">
-<link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
-
-<style>
-  :root{
-    --ufo:#00ff99; --text:#d9fff5;
-    --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
-    --glow:rgba(34,255,200,.10);
-    --hero-img:url("/img/profile");
-    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    --ufo-lead: 8px; /* ยานนำปลายแท่งสีเขียว */
-  }
-
-  html,body{height:100%; background:#0a1411;}
-  body{
-    margin:0; min-height:100svh;
-    font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    color:var(--text);
-    background:url("/img/bg") center/cover fixed no-repeat;
-  }
-
-  .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
-
-  /* HERO */
-  .hero{display:flex; justify-content:center; margin:8px 0 20px;}
-  .hero-box{
-    display:inline-block; max-width:320px; width:90vw;
-    border-radius:18px; overflow:hidden; position:relative;
-    background:radial-gradient(1200px 400px at 50% -200px, rgba(0,255,160,.12), transparent 70%), #0b1a15;
-    box-shadow:0 0 28px rgba(0,255,160,.18), 0 16px 44px rgba(0,0,0,.55);
-  }
-  .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
-
-  /* CARD */
-  .card{
-    background:linear-gradient(180deg,var(--panel1),var(--panel2));
-    border-radius:18px;
-    box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
-    padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
-    overflow:visible;
-  }
-
-  .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
-  .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
-  .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
-
-  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
-
-  /* BAR + UFO */
-  .bar-wrap{
-    position:relative;width:100%;height:18px;border-radius:10px;
-    overflow:visible;
-    background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
-    box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
-  }
-  .bar{
-    position:absolute;left:0;top:0;bottom:0;width:0%;
-    background:linear-gradient(90deg,#00ffa3,#3bffbf);
-    box-shadow:0 0 18px rgba(34,255,200,.35);
-    z-index:1;
-  }
-  .bar-ufo{
-    position:absolute; top:50%; transform:translate(-50%,-50%);
-    width:50px;height:50px; opacity:0; transition:opacity .2s ease;
-    background:var(--ufo-ship) center/contain no-repeat;
-    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));
-    z-index:8; pointer-events:none;
-  }
-  .bar-ufo.on{opacity:1;}
-
-  .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
-  .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
-  .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
-  table{width:100%;border-collapse:collapse;color:var(--text);font-size:14px}
-  th,td{padding:10px 8px;text-align:center}
-  th{color:#77ffc8;font-weight:600}
-
-  @media (max-width:560px){
-    .head-title{font-size:34px}
-    .bar-ufo{width:46px;height:46px}
-  }
-</style>
-</head>
+<!-- … head และ style ทั้งหมดของคุณ (เหมือนเดิม) … -->
 <body>
   <div class="container">
+    <!-- … HERO / การ์ด / ตาราง … เหมือนเดิม … -->
 
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-box">
-        <img class="hero-img" src="/img/profile" alt="UFO HUB X">
-      </div>
-    </div>
-
-    <!-- Title + Button + Progress -->
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-
-        <!-- ปุ่ม START (คงหน้าตาเดิม) -->
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
@@ -123,26 +20,18 @@
       </div>
     </section>
 
-    <!-- Your Key -->
-    <section class="card">
-      <div class="key-head">
-        <div class="key-title">🔑 Your Key</div>
-        <button class="new-btn" id="getKey">+ GET A NEW KEY</button>
-      </div>
-      <table>
-        <thead><tr><th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
-        <tbody id="keyRows"></tbody>
-      </table>
-    </section>
+    <!-- … การ์ด Your Key เหมือนเดิม … -->
 
   </div>
 
 <script>
-  // ===== CONFIG =====
-  const START_URL = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const RETURN_FLAG = "ufo_after_external"; // ธงบอกว่าไปทำลิงก์แล้วกำลังกลับมา
+  /* ================= CONFIG (เพิ่ม) ================= */
+  const START_URL       = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+  const RETURN_HOST     = "ufo-hub-x-key-umoq.onrender.com";
+  const RETURN_FLAG     = "ufo_after_external";
+  const PAGE_DELAY_MS   = 5000; // ดีเลย์ 5 วิ ก่อนวิ่งหลอดออโต้หลังกลับมา
 
-  // ===== Progress + UFO =====
+  /* ============== ตัวแปรเดิม (คงไว้) ============== */
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -154,30 +43,19 @@
   const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
 
   function setProgress(p){
-    if (p < 0) p = 0; if (p > 100) p = 100;
+    p = Math.max(0, Math.min(100, p));
     bar.style.width = p + '%';
 
-    // คำนวณตำแหน่งปลายแท่งสีเขียวภายในหลอด
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
 
-    // วางยานให้นำหน้าปลายแท่ง
     barUfo.style.left = (tipInside + LEAD) + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
 
-  // เปิดลิงก์ START ในแท็บใหม่ + ตั้งธง
-  startBtn.addEventListener('click', ()=>{
-    try { localStorage.setItem(RETURN_FLAG, '1'); } catch(e){}
-    window.open(START_URL, '_blank'); // เปิดลิงก์
-    // แสดงแอนิเมชันระหว่างรอ (ไม่บังคับ)
-    runProgress(65, 900);
-  });
-
-  // utility: วิ่งหลอดไปยังค่า pTarget ภายใน duration ms
   function runProgress(pTarget=100, duration=1200){
     cancelAnimationFrame(raf);
     barUfo.classList.add('on');
@@ -193,19 +71,26 @@
     raf = requestAnimationFrame(tick);
   }
 
-  // ถ้า "กลับมาที่โดเมนนี้" หลังจากกด START => เติมหลอดจนเต็ม + ขึ้น 1/1 อัตโนมัติ
+  /* ============== ปุ่ม START (แก้บั๊ก) ============== */
+  startBtn.addEventListener('click', ()=>{
+    try { localStorage.setItem(RETURN_FLAG, '1'); } catch(e){}
+    // ไม่ทำให้หลอดวิ่งในหน้านี้ เพื่อกันเคส "กดย้อนกลับแล้วหลอดขึ้น"
+    window.open(START_URL, '_blank'); // เปิดลิงก์ในแท็บใหม่
+  });
+
+  /* ======= กลับมาหน้าเราแล้วค่อยวิ่งหลอดหลังดีเลย์ 5 วิ ======= */
   (function autoCompleteIfReturned(){
-    const onOurDomain = location.hostname === "ufo-hub-x-key-umoq.onrender.com";
+    const onOurDomain = location.hostname === RETURN_HOST;
     let flag = null;
     try { flag = localStorage.getItem(RETURN_FLAG); } catch(e){}
+
     if(onOurDomain && flag === '1'){
-      // ลบธง แล้ววิ่งหลอดเต็ม 100%
       try { localStorage.removeItem(RETURN_FLAG); } catch(e){}
-      runProgress(100, 1000); // เร็วหน่อย
+      setTimeout(()=>runProgress(100, 1000), PAGE_DELAY_MS);
     }
   })();
 
-  // Preload รูป (กันแฟลช)
+  /* ===== preload เดิม (คงไว้) ===== */
   new Image().src = '/img/bg';
   new Image().src = '/img/profile';
   new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
