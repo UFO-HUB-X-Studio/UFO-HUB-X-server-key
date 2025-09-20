@@ -8,11 +8,6 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
-<!-- ADD-ONLY: ปิดแคชหน้า index เพื่อกันอาการค้าง/หน้าโล่ง -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
-
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png">
@@ -88,11 +83,6 @@
   .dl-count{font-size:24px; font-weight:900; color:#ffea63; text-shadow:0 0 10px rgba(255,234,99,.35);}
   .dl-note{font-size:12px; opacity:.85; color:#b9ffee; margin-top:8px;}
 </style>
-
-<!-- ADD-ONLY: บังคับให้กรอบ Progress โผล่เสมอ แม้ JS หลักมาช้า -->
-<style>
-  #progressMeta, #barWrap { opacity:1 !important; pointer-events:auto !important; }
-</style>
 </head>
 <body>
   <div class="container">
@@ -109,6 +99,7 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
+      <!-- เดิม -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
@@ -193,8 +184,7 @@
       setProgress(p);
       if(t < 1){ raf = requestAnimationFrame(tick); }
       else {
-        // ถ้าต้องการให้ UFO หายตอน 100% ให้ปลดคอมเมนต์บรรทัดล่าง
-        // setTimeout(()=>barUfo.classList.remove('on'), 300);
+        // setTimeout(()=>barUfo.classList.remove('on'), 300); // ถ้าอยากให้หายตอน 100%
       }
     }
     raf = requestAnimationFrame(tick);
@@ -274,63 +264,48 @@
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- ADD-ONLY: UI watchdog & cache-bust + บังคับชื่อเริ่มต้น 0/1 และปลดซ่อนกรอบทันที -->
+<!-- ADD-ONLY: แพตช์แก้หน้าเฟรมดำ/ค้าง + บังคับให้กรอบ Progress โผล่ทันที และชื่อเริ่ม 0/1 -->
 <script>
-(function(){
-  const progressMeta = document.getElementById('progressMeta');
-  const barWrap      = document.getElementById('barWrap');
-  const pText        = document.getElementById('progressText');
-  const pPct         = document.getElementById('percentText');
-  const barUfo       = document.getElementById('barUfo');
-
-  // โผล่กรอบทันที
-  progressMeta?.classList.remove('is-hidden');
-  barWrap?.classList.remove('is-hidden');
-
-  // ตั้งชื่อเริ่มเป็น 0/1 เสมอ
-  if (pText) pText.textContent = 'Progress: 0/1';
-  if (pPct)  pPct.textContent  = '0%';
-
-  // ครอบ setProgress เพื่อกันชื่อกลับเป็น 1/1 ก่อนเวลา + ทำให้ UFO โผล่เมื่อมี progress
-  const _origSet = window.setProgress;
-  if (typeof _origSet === 'function') {
-    window.setProgress = function(p){
-      _origSet(p);
-      if (pText) pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
-      if (barUfo && p > 0) barUfo.classList.add('on');
-    };
-  }
-
-  // ถ้า JS หลักโหลดช้า/ค้าง ให้ปลุก UI และรีโหลดแบบ cache-bust 1 ครั้ง
-  setTimeout(function(){
-    const hasHead = !!document.querySelector('.head-title');
-    const visible = document.querySelector('.container')?.getBoundingClientRect().height > 80;
-    if (!hasHead || !visible){
-      progressMeta?.classList.remove('is-hidden');
-      barWrap?.classList.remove('is-hidden');
-      try{
-        const KEY='ufox_busted_once';
-        if (!sessionStorage.getItem(KEY)) {
-          sessionStorage.setItem(KEY, '1');
-          const u = new URL(location.href);
-          u.searchParams.set('v', Date.now().toString());
-          location.replace(u.toString());
-        }
-      }catch(e){}
+(async function ufoxFixBlankAndForceUI() {
+  try {
+    if (!sessionStorage.getItem('ufox_cache_busted')) {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) { try { await r.unregister(); } catch(e){} }
+      }
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        for (const k of keys) { try { await caches.delete(k); } catch(e){} }
+      }
+      sessionStorage.setItem('ufox_cache_busted','1');
+      const u = new URL(location.href);
+      u.searchParams.set('v', Date.now().toString());
+      location.replace(u.toString());
+      return;
     }
-  }, 1500);
+  } catch(e) {}
 
-  // กันถูกซ่อนกลับ
-  const keepShown = (el)=> el && new MutationObserver(()=>el.classList.remove('is-hidden'))
-    .observe(el,{attributes:true,attributeFilter:['class']});
-  keepShown(progressMeta); keepShown(barWrap);
+  try {
+    const progressMeta = document.getElementById('progressMeta');
+    const barWrap      = document.getElementById('barWrap');
+    const pText        = document.getElementById('progressText');
+    const pPct         = document.getElementById('percentText');
+    const barUfo       = document.getElementById('barUfo');
 
-  // บังคับรูป UFO (กันโหลดไม่ขึ้น)
-  if (barUfo){
-    const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png";
-    barUfo.style.backgroundImage = `url("${UFO_EXACT}")`;
-    (new Image()).src = UFO_EXACT;
-  }
+    progressMeta && progressMeta.classList.remove('is-hidden');
+    barWrap      && barWrap.classList.remove('is-hidden');
+    pText && (pText.textContent = 'Progress: 0/1');
+    pPct  && (pPct.textContent  = '0%');
+
+    // กันถูกซ่อนกลับ
+    const keepShown = (el)=> el && new MutationObserver(()=>el.classList.remove('is-hidden'))
+      .observe(el,{attributes:true,attributeFilter:['class']});
+    keepShown(progressMeta); keepShown(barWrap);
+
+    // บังคับภาพยานโหลดแน่ ๆ (ลิงก์เต็ม)
+    const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+    if (barUfo) { barUfo.style.backgroundImage = `url("${UFO_EXACT}")`; (new Image()).src = UFO_EXACT; }
+  } catch(e){}
 })();
 </script>
 </body>
