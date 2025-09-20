@@ -8,6 +8,11 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
+<!-- ADD-ONLY: ปิดแคชหน้า index เพื่อกันอาการค้าง/หน้าโล่ง -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png">
@@ -83,6 +88,11 @@
   .dl-count{font-size:24px; font-weight:900; color:#ffea63; text-shadow:0 0 10px rgba(255,234,99,.35);}
   .dl-note{font-size:12px; opacity:.85; color:#b9ffee; margin-top:8px;}
 </style>
+
+<!-- ADD-ONLY: บังคับให้กรอบ Progress โผล่เสมอ แม้ JS หลักมาช้า -->
+<style>
+  #progressMeta, #barWrap { opacity:1 !important; pointer-events:auto !important; }
+</style>
 </head>
 <body>
   <div class="container">
@@ -151,6 +161,7 @@
   const percentEl   = document.getElementById('percentText');
   const startBtn    = document.getElementById('startBtn');
   const progressMeta= document.getElementById('progressMeta');
+
   const dlOverlay   = document.getElementById('dlOverlay');
   const dlSecondsEl = document.getElementById('dlSeconds');
 
@@ -182,7 +193,7 @@
       setProgress(p);
       if(t < 1){ raf = requestAnimationFrame(tick); }
       else {
-        // ถ้าต้องการให้ UFO หายตอนครบ 100% ให้ปลดคอมเมนต์บรรทัดล่าง
+        // ถ้าต้องการให้ UFO หายตอน 100% ให้ปลดคอมเมนต์บรรทัดล่าง
         // setTimeout(()=>barUfo.classList.remove('on'), 300);
       }
     }
@@ -263,55 +274,64 @@
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- === ADD-ONLY: บังคับให้กรอบขึ้นตลอด + เริ่มที่ 0/1 + UFO โผล่เมื่อ p>0 === -->
-<style>
-  #progressMeta, #barWrap{opacity:1 !important; pointer-events:auto !important;}
-</style>
+<!-- ADD-ONLY: UI watchdog & cache-bust + บังคับชื่อเริ่มต้น 0/1 และปลดซ่อนกรอบทันที -->
 <script>
-(function () {
+(function(){
   const progressMeta = document.getElementById('progressMeta');
   const barWrap      = document.getElementById('barWrap');
-  const bar          = document.getElementById('bar');
-  const barUfo       = document.getElementById('barUfo');
   const pText        = document.getElementById('progressText');
-  const percentEl    = document.getElementById('percentText');
+  const pPct         = document.getElementById('percentText');
+  const barUfo       = document.getElementById('barUfo');
 
-  // แสดงกรอบทันที + กันโดนซ่อนซ้ำ
-  function showShell(){ progressMeta?.classList.remove('is-hidden'); barWrap?.classList.remove('is-hidden'); }
-  showShell();
-  progressMeta && new MutationObserver(showShell).observe(progressMeta,{attributes:true,attributeFilter:['class']});
-  barWrap      && new MutationObserver(showShell).observe(barWrap,{attributes:true,attributeFilter:['class']});
+  // โผล่กรอบทันที
+  progressMeta?.classList.remove('is-hidden');
+  barWrap?.classList.remove('is-hidden');
 
-  // ค่าเริ่มต้น
-  pText && (pText.textContent = 'Progress: 0/1');
-  percentEl && (percentEl.textContent = '0%');
-  barUfo && barUfo.classList.remove('on');
+  // ตั้งชื่อเริ่มเป็น 0/1 เสมอ
+  if (pText) pText.textContent = 'Progress: 0/1';
+  if (pPct)  pPct.textContent  = '0%';
 
-  // ครอบ setProgress ให้คุมชื่อ/เปอร์เซ็นต์ และโชว์ UFO เมื่อ p>0
+  // ครอบ setProgress เพื่อกันชื่อกลับเป็น 1/1 ก่อนเวลา + ทำให้ UFO โผล่เมื่อมี progress
   const _origSet = window.setProgress;
-  window.setProgress = function(p){
-    if (typeof _origSet === 'function') _origSet(p);
-    else if (bar){ p = Math.max(0, Math.min(100, Number(p)||0)); bar.style.width = p + '%'; }
+  if (typeof _origSet === 'function') {
+    window.setProgress = function(p){
+      _origSet(p);
+      if (pText) pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
+      if (barUfo && p > 0) barUfo.classList.add('on');
+    };
+  }
 
-    const pv = Math.max(0, Math.min(100, Number(p)||0));
-    pText && (pText.textContent = 'Progress: ' + (pv >= 100 ? '1/1' : '0/1'));
-    percentEl && (percentEl.textContent = pv.toFixed(0) + '%');
+  // ถ้า JS หลักโหลดช้า/ค้าง ให้ปลุก UI และรีโหลดแบบ cache-bust 1 ครั้ง
+  setTimeout(function(){
+    const hasHead = !!document.querySelector('.head-title');
+    const visible = document.querySelector('.container')?.getBoundingClientRect().height > 80;
+    if (!hasHead || !visible){
+      progressMeta?.classList.remove('is-hidden');
+      barWrap?.classList.remove('is-hidden');
+      try{
+        const KEY='ufox_busted_once';
+        if (!sessionStorage.getItem(KEY)) {
+          sessionStorage.setItem(KEY, '1');
+          const u = new URL(location.href);
+          u.searchParams.set('v', Date.now().toString());
+          location.replace(u.toString());
+        }
+      }catch(e){}
+    }
+  }, 1500);
 
-    if (barUfo){ if (pv > 0) barUfo.classList.add('on'); else barUfo.classList.remove('on'); }
-  };
+  // กันถูกซ่อนกลับ
+  const keepShown = (el)=> el && new MutationObserver(()=>el.classList.remove('is-hidden'))
+    .observe(el,{attributes:true,attributeFilter:['class']});
+  keepShown(progressMeta); keepShown(barWrap);
 
-  // sync ครั้งแรก
-  requestAnimationFrame(()=>window.setProgress(0));
-
-  // กันรูป UFO หาย
-  const UFO_FALLBACK = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  // บังคับรูป UFO (กันโหลดไม่ขึ้น)
   if (barUfo){
-    const v = getComputedStyle(document.documentElement).getPropertyValue('--ufo-ship').trim();
-    if (!v || v === 'none') barUfo.style.backgroundImage = `url("${UFO_FALLBACK}")`;
-    const img = new Image(); img.src = UFO_FALLBACK;
+    const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png";
+    barUfo.style.backgroundImage = `url("${UFO_EXACT}")`;
+    (new Image()).src = UFO_EXACT;
   }
 })();
 </script>
-<!-- === /ADD-ONLY === -->
 </body>
 </html>
