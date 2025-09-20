@@ -133,7 +133,7 @@
   </div>
 
 <script>
-  /* ===== CONFIG ===== */
+  /* ===== CONFIG (ของเดิม) ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
@@ -151,22 +151,94 @@
   const percentEl   = document.getElementById('percentText');
   const startBtn    = document.getElementById('startBtn');
   const progressMeta= document.getElementById('progressMeta');
-
   const dlOverlay   = document.getElementById('dlOverlay');
   const dlSecondsEl = document.getElementById('dlSeconds');
 
   let raf = null;
 
+  /* ===== Progress / UFO (เดิม) ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
+
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-    const LEAD = 8;
+    const LEAD = 8; // px
     barUfo.style.left = (tipInside + LEAD) + 'px';
+
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
+  }
+
+  function runProgress(pTarget=100, duration=5000){
+    cancelAnimationFrame(raf);
+    barUfo.classList.add('on');
+    const pStart = parseFloat(bar.style.width) || 0;
+    const t0 = performance.now();
+    function tick(ts){
+      const t = Math.min(1, (ts - t0)/duration);
+      const p = pStart + (pTarget - pStart) * t;
+      setProgress(p);
+      if(t < 1){ raf = requestAnimationFrame(tick); }
+      else {
+        // ถ้าต้องการให้ UFO หายตอนครบ 100% ให้ปลดคอมเมนต์บรรทัดล่าง
+        // setTimeout(()=>barUfo.classList.remove('on'), 300);
+      }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function showBarAfterDelay(){
+    setTimeout(()=>{
+      progressMeta.classList.remove('is-hidden');
+      barWrap.classList.remove('is-hidden');
+      setProgress(parseFloat(bar.style.width) || 0);
+      autoCompleteIfReturned(true);
+    }, ARM_DELAY);
+  }
+
+  function isValidReturn(){
+    try{
+      const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
+      if(!ts) return false;
+      return (Date.now() - ts) >= MIN_VISIT;
+    }catch(e){ return false; }
+  }
+  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY);}catch(e){} }
+  function autoCompleteIfReturned(onlyIfVisible=false){
+    if(location.hostname!==DOMAIN_OK) return;
+    if(onlyIfVisible && (progressMeta.classList.contains('is-hidden')||barWrap.classList.contains('is-hidden'))) return;
+    if(isValidReturn()){ clearReturnMark(); runProgress(100,5000); }
+  }
+
+  function showDownloadOverlay(){
+    if(location.hostname !== DOMAIN_OK) return;
+    document.body.classList.add('locked');
+    dlOverlay.classList.remove('hidden');
+    const start = Date.now();
+    const timer = setInterval(()=>{
+      const elapsed = Date.now() - start;
+      const percent = Math.min(100, Math.floor((elapsed / DL_TOTAL_MS)*100));
+      dlSecondsEl.textContent = percent;
+      if(elapsed >= DL_TOTAL_MS){
+        clearInterval(timer);
+        dlOverlay.classList.add('hidden');
+        document.body.classList.remove('locked');
+      }
+    }, 100);
+  }
+
+  function preloadImages(urls, timeoutMs=IMG_TIMEOUT){
+    return new Promise(resolve=>{
+      let done=false; const timer=setTimeout(()=>{if(!done){done=true;resolve();}},timeoutMs);
+      let loaded=0;
+      urls.forEach(u=>{
+        const img=new Image();
+        img.onload=img.onerror=()=>{ if(done) return; if(++loaded>=urls.length){done=true;clearTimeout(timer);resolve();}};
+        img.src=u;
+      });
+    });
   }
 
   startBtn.addEventListener('click', ()=>{
@@ -175,45 +247,71 @@
   });
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    progressMeta.classList.remove('is-hidden');
-    barWrap.classList.remove('is-hidden');
-    setProgress(0);
+    progressMeta.classList.add('is-hidden');
+    barWrap.classList.add('is-hidden');
+
+    preloadImages([
+      '/img/bg',
+      '/img/profile',
+      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png'
+    ]);
+
+    showBarAfterDelay();
+    showDownloadOverlay();
   });
+
+  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- === ADD-ONLY PATCH: บังคับให้ Progress UI โผล่ตลอด === -->
+<!-- === ADD-ONLY: บังคับให้กรอบขึ้นตลอด + เริ่มที่ 0/1 + UFO โผล่เมื่อ p>0 === -->
 <style>
-  #progressMeta, #barWrap{
-    opacity:1 !important;
-    pointer-events:auto !important;
-  }
+  #progressMeta, #barWrap{opacity:1 !important; pointer-events:auto !important;}
 </style>
 <script>
-(function(){
-  const progressMeta=document.getElementById('progressMeta');
-  const barWrap=document.getElementById('barWrap');
-  const pText=document.getElementById('progressText');
-  const percent=document.getElementById('percentText');
-  const barUfo=document.getElementById('barUfo');
+(function () {
+  const progressMeta = document.getElementById('progressMeta');
+  const barWrap      = document.getElementById('barWrap');
+  const bar          = document.getElementById('bar');
+  const barUfo       = document.getElementById('barUfo');
+  const pText        = document.getElementById('progressText');
+  const percentEl    = document.getElementById('percentText');
 
-  if(progressMeta) progressMeta.classList.remove('is-hidden');
-  if(barWrap) barWrap.classList.remove('is-hidden');
-  if(pText) pText.textContent='Progress: 0/1';
-  if(percent) percent.textContent='0%';
+  // แสดงกรอบทันที + กันโดนซ่อนซ้ำ
+  function showShell(){ progressMeta?.classList.remove('is-hidden'); barWrap?.classList.remove('is-hidden'); }
+  showShell();
+  progressMeta && new MutationObserver(showShell).observe(progressMeta,{attributes:true,attributeFilter:['class']});
+  barWrap      && new MutationObserver(showShell).observe(barWrap,{attributes:true,attributeFilter:['class']});
 
-  const _orig=window.setProgress;
-  if(typeof _orig==='function'){
-    window.setProgress=function(p){
-      _orig(p);
-      if(pText) pText.textContent='Progress: '+(p>=100?'1/1':'0/1');
-      if(barUfo){
-        if(p>0) barUfo.classList.add('on');
-        else barUfo.classList.remove('on');
-      }
-    }
+  // ค่าเริ่มต้น
+  pText && (pText.textContent = 'Progress: 0/1');
+  percentEl && (percentEl.textContent = '0%');
+  barUfo && barUfo.classList.remove('on');
+
+  // ครอบ setProgress ให้คุมชื่อ/เปอร์เซ็นต์ และโชว์ UFO เมื่อ p>0
+  const _origSet = window.setProgress;
+  window.setProgress = function(p){
+    if (typeof _origSet === 'function') _origSet(p);
+    else if (bar){ p = Math.max(0, Math.min(100, Number(p)||0)); bar.style.width = p + '%'; }
+
+    const pv = Math.max(0, Math.min(100, Number(p)||0));
+    pText && (pText.textContent = 'Progress: ' + (pv >= 100 ? '1/1' : '0/1'));
+    percentEl && (percentEl.textContent = pv.toFixed(0) + '%');
+
+    if (barUfo){ if (pv > 0) barUfo.classList.add('on'); else barUfo.classList.remove('on'); }
+  };
+
+  // sync ครั้งแรก
+  requestAnimationFrame(()=>window.setProgress(0));
+
+  // กันรูป UFO หาย
+  const UFO_FALLBACK = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  if (barUfo){
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--ufo-ship').trim();
+    if (!v || v === 'none') barUfo.style.backgroundImage = `url("${UFO_FALLBACK}")`;
+    const img = new Image(); img.src = UFO_FALLBACK;
   }
 })();
 </script>
-<!-- === /PATCH === -->
+<!-- === /ADD-ONLY === -->
 </body>
 </html>
