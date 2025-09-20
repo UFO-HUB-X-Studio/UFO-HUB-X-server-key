@@ -1,146 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UFO HUB X</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: url("bg.png") no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
-    }
-    .card {
-      background: rgba(0, 0, 0, 0.75);
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px;
-      box-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .header img {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-    }
-    .title {
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .title span:first-child {
-      color: #fff;   /* UFO เป็นสีขาว */
-    }
-    .title span:last-child {
-      color: #00ff88; /* HUB X เป็นสีเขียว */
-    }
-    .progress-row {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-top: 15px;
-    }
-    .progress-wrap {
-      flex: 1;
-      background: #222;
-      border-radius: 8px;
-      overflow: hidden;
-      height: 14px;
-      box-shadow: inset 0 0 8px rgba(0,255,170,0.5);
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg,#00ff88,#00ffaa);
-      width: 0%;
-      transition: width 0.3s;
-    }
-    .progress-text {
-      margin-top: 6px;
-      font-size: 14px;
-      color: #9fffdc;
-      text-shadow: 0 0 8px rgba(0,255,170,.6);
-      text-align: right;
-    }
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .btn-start {
-      background: #00ff88;
-      color: #000;
-      box-shadow: 0 0 10px rgba(0,255,170,0.6);
-    }
-    .key-card {
-      background: rgba(0, 0, 0, 0.75);
-      border-radius: 12px;
-      padding: 15px;
-      margin: 20px;
-      box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
-    }
-    .key-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      font-weight: bold;
-      color: #00ff88;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    th, td {
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      color: #9fffdc;
-      font-weight: normal;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UFO HUB X</title>
+<style>
+  :root{
+    --ufo-green:#00ff99;
+    --ufo-green-soft:#36ffb5;
+    --text:#d9fff5;
+    --panel1:rgba(9,16,23,.88);
+    --panel2:rgba(8,13,19,.92);
+    --glow:rgba(34,255,200,.09);
+  }
+  /* BG */
+  body{
+    margin:0;
+    font-family: "Orbitron", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: url("/img/bg") center/cover fixed no-repeat;
+    color:var(--text);
+  }
+
+  .container{
+    max-width: 880px;
+    margin: 22px auto 80px;
+    padding: 0 16px;
+  }
+
+  .card{
+    background:linear-gradient(180deg,var(--panel1),var(--panel2));
+    border-radius:18px;
+    box-shadow:
+      0 0 0 1px rgba(34,255,200,.06) inset,
+      0 10px 30px rgba(0,0,0,.55),
+      0 0 34px var(--glow);
+    padding:18px;
+    margin-bottom:22px;
+    backdrop-filter: blur(2px);
+  }
+
+  /* ---------- TOP CARD ---------- */
+  .top-head{
+    display:flex;
+    align-items:center;
+    gap:18px;
+  }
+  .logo{
+    width:88px;height:88px;border-radius:14px;
+    background:url("/img/profile") center/cover no-repeat;
+    box-shadow:0 0 18px rgba(0,255,170,.45);
+    flex:0 0 auto;
+  }
+  .title-wrap{
+    display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;
+    margin-top:6px;
+  }
+  .title{
+    font-size:36px; line-height:1; letter-spacing:.5px; margin:0;
+    text-shadow:0 0 12px rgba(0,255,170,.15);
+  }
+  .title .ufo{color:#ffffff;}       /* UFO ขาว */
+  .title .hubx{color:var(--ufo-green-soft);} /* HUB X เขียว */
+
+  /* Progress row: bar ซ้าย, ปุ่มขวา */
+  .progress-row{
+    display:flex; align-items:center; gap:14px; margin-top:16px;
+  }
+  .progress-wrap{
+    position:relative; flex:1 1 auto; height:14px;
+    background:rgba(0,0,0,.35); border-radius:8px; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(34,255,200,.06);
+  }
+  .progress-bar{
+    position:absolute; inset:0 0 0 auto; width:0%;
+    background:linear-gradient(90deg,#00ffa3,#3bffbf);
+    box-shadow:0 0 18px rgba(34,255,200,.35);
+    z-index:1; /* อยู่ใต้ข้อความ */
+  }
+  .progress-label{
+    position:absolute; left:10px; top:50%; transform:translateY(-50%);
+    font-size:13px; font-weight:800; color:#eafff8;
+    /* ทำให้เห็นชัดแม้อยู่บนสีเขียวสว่าง */
+    z-index:2;
+    text-shadow:
+      0 0 2px #000,
+      0 0 6px rgba(0,0,0,.85),
+      0 0 12px rgba(0,0,0,.85);
+    -webkit-text-stroke: .4px rgba(0,0,0,.55);
+    pointer-events:none;
+  }
+
+  .btn{
+    appearance:none; border:0; cursor:pointer; font-weight:700;
+    border-radius:12px; padding:10px 16px; transition:.15s;
+  }
+  .btn-start{
+    background:var(--ufo-green); color:#071a14; white-space:nowrap;
+    box-shadow:0 6px 18px rgba(0,255,140,.25), 0 0 0 1px rgba(0,0,0,.2) inset;
+  }
+  .btn-start:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+
+  /* ---------- BOTTOM CARD ---------- */
+  .key-head{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin-bottom:10px;
+  }
+  .key-title{ font-size:18px; color:#ffea63; display:flex; align-items:center; gap:8px;}
+  .btn-new{ background:var(--ufo-green); color:#071a14; padding:10px 14px; border-radius:12px; font-weight:800;}
+  .table{ width:100%; border-collapse:collapse; font-size:14px; color:var(--text);}
+  .table th, .table td{ padding:10px 8px; text-align:center;}
+  .table th{ color:#77ffc8; font-weight:600; }
+  .pill{
+    display:inline-block; padding:6px 10px; border-radius:999px;
+    background:rgba(0,255,170,.1); color:var(--ufo-green); font-weight:800; font-size:12px;
+    box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;
+  }
+
+  /* Responsive tweak */
+  @media (max-width:560px){
+    .title{font-size:30px}
+    .logo{width:76px;height:76px}
+  }
+</style>
 </head>
 <body>
-  <div class="card">
-    <div class="header">
-      <img src="logo.png" alt="logo">
-      <div class="title"><span>UFO</span> <span>HUB X</span></div>
-    </div>
-    <div class="progress-row">
-      <div class="progress-wrap">
-        <div class="progress-bar" id="bar"></div>
+  <div class="container">
+
+    <!-- TOP CARD -->
+    <section class="card">
+      <div class="top-head">
+        <div class="logo"></div>
+        <div class="title-wrap">
+          <h1 class="title">
+            <span class="ufo">UFO</span> <span class="hubx">HUB X</span>
+          </h1>
+        </div>
       </div>
-      <button class="btn btn-start" id="startBtn">🟢 START</button>
-    </div>
-    <div class="progress-text" id="label">Progress: 0/1</div>
+
+      <div class="progress-row">
+        <!-- progress bar + label -->
+        <div class="progress-wrap">
+          <div class="progress-bar" id="bar" style="width:0%"></div>
+          <div class="progress-label" id="label">Progress: 0/1</div>
+        </div>
+
+        <!-- START button ขวา + ไอคอน 🟢 -->
+        <button class="btn btn-start" id="startBtn">🟢 START</button>
+      </div>
+    </section>
+
+    <!-- BOTTOM CARD -->
+    <section class="card">
+      <div class="key-head">
+        <div class="key-title">🔑 Your Key</div>
+        <button class="btn btn-new" id="getKey">+ GET A NEW KEY</button>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="keyRows">
+          <!-- ใส่แถวคีย์ด้วย JS ฝั่งคุณตามเดิม -->
+        </tbody>
+      </table>
+    </section>
+
   </div>
 
-  <div class="key-card">
-    <div class="key-header">
-      <div>🔑 Your Key</div>
-      <button class="btn btn-start">+ GET A NEW KEY</button>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>KEY</th>
-          <th>TIME LEFT</th>
-          <th>STATUS</th>
-          <th>ACTIONS</th>
-        </tr>
-      </thead>
-      <tbody id="keyTable">
-        <!-- keys แสดงที่นี่ -->
-      </tbody>
-    </table>
-  </div>
+  <script>
+    // เริ่มต้นให้เห็นเป็น 0/1 ชัดเจน
+    const bar   = document.getElementById('bar');
+    const label = document.getElementById('label');
+
+    // กด START ค่อยอัปเดตเป็น 1/1 (หรือจะค่อย ๆ เพิ่ม bar ก็ได้)
+    document.getElementById('startBtn').addEventListener('click', ()=>{
+      label.textContent = 'Progress: 1/1';
+      bar.style.width = '100%';
+    });
+  </script>
 </body>
 </html>
