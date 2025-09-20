@@ -1,165 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>UFO HUB X</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&display=swap" rel="stylesheet" />
 <style>
-  body {
-    margin:0; font-family:'Orbitron',sans-serif; color:#fff;
-    background:#050d08 url("/img/bg") no-repeat center/cover fixed;
+  :root{
+    --ufo-green:#22ff88;
+    --ufo-green-d:#0adf69;
+    --ufo-dark:#0a0f0d;
+    --ufo-panel:#0e1413;
+    --ufo-panel-2:#0c1117;
+    --ufo-line:#083a25;
+    --txt-dim:#a9ffe1;
   }
-  .wrap {
-    max-width:750px; margin:20px auto; padding:0 10px;
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:#fff; font-family:'Orbitron',system-ui,sans-serif;
+    background:#040b07 url("/img/bg") center/cover fixed no-repeat;
   }
-  .card {
-    background:rgba(0,0,0,.6); border:1px solid #0f3; border-radius:12px;
-    box-shadow:0 0 15px rgba(0,255,100,.4); margin-bottom:18px; overflow:hidden;
+
+  /* container กว้างพอดี + ระยะห่างชัดเจน */
+  .wrap{ max-width:860px; margin:20px auto 60px; padding:0 14px; }
+
+  /* 2 การ์ดแยกชัดเจน */
+  .card{
+    position:relative; overflow:hidden; border-radius:16px; margin:0 auto 26px;
+    border:1px solid var(--ufo-line);
   }
-  .header {
-    text-align:center; padding:20px;
+
+  /* การ์ดบน – โทนเขียวเข้ม */
+  .card.top{
+    background:linear-gradient(180deg, rgba(11,23,18,.85), rgba(7,14,12,.9));
+    box-shadow:
+      0 0 0 1px rgba(34,255,136,.08) inset,
+      0 10px 30px rgba(0,0,0,.55),
+      0 0 40px rgba(34,255,136,.10);
   }
-  .header img {
-    width:160px; height:160px; object-fit:cover; border-radius:10px;
-    box-shadow:0 0 20px rgba(0,255,100,.6);
+  /* การ์ดล่าง – โทนเขียวอมฟ้า เพื่อแยกชั้น */
+  .card.bottom{
+    background:linear-gradient(180deg, rgba(9,16,23,.88), rgba(8,13,19,.92));
+    box-shadow:
+      0 0 0 1px rgba(34,255,200,.06) inset,
+      0 10px 30px rgba(0,0,0,.55),
+      0 0 34px rgba(34,255,200,.09);
   }
-  .title { font-size:26px; margin-top:12px; color:#0f0; letter-spacing:2px; }
-  .strip {
+
+  /* หัวการ์ด */
+  .head{ padding:18px 22px 12px; display:flex; align-items:center; gap:14px; }
+  .logo{
+    width:110px; height:110px; border-radius:12px; object-fit:cover;
+    box-shadow:0 0 22px rgba(34,255,136,.5);
+  }
+  .brand{ font-size:28px; letter-spacing:2px; color:var(--ufo-green); text-shadow:0 0 8px rgba(34,255,136,.5); }
+
+  .strip{ display:flex; justify-content:space-between; align-items:center; padding:10px 22px 16px; }
+  .pill{
+    background:#0b2119; border:1px solid #0f3; color:var(--txt-dim);
+    padding:6px 16px; border-radius:999px; font-size:14px;
+  }
+  .btn{
+    background:var(--ufo-green); color:#000; font-weight:800;
+    border:none; padding:10px 18px; border-radius:10px; cursor:pointer;
+    box-shadow:0 0 20px rgba(34,255,136,.35);
+  }
+  .btn:active{ transform:translateY(1px) }
+
+  .prog{ padding:0 22px 22px }
+  .prog .label{ font-size:13px; color:var(--txt-dim); margin:0 0 8px }
+  .bar{ height:10px; background:#0a1411; border-radius:8px; overflow:hidden; border:1px solid #093 }
+  .fill{ height:100%; width:0%; background:linear-gradient(90deg,#16ff75,#19ffd1) }
+
+  /* Title row ของ Your Key */
+  .k-head{
     display:flex; align-items:center; justify-content:space-between;
-    padding:12px 20px;
+    padding:14px 18px; border-bottom:1px solid rgba(34,255,200,.12);
+    background:linear-gradient(180deg, rgba(34,255,200,.06), rgba(34,255,200,0));
   }
-  .pill {
-    background:#0b2119; border:1px solid #0f3;
-    padding:6px 14px; border-radius:999px; font-size:14px; color:#9fffdc;
+  .k-title{ color:#9effee; display:flex; align-items:center; gap:8px; font-size:16px }
+  .k-get{
+    background:var(--ufo-green); color:#001; font-weight:800; border:none;
+    padding:8px 14px; border-radius:10px; cursor:pointer;
+    box-shadow:0 0 16px rgba(34,255,136,.28);
   }
-  .btn {
-    background:#0f3; border:none; color:#000; font-weight:700;
-    padding:8px 18px; border-radius:8px; cursor:pointer;
+
+  /* ตารางคีย์ */
+  .thead,.row{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:10px; align-items:center }
+  .thead{
+    padding:10px 18px; font-size:12.5px; color:#b1ffe9; opacity:.9;
+    border-bottom:1px solid rgba(34,255,200,.10);
   }
-  .prog { padding:0 20px 20px; }
-  .bar { height:8px; background:#111; border-radius:6px; overflow:hidden; }
-  .fill { height:100%; width:0; background:linear-gradient(90deg,#0f0,#0ff); }
-  .prog .label { margin-bottom:6px; font-size:13px; color:#9fffdc; }
-  .kHead {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:10px 16px; background:rgba(0,255,100,.05);
+  .tbody{ padding:2px 6px 14px }
+  .row{
+    padding:12px 12px; border-radius:10px; margin:8px 8px;
+    background:rgba(8,20,18,.55); border:1px solid rgba(34,255,136,.10);
   }
-  .kTitle { font-size:15px; color:#0f0; display:flex; align-items:center; gap:6px; }
-  .kGet { background:#0f3; border:none; padding:6px 14px; font-weight:700; border-radius:8px; cursor:pointer; }
-  .thead, .row {
-    display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr;
-    gap:8px; align-items:center; padding:10px 16px;
+  .keypill{
+    background:#0b2119; border:1px solid #094; border-radius:8px;
+    padding:7px 10px; font-size:13px; letter-spacing:.5px;
   }
-  .thead { font-size:13px; color:#9fffdc; border-bottom:1px solid #093; }
-  .tbody { }
-  .row { border-bottom:1px solid #063; font-size:14px; }
-  .row:last-child { border-bottom:none; }
-  .keypill {
-    background:#0b2119; border:1px solid #093;
-    padding:6px 10px; border-radius:6px; font-size:13px;
+  .badge{ padding:5px 10px; border-radius:8px; font-size:12px; font-weight:800 }
+  .ok{ background:rgba(34,255,136,.18); color:#22ff88; border:1px solid #0f3 }
+  .ex{ background:rgba(255,90,90,.18); color:#ff8080; border:1px solid #d66 }
+  .act{ display:flex; gap:8px; }
+  .copy,.plus{
+    background:#0b2119; border:1px solid #094; color:#fff; font-size:12px;
+    padding:6px 10px; border-radius:8px; cursor:pointer;
   }
-  .time { font-size:13px; }
-  .badge {
-    padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700;
+
+  /* เส้นแบ่งสองการ์ดให้รู้สึกเป็นหน้าคนละชิ้น */
+  .separator{
+    height:22px; margin:-8px auto 26px; width:min(860px, calc(100% - 28px));
+    background:radial-gradient(60% 80% at 50% 100%, rgba(34,255,136,.30) 0%, rgba(34,255,136,0) 70%);
+    filter:blur(8px); pointer-events:none;
   }
-  .ok { background:rgba(0,255,100,.2); color:#0f0; }
-  .ex { background:rgba(255,80,80,.2); color:#f66; }
-  .act { display:flex; gap:6px; }
-  .copy,.tiny {
-    background:#0b2119; border:1px solid #093; color:#fff; font-size:12px;
-    padding:6px 10px; border-radius:6px; cursor:pointer;
+
+  @media (max-width:520px){
+    .logo{ width:90px; height:90px }
+    .brand{ font-size:22px }
+    .thead,.row{ grid-template-columns:1.4fr .9fr .9fr 1fr }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+  <div class="wrap">
 
-  <!-- Header -->
-  <section class="card">
-    <div class="header">
-      <img src="/img/profile" alt="UFO">
-      <div class="title">UFO HUB X</div>
-    </div>
-    <div class="strip">
-      <span class="pill">UFO HUB X</span>
-      <button id="btnStart" class="btn">START</button>
-    </div>
-    <div class="prog">
-      <div class="label">Progress: <b id="ptext">0/1</b></div>
-      <div class="bar"><div id="pfill" class="fill"></div></div>
-    </div>
-  </section>
+    <!-- ===== UI 1 : START + PROGRESS ===== -->
+    <section class="card top" id="ui-start">
+      <div class="head">
+        <img class="logo" src="/img/profile" alt="UFO" />
+        <div class="brand">UFO HUB X</div>
+      </div>
+      <div class="strip">
+        <div class="pill">UFO&nbsp;&nbsp;HUB X</div>
+        <button id="btnStart" class="btn">START</button>
+      </div>
+      <div class="prog">
+        <div class="label">Progress: <b id="ptext">0/1</b></div>
+        <div class="bar"><div id="pfill" class="fill"></div></div>
+      </div>
+    </section>
 
-  <!-- Key Panel -->
-  <section class="card">
-    <div class="kHead">
-      <div class="kTitle">🔑 Your Key</div>
-      <button id="btnGet" class="kGet">+ GET A NEW KEY</button>
-    </div>
-    <div class="thead">
-      <div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
-    </div>
-    <div id="tbody" class="tbody"></div>
-  </section>
+    <!-- เส้น glow คั่น “ให้รู้สึกเป็น 2 หน้า” -->
+    <div class="separator"></div>
 
-</div>
+    <!-- ===== UI 2 : YOUR KEY ===== -->
+    <section class="card bottom" id="ui-key">
+      <div class="k-head">
+        <div class="k-title">🔑 Your Key</div>
+        <button id="btnGet" class="k-get">+ GET A NEW KEY</button>
+      </div>
+
+      <div class="thead">
+        <div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
+      </div>
+      <div id="tbody" class="tbody"></div>
+    </section>
+
+  </div>
 
 <script>
-const pText=document.getElementById('ptext');
-const pFill=document.getElementById('pfill');
-let progress=0;
-document.getElementById('btnStart').onclick=()=>{
-  progress=Math.min(1,progress+1);
-  pText.textContent=`${progress}/1`;
-  pFill.style.width=(progress*100)+'%';
-};
+  // ===== Progress (UI 1) =====
+  const pText=document.getElementById('ptext');
+  const pFill=document.getElementById('pfill');
+  let progress=0;
+  document.getElementById('btnStart').onclick=()=>{
+    progress=Math.min(1,progress+1);
+    pText.textContent=`${progress}/1`;
+    pFill.style.width=(progress*100)+'%';
+  };
 
-const tbody=document.getElementById('tbody');
-function hhmmss(sec){
-  const h=String(Math.floor(sec/3600)).padStart(2,'0');
-  const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
-  const s=String(sec%60).padStart(2,'0');
-  return `${h}:${m}:${s}`;
-}
-let items=[];
-function render(){
-  tbody.innerHTML='';
-  items.forEach((it,i)=>{
-    const left=Math.max(0,Math.floor(it.expires_at-Date.now()/1000));
-    const row=document.createElement('div');
-    row.className='row';
-    row.innerHTML=`
-      <div class="keypill">${it.key}</div>
-      <div class="time" id="left-${i}">${hhmmss(left)}</div>
-      <div><span class="badge ${left>0?'ok':'ex'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
-      <div class="act">
-        <button class="copy">Copy</button>
-        <button class="tiny">+5H</button>
-      </div>`;
-    row.querySelector('.copy').onclick=()=>navigator.clipboard.writeText(it.key);
-    tbody.appendChild(row);
-  });
-}
-setInterval(()=>{
-  items.forEach((it,i)=>{
-    const el=document.getElementById(`left-${i}`);
-    if(!el) return;
-    const left=Math.max(0,Math.floor(it.expires_at-Date.now()/1000));
-    el.textContent=hhmmss(left);
-  });
-},1000);
+  // ===== Keys (UI 2) =====
+  const tbody=document.getElementById('tbody');
+  let items=[];
 
-document.getElementById('btnGet').onclick=async()=>{
-  try{
-    const res=await fetch(`/getkey?uid=123&place=999`);
-    const data=await res.json();
-    if(data.ok){
-      items=[{key:data.key,expires_at:data.expires_at||Date.now()/1000+600}];
-      render();
-    }
-  }catch(e){console.error(e)}
-};
+  const hhmmss=(sec)=>{
+    const h=String(Math.floor(sec/3600)).padStart(2,'0');
+    const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
+    const s=String(sec%60).padStart(2,'0');
+    return `${h}:${m}:${s}`;
+  };
+
+  function render(){
+    tbody.innerHTML='';
+    items.forEach((it,i)=>{
+      const left=Math.max(0,Math.floor(it.expires_at-Date.now()/1000));
+      const row=document.createElement('div');
+      row.className='row';
+      row.innerHTML=`
+        <div class="keypill">${it.key}</div>
+        <div id="left-${i}">${hhmmss(left)}</div>
+        <div><span class="badge ${left>0?'ok':'ex'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
+        <div class="act">
+          <button class="copy">Copy</button>
+          <button class="plus">+5H ➜</button>
+        </div>`;
+      row.querySelector('.copy').onclick=()=>navigator.clipboard.writeText(it.key);
+      row.querySelector('.plus').onclick=()=>{
+        // เดโม่เพิ่มเวลาเฉพาะในหน้าเว็บ (ฝั่ง server ไม่ได้ต่อ)
+        it.expires_at += 5*3600; render();
+      };
+      tbody.appendChild(row);
+    });
+  }
+
+  setInterval(()=>{
+    items.forEach((it,i)=>{
+      const el=document.getElementById(`left-${i}`);
+      if(!el) return;
+      const left=Math.max(0,Math.floor(it.expires_at-Date.now()/1000));
+      el.textContent=hhmmss(left);
+    });
+  },1000);
+
+  document.getElementById('btnGet').onclick=async()=>{
+    try{
+      const res=await fetch(`/getkey?uid=123&place=999`);
+      const data=await res.json();
+      if(data.ok){
+        items=[{ key:data.key, expires_at:data.expires_at || Math.floor(Date.now()/1000)+600 }];
+        render();
+      }
+    }catch(e){ console.error(e); }
+  };
 </script>
 </body>
 </html>
