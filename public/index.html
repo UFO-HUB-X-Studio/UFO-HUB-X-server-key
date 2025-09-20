@@ -4,222 +4,268 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>UFO HUB X</title>
+
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root{
-    --bg:#050806; --panel:#0b1210; --panel2:#0a1612; --line:#103424;
-    --text:#eafff4; --muted:#9ad7be; --neon:#00ff8c; --neon2:#07d47a; --danger:#ff5e66;
-    --shadow:0 18px 60px rgba(0,0,0,.55);
-    --glow:0 0 18px rgba(0,255,140,.35), 0 0 60px rgba(0,255,140,.18);
+    --bg:#07100c;
+    --card:#0b1512;
+    --card2:#0c1714;
+    --line:#123a27;
+    --soft:#0a2017;
+    --text:#ecfff6;
+    --muted:#9cdac0;
+    --neon:#1dfc9d;
+    --neon-2:#00ff84;
+    --accent:#00f58a;
+    --danger:#ff6b6b;
+    --shadow:0 18px 60px rgba(0,0,0,.6);
+    --glow:0 0 24px rgba(0,255,132,.35), 0 0 60px rgba(0,255,132,.18);
   }
+
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0;background:var(--bg);color:var(--text);
-    font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial;
-    -webkit-font-smoothing:antialiased
+    font-family:'Inter',system-ui,Segoe UI,Roboto,Arial; -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 90% -10%, rgba(0,255,132,.12), transparent 60%),
+      radial-gradient(900px 520px at 10% 110%, rgba(0,255,132,.10), transparent 60%),
+      url("/img/bg");
+    background-size:cover; background-attachment:fixed; background-position:center;
   }
-  /* พื้นหลัง */
-  .bgA{position:fixed;inset:0;z-index:-3;background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(0,255,140,.12), transparent 60%),
-      radial-gradient(900px 520px at 10% 110%, rgba(0,255,140,.09), transparent 60%),
-      var(--bg);}
-  .bgB{position:fixed;inset:0;z-index:-2;opacity:.25;background:url("/img/bg") center/cover no-repeat;filter:saturate(1.05) brightness(.9)}
-  /* โครง */
-  .wrap{max-width:760px;margin:22px auto;padding:0 16px}
+
+  .wrap{max-width:880px;margin:30px auto;padding:0 16px}
+
+  /* ----- generic card ----- */
   .card{
-    background:linear-gradient(180deg, rgba(0,0,0,.32), rgba(0,0,0,.18));
-    border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);
-    backdrop-filter:blur(6px);position:relative;overflow:hidden
+    background:linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.15));
+    border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow);
+    backdrop-filter:blur(6px); position:relative; overflow:hidden;
   }
-  .card::after{content:"";position:absolute;inset:-2px;border-radius:24px;pointer-events:none;
-    box-shadow:inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow)}
-  /* หัวหน้า */
-  .hero{padding:22px}
-  .heroTop{display:flex;gap:18px;align-items:center}
-  .logo{
-    width:112px;height:112px;border-radius:18px;border:1px solid var(--line);
-    background:#0d1a14;overflow:hidden;box-shadow:var(--glow)
+  .card::after{
+    content:""; position:absolute; inset:-2px; border-radius:22px; pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow);
   }
-  .logo img{width:100%;height:100%;object-fit:cover;display:block}
-  .title{flex:1;text-align:center}
-  .title h1{
-    margin:4px 0 2px;font:700 40px 'Orbitron',sans-serif;letter-spacing:1.5px;
-    color:var(--text);text-shadow:0 0 14px rgba(0,255,140,.25)
+
+  /* ===== TOP VISUAL ===== */
+  .visual{
+    padding:26px 26px 18px;
+    display:flex; justify-content:center;
   }
-  .sub{color:var(--muted);font-weight:700;letter-spacing:.4px}
-  /* Progress */
-  .progWrap{margin-top:14px}
-  .bar{height:12px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#07140e}
-  .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--neon),#67ffb8);box-shadow:var(--glow);transition:width .35s ease}
-  .ctrl{margin-top:14px;display:flex;gap:12px}
+  .art{
+    width:360px; max-width:86vw; aspect-ratio:1/1;
+    border-radius:18px; background:#0f1f19; overflow:hidden;
+    border:1px solid var(--line); box-shadow:var(--glow);
+  }
+  .art img{width:100%; height:100%; object-fit:cover; display:block}
+
+  /* ===== HEADER BAR (UFO HUB X + START) ===== */
+  .bar{
+    margin-top:16px; padding:14px 18px 18px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .pillTitle{
+    background:#0a2219; border:1px solid var(--line);
+    color:#a9ffd6; font:700 15px/1 'Orbitron',sans-serif; letter-spacing:.8px;
+    padding:10px 14px; border-radius:999px; box-shadow:var(--glow);
+  }
+  .spacer{flex:1}
   .btn{
-    appearance:none;border:none;border-radius:14px;padding:12px 18px;
-    font-weight:900;letter-spacing:.3px;cursor:pointer;transition:.2s
+    appearance:none; border:none; cursor:pointer; font-weight:800;
+    padding:12px 18px; border-radius:14px; transition:.16s;
   }
-  .btnPrimary{background:var(--neon);color:#052016;box-shadow:var(--glow)}
+  .btnPrimary{
+    background:var(--neon); color:#042417; box-shadow:var(--glow);
+  }
   .btnPrimary:hover{filter:brightness(.95)}
-  .btnGhost{background:#0e1b15;border:1px solid var(--line);color:var(--text)}
-  /* การ์ด Key */
+  .statusDot{width:10px; height:10px; border-radius:50%; background:var(--neon); box-shadow:0 0 10px var(--neon)}
+  .btnWithDot{display:flex; align-items:center; gap:10px}
+
+  .progressBox{padding:0 18px 18px}
+  .progressLabel{color:var(--muted); font-weight:700}
+  .barLine{margin-top:10px; height:10px; border:1px solid var(--line); border-radius:12px; background:#07140e; overflow:hidden}
+  .barFill{height:100%; width:0%; background:linear-gradient(90deg,var(--neon),#67ffb8); box-shadow:var(--glow); transition:width .35s ease}
+
+  /* ===== KEY CARD ===== */
   .keyCard{margin-top:18px}
-  .head{display:flex;justify-content:space-between;align-items:center;
-        border-bottom:1px solid var(--line);padding:14px 18px;background:rgba(0,0,0,.06)}
-  .head h2{margin:0;font:700 20px 'Orbitron',sans-serif;color:var(--neon)}
-  .table{width:100%}
-  .th,.tr{display:grid;grid-template-columns:1.6fr 1fr .9fr 1fr;gap:12px;align-items:center}
-  .th{padding:12px 18px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
-  .list{padding:8px}
-  .row{padding:12px;border-bottom:1px dashed var(--line)}
+  .keyHead{
+    padding:14px 18px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--line); background:rgba(0,0,0,.06);
+  }
+  .keyTitle{
+    display:inline-flex; align-items:center; gap:10px;
+    background:#0a2219; border:1px solid var(--line);
+    padding:10px 14px; border-radius:999px; font:700 16px 'Orbitron',sans-serif; color:var(--neon);
+    box-shadow:var(--glow);
+  }
+  .btnGet{background:var(--neon); color:#052016; box-shadow:var(--glow)}
+
+  .thead{display:grid; grid-template-columns:1.6fr 1fr .9fr 1fr; gap:12px;
+         padding:12px 18px; color:var(--muted); font-weight:700; border-bottom:1px solid var(--line)}
+  .tbody{padding:6px}
+  .row{display:grid; grid-template-columns:1.6fr 1fr .9fr 1fr; gap:12px;
+       padding:12px 18px; align-items:center; border-bottom:1px dashed var(--line)}
   .row:last-child{border-bottom:none}
-  /* เซลล์ */
-  .kcell{display:flex;align-items:center;gap:10px}
-  .pill{
-    display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
-    background:#07150f;border:1px solid var(--line);font-weight:800
+
+  .keyPill{
+    display:inline-flex; align-items:center; gap:10px;
+    background:#091b15; border:1px solid var(--line); padding:10px 14px; border-radius:999px; font-weight:800;
   }
-  .copy{
-    width:44px;height:44px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);
-    display:grid;place-items:center;cursor:pointer;color:var(--text)
+  .copyBtn{
+    width:46px; height:46px; display:grid; place-items:center;
+    background:#0c1814; border:1px solid var(--line); border-radius:12px; color:var(--text); cursor:pointer;
   }
-  .muted{color:var(--muted)}
-  .badge{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;font-weight:900;font-size:12px}
-  .ok{background:rgba(0,255,140,.12);color:var(--neon);border:1px solid rgba(0,255,140,.4)}
-  .danger{background:rgba(255,94,102,.12);color:#ff9fa4;border:1px solid rgba(255,94,102,.5)}
-  .act{display:flex;gap:10px;justify-content:flex-end}
-  .btnTiny{padding:10px 12px;border-radius:12px}
-  .foot{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:16px;border-top:1px solid var(--line);background:rgba(0,0,0,.06)}
-  .inp{background:#08140f;border:1px solid var(--line);color:var(--text);padding:12px;border-radius:12px;min-width:220px;flex:1}
-  .note{color:var(--muted);font-size:12px}
-  @media (max-width:720px){
-    .title h1{font-size:34px}
-    .th{display:none}
-    .tr{grid-template-columns:1fr}
-    .act{justify-content:flex-start}
+  .actions{display:flex; gap:10px; justify-content:flex-end}
+  .btnTiny{padding:10px 12px; border-radius:12px; background:#0e1c17; border:1px solid var(--line); color:#d7ffee}
+  .badge{
+    padding:7px 12px; border-radius:999px; font-weight:900; font-size:12px; display:inline-flex; align-items:center;
+  }
+  .active{background:rgba(0,255,132,.12); color:var(--neon); border:1px solid rgba(0,255,132,.45)}
+  .expired{background:rgba(255,107,107,.12); color:#ff9da3; border:1px solid rgba(255,107,107,.45)}
+  .time{color:#cfeedd; font-weight:700; letter-spacing:.5px}
+
+  .foot{
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+    padding:14px 18px; border-top:1px solid var(--line); background:rgba(0,0,0,.06)
+  }
+  .inp{
+    background:#08140f; border:1px solid var(--line); color:var(--text);
+    padding:12px 14px; border-radius:12px; min-width:220px; flex:1;
+  }
+  .hint{color:var(--muted); font-size:12px}
+
+  @media (max-width:760px){
+    .thead{display:none}
+    .row{grid-template-columns:1fr}
+    .actions{justify-content:flex-start}
   }
 </style>
 </head>
 <body>
-<div class="bgA"></div>
-<div class="bgB"></div>
-
 <div class="wrap">
-  <!-- HERO -->
-  <section class="card hero">
-    <div class="heroTop">
-      <div class="logo">
-        <img src="/img/profile" alt="logo"
+
+  <!-- ========== TOP VISUAL ========== -->
+  <section class="card">
+    <div class="visual">
+      <div class="art">
+        <img src="/img/profile" alt="UFO HUB X"
              onerror="this.onerror=null;this.src='';this.style.background='radial-gradient(70px 70px at 50% 50%, rgba(0,255,140,.35), transparent 60%)'">
       </div>
-      <div class="title" style="flex:1">
-        <h1>UFO HUB X</h1>
-        <div class="sub">Progress: <span id="ptext">0/1</span></div>
-        <div class="progWrap">
-          <div class="bar"><i id="pfill"></i></div>
-          <div class="ctrl">
-            <button id="btnStart" class="btn btnPrimary">START</button>
-          </div>
-        </div>
-      </div>
+    </div>
+
+    <div class="bar">
+      <span class="pillTitle">UFO&nbsp;&nbsp;<span style="color:#00ff9b">HUB X</span></span>
+      <div class="spacer"></div>
+      <button id="btnStart" class="btn btnPrimary btnWithDot"><span class="statusDot"></span> START</button>
+    </div>
+
+    <div class="progressBox">
+      <div class="progressLabel">Progress: <b id="ptext">0/1</b></div>
+      <div class="barLine"><div id="pfill" class="barFill"></div></div>
     </div>
   </section>
 
-  <!-- KEY PANEL -->
+  <!-- ========== KEY PANEL ========== -->
   <section class="card keyCard">
-    <div class="head">
-      <h2>🔑 Your Key</h2>
-      <button id="btnGet" class="btn btnPrimary">＋ GET A NEW KEY</button>
+    <div class="keyHead">
+      <div class="keyTitle">🔑 Your Key</div>
+      <button id="btnGet" class="btn btnPrimary btnGet">+ GET A NEW KEY</button>
     </div>
 
-    <div class="th">
+    <div class="thead">
       <div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
     </div>
 
-    <div id="list" class="list">
-      <!-- แถวจะถูกใส่มาที่นี่ -->
-    </div>
+    <div id="tbody" class="tbody"></div>
 
     <div class="foot">
-      <input id="uid" class="inp" placeholder="UID (e.g. 123)">
+      <input id="uid"   class="inp" placeholder="UID (e.g. 123)">
       <input id="place" class="inp" placeholder="Place (e.g. 999)">
-      <div class="note">กรอก UID/Place ของคุณ แล้วกด “GET A NEW KEY”</div>
+      <div class="hint">กรอก UID/Place แล้วกด “GET A NEW KEY”</div>
     </div>
   </section>
 </div>
 
 <script>
-  // ---------- UI logic ----------
-  const $ = s => document.querySelector(s);
-  const API = ""; // ใช้โดเมนเดียวกัน
-
-  // Progress
+  // ---------- Progress ----------
+  const pText = document.getElementById('ptext');
+  const pFill = document.getElementById('pfill');
+  const btnStart = document.getElementById('btnStart');
   let progress = 0;
   function setProgress(v){
     progress = Math.max(0, Math.min(1, v));
-    $("#ptext").textContent = `${progress}/1`;
-    $("#pfill").style.width  = (progress*100) + "%";
-    $("#btnStart").textContent = progress >= 1 ? "DONE" : "START";
+    pText.textContent = `${progress}/1`;
+    pFill.style.width = (progress*100) + '%';
+    btnStart.textContent = progress >= 1 ? 'DONE' : 'START';
   }
-  $("#btnStart").onclick = () => setProgress(progress+1);
+  btnStart.onclick = ()=> setProgress(progress+1);
 
-  // Format HH:MM:SS
-  function fmtLeft(sec){
-    if (sec<=0) return "00:00:00";
-    const h=String(Math.floor(sec/3600)).padStart(2,"0");
-    const m=String(Math.floor((sec%3600)/60)).padStart(2,"0");
-    const s=String(sec%60).padStart(2,"0");
+  // ---------- Utils ----------
+  const $ = s => document.querySelector(s);
+  function hhmmss(sec){
+    if (sec<=0) return '00:00:00';
+    const h=String(Math.floor(sec/3600)).padStart(2,'0');
+    const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
+    const s=String(sec%60).padStart(2,'0');
     return `${h}:${m}:${s}`;
   }
 
-  // State
-  let rows = [];
+  // ---------- State & Render ----------
+  let items = []; // [{key, expires_at}]
+  const tbody = $('#tbody');
 
   function render(){
-    const root = $("#list"); root.innerHTML = "";
-    rows.forEach((r,idx)=>{
-      const left = Math.max(0, Math.floor(r.expires_at - Date.now()/1000));
-      const row = document.createElement("div"); row.className="row tr";
+    tbody.innerHTML = '';
+    items.forEach((it, i)=>{
+      const left = Math.max(0, Math.floor(it.expires_at - Date.now()/1000));
+      const row = document.createElement('div');
+      row.className = 'row';
       row.innerHTML = `
-        <div class="kcell">
-          <button class="copy" title="Copy">📋</button>
-          <div class="pill">🔑 ${r.key}</div>
+        <div class="keyPill">🔑 ${it.key}</div>
+        <div class="time" id="left-${i}">${hhmmss(left)}</div>
+        <div><span class="badge ${left>0?'active':'expired'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
+        <div class="actions">
+          <button class="copyBtn" title="Copy">📋</button>
+          <button class="btnTiny" disabled>+ 5H ⏩</button>
         </div>
-        <div class="muted" id="left-${idx}">${fmtLeft(left)}</div>
-        <div><span class="badge ${left>0?'ok':'danger'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
-        <div class="act">
-          <button class="btn btnTiny btnGhost" disabled>＋ 5H ⏩</button>
-        </div>`;
-      row.querySelector(".copy").onclick = () => navigator.clipboard.writeText(r.key);
-      root.appendChild(row);
+      `;
+      row.querySelector('.copyBtn').onclick = ()=> navigator.clipboard.writeText(it.key);
+      tbody.appendChild(row);
     });
   }
 
-  // Countdown updater
+  // countdown update
   setInterval(()=>{
-    rows.forEach((r,i)=>{
+    items.forEach((it, i)=>{
       const el = document.getElementById(`left-${i}`);
-      if (el) el.textContent = fmtLeft(Math.max(0, Math.floor(r.expires_at - Date.now()/1000)));
+      if (!el) return;
+      const left = Math.max(0, Math.floor(it.expires_at - Date.now()/1000));
+      el.textContent = hhmmss(left);
     });
   }, 1000);
 
-  // API
-  async function requestKey(){
-    const uid   = $("#uid").value.trim();
-    const place = $("#place").value.trim();
-    if(!uid || !place){ alert("กรอก UID และ Place ก่อน"); return; }
+  // ---------- API ----------
+  async function getKey(){
+    const uid   = $('#uid').value.trim();
+    const place = $('#place').value.trim();
+    if (!uid || !place){ alert('กรอก UID และ Place ก่อน'); return; }
     try{
-      const res = await fetch(`${API}/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+      const res  = await fetch(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
       const data = await res.json();
-      if(!data || !data.ok){ alert("getkey ล้มเหลว"); return; }
-      const exp = data.expires_at || (Date.now()/1000 + 600);
-      rows = [{ key: data.key, expires_at: exp }];
+      if (!data || !data.ok){ alert('getkey ล้มเหลว'); return; }
+      items = [{ key: data.key, expires_at: data.expires_at || (Date.now()/1000+600) }];
       render(); setProgress(1);
-      // เลื่อนจอไปยังตาราง (เหมือน UX เก่า)
-      document.querySelector('.keyCard').scrollIntoView({behavior:'smooth', block:'start'});
-    }catch(e){ console.error(e); alert("ติดต่อเซิร์ฟเวอร์ไม่ได้"); }
+      document.querySelector('.keyCard').scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){
+      console.error(err); alert('ติดต่อเซิร์ฟเวอร์ไม่ได้');
+    }
   }
-  $("#btnGet").onclick = requestKey;
+  document.getElementById('btnGet').onclick = getKey;
 
+  // init
   setProgress(0); render();
 </script>
 </body>
