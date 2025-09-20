@@ -19,8 +19,8 @@
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    /* ระยะ "นำหน้า" จากปลายแท่งเขียว → ปรับได้ */
-    --ufo-lead: 10px;
+    /* ระยะที่ให้ยาน "นำหน้า" ปลายแท่งสีเขียว (px) */
+    --ufo-lead: 8px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -33,7 +33,7 @@
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
-  /* ---------- HERO ---------- */
+  /* HERO */
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
   .hero-box{
     display:inline-block; max-width:320px; width:90vw;
@@ -43,12 +43,13 @@
   }
   .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
 
-  /* ---------- CARD ---------- */
+  /* CARD */
   .card{
     background:linear-gradient(180deg,var(--panel1),var(--panel2));
     border-radius:18px;
     box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
     padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
+    overflow:visible; /* ให้ของด้านในโผล่พ้นการ์ดได้ */
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -58,11 +59,10 @@
 
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
 
-  /* ---------- PROGRESS + UFO ---------- */
-  /* กล่องหลอด: เปิดให้เห็น "เหนือหลอด" (ยานจะไม่ถูกคลิป) */
+  /* ===== หลอด + ยาน ===== */
   .bar-wrap{
     position:relative;width:100%;height:18px;border-radius:10px;
-    overflow:visible; /* <— โอเวอร์ไรด์ให้มองเห็นยานด้านบน */
+    overflow:visible; /* ทะลุกรอบหลอดได้ */
     background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
     box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
   }
@@ -72,21 +72,20 @@
     box-shadow:0 0 18px rgba(34,255,200,.35);
     z-index:1;
   }
-
-  /* ยาน: “อยู่ข้างบน UI” ชัด ๆ และวิ่งนำปลายแท่งเขียว */
+  /* ยาน: ให้อยู่ "แนวกึ่งกลางเดียวกับหลอด" และโผล่พ้นกรอบได้ */
   .bar-ufo{
     position:absolute;
-    top:-28px;                      /* ลอยเหนือหลอดให้เห็นชัด */
-    transform:translateX(-50%);     /* จับกึ่งกลางยานกับตำแหน่งซ้าย */
-    width:48px; height:48px;
+    top:50%;                         /* กลางแนวตั้งของหลอด */
+    transform:translate(-50%,-50%);  /* จับศูนย์ยานพอดี */
+    width:50px;height:50px;
     opacity:0; transition:opacity .2s ease;
     background:var(--ufo-ship) center/contain no-repeat;
-    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 12px rgba(0,255,160,.9)) drop-shadow(0 0 22px rgba(0,255,160,.7));
-    z-index:6; pointer-events:none;
+    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));
+    z-index:8; pointer-events:none;  /* เห็นชัด อยู่บน UI */
   }
   .bar-ufo.on{opacity:1;}
 
-  /* ---------- TABLE (คงเดิม) ---------- */
+  /* TABLE */
   .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
   .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
   .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
@@ -96,7 +95,7 @@
 
   @media (max-width:560px){
     .head-title{font-size:34px}
-    .bar-ufo{width:44px;height:44px;top:-24px}
+    .bar-ufo{width:46px;height:46px}
   }
 </style>
 </head>
@@ -124,6 +123,7 @@
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
+        <!-- ยาน “ระดับเดียวกับหลอด” และทะลุกรอบได้ -->
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
     </section>
@@ -143,7 +143,7 @@
   </div>
 
 <script>
-  // ===== ยาน "วิ่งนำปลายแท่งเขียว" และอยู่บน UI แบบเป๊ะ ๆ =====
+  // ===== ให้ยาน “วิ่งนำปลายแท่งสีเขียว” แบบเป๊ะ ๆ และมองเห็นนอกกรอบได้ =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -151,29 +151,20 @@
   const percentEl = document.getElementById('percentText');
   let raf = null;
 
-  // ระยะนำหน้า (อ่านจาก CSS var)
   const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
 
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
-    // อัปเดตความกว้างแท่งเขียว
+    // อัปเดตความกว้างแท่งสีเขียว
     bar.style.width = p + '%';
 
-    // หาปลายแท่งเขียวจริง (px) ภายในกรอบหลอด
+    // ปลายแท่งเขียวจริง (ภายในกรอบหลอด)
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
-    const tipInside = (barRect.left + barRect.width) - wrapRect.left; // ตำแหน่งปลายในกรอบ
+    const tipInside = (barRect.left + barRect.width) - wrapRect.left;
 
-    // หนีบไม่ให้ยานล้ำขอบ (คำนึงครึ่งยาน + มุมโค้งเล็กน้อย)
-    const ufoHalf = barUfo.offsetWidth / 2;
-    const corner  = parseFloat(getComputedStyle(barWrap).borderRadius) || 0;
-    const pad     = 2;
-    const minX    = ufoHalf + corner + pad;
-    const maxX    = barWrap.clientWidth - (ufoHalf + corner + pad);
-
-    // ให้ยาน "นำหน้า" ปลายแท่งเขียวด้วย LEAD แล้วหนีบขอบ
-    const x = Math.max(minX, Math.min(tipInside + LEAD, maxX));
-    barUfo.style.left = x + 'px';
+    // ให้ยานอยู่ตรง “ปลายแท่ง + ระยะนำหน้า” ไม่ clamp เพื่อให้ทะลุกรอบได้
+    barUfo.style.left = (tipInside + LEAD) + 'px';
 
     // อัปเดตตัวเลข
     percentEl.textContent = p.toFixed(0) + '%';
@@ -194,7 +185,7 @@
     raf = requestAnimationFrame(tick);
   });
 
-  // Preload
+  // Preload รูป
   new Image().src = '/img/bg';
   new Image().src = '/img/profile';
   new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
