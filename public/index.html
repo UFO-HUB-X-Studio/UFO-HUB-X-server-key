@@ -1,51 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>UFO HUB X</title>
 
-<!-- ทำให้แถบเบราเซอร์/ระบบเป็นธีมมืด -->
-<meta name="theme-color" content="#0a1411">
-<meta name="color-scheme" content="dark">
+<!-- มือถือธีมมืด + กันหน้าขาว -->
+<meta name="theme-color" content="#0a1411"/>
+<meta name="color-scheme" content="dark"/>
 
-<!-- ให้รูปโหลดก่อน เพื่อลดแฟลช -->
+<!-- เร่งโหลดรูป -->
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
 
 <style>
   :root{
-    --ufo-green:#00ff99;
-    --ufo-green-soft:#36ffb5;
+    --ufo:#00ff99;
+    --ufo-soft:#36ffb5;
     --text:#d9fff5;
     --panel1:rgba(9,16,23,.88);
     --panel2:rgba(8,13,19,.92);
-    --glow:rgba(34,255,200,.09);
+    --glow:rgba(34,255,200,.10);
   }
 
-  /* BG: มีสีพื้นมืดทันที + รูปตามมาทีหลัง */
-  html,body{
-    height:100%;
-    background-color:#0a1411; /* <- กันจอขาว */
-  }
+  /* ===== Base & BG (กันหน้าขาว) ===== */
+  html,body{height:100%; background:#0a1411;}
   body{
-    margin:0;
-    min-height:100svh;
+    margin:0; min-height:100svh;
     font-family:"Orbitron",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    background-image:url("/img/bg");
-    background-position:center;
-    background-repeat:no-repeat;
-    background-size:cover;
-    background-attachment:fixed;
     color:var(--text);
+    background-image:url("/img/bg");
+    background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed;
   }
 
-  .container{
-    max-width:880px;
-    margin:22px auto 80px;
-    padding:0 16px;
+  .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
+
+  /* ===== HERO ART (รูปใหญ่แยกต่างหาก) ===== */
+  .hero{
+    width:100%;
+    display:flex; justify-content:center;
+    margin:6px 0 18px 0;            /* ช่องว่างจากขอบ และเว้นก่อนการ์ดถัดไป */
+  }
+  .hero-box{
+    width:min(520px, 92vw);
+    aspect-ratio:1/1;               /* เป็นสี่เหลี่ยมจัตุรัส */
+    border-radius:22px;
+    background:#0b1a15 url("/img/profile") center/cover no-repeat; /* มีพื้นมืดก่อนรูปมา */
+    box-shadow:
+      0 0 0 2px rgba(34,255,200,.16) inset,
+      0 0 60px rgba(0,255,160,.20),
+      0 20px 50px rgba(0,0,0,.55);
   }
 
+  /* ===== Card wrapper (2 การ์ดด้านล่าง) ===== */
   .card{
     background:linear-gradient(180deg,var(--panel1),var(--panel2));
     border-radius:18px;
@@ -58,108 +65,134 @@
     backdrop-filter: blur(2px);
   }
 
-  /* ---------- TOP CARD ---------- */
-  .top-head{display:flex;align-items:center;gap:18px;}
-  .logo{
-    width:88px;height:88px;border-radius:14px;
-    background-color:#0b1a15;              /* พื้นหลังเข้มระหว่างรอรูป */
-    background-image:url("/img/profile");   /* มาทีหลัง */
-    background-position:center;
-    background-size:cover;
-    box-shadow:0 0 18px rgba(0,255,170,.45);
-    flex:0 0 auto;
+  /* ===== Card #1 : Header + Progress + Start ===== */
+  .head{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:16px;
+    align-items:center;
   }
-  .title-wrap{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:6px;}
-  .title{font-size:36px;line-height:1;letter-spacing:.5px;margin:0;text-shadow:0 0 12px rgba(0,255,170,.15);}
-  .title .ufo{color:#fff;}              /* UFO ขาว */
-  .title .hubx{color:var(--ufo-green);} /* HUB X เขียว */
+  .head-logo{
+    width:74px; height:74px; border-radius:14px;
+    background:#0b1a15 url("/img/profile") center/cover no-repeat;
+    box-shadow:0 0 18px rgba(0,255,170,.45);
+  }
+  .head-title{
+    margin:0; font-size:40px; line-height:1; letter-spacing:.6px;
+    text-shadow:0 0 12px rgba(0,255,170,.15);
+  }
+  .head-title .ufo{color:#fff}
+  .head-title .hubx{color:var(--ufo)}
 
-  /* Progress row */
-  .progress-row{display:flex;align-items:center;gap:14px;margin-top:16px;}
-  .progress-wrap{
-    position:relative;flex:1 1 auto;height:14px;
-    background:rgba(0,0,0,.35);border-radius:8px;overflow:hidden;
+  .start-btn{
+    appearance:none; border:0; cursor:pointer;
+    padding:10px 18px; border-radius:14px; font-weight:800;
+    background:var(--ufo); color:#072017; white-space:nowrap;
+    box-shadow:0 6px 18px rgba(0,255,140,.25), 0 0 0 1px rgba(0,0,0,.25) inset;
+    transition:.15s;
+  }
+  .start-btn:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+
+  .progress-row{ margin-top:14px; display:flex; align-items:center; gap:14px; }
+  .bar-wrap{
+    position:relative; flex:1 1 auto; height:14px; border-radius:10px; overflow:hidden;
+    background:rgba(0,0,0,.35);
     box-shadow:inset 0 0 0 1px rgba(34,255,200,.06);
   }
-  .progress-bar{
-    position:absolute;inset:0 0 0 auto;width:0%;
+  .bar{
+    position:absolute; inset:0 0 0 auto; width:0%;
     background:linear-gradient(90deg,#00ffa3,#3bffbf);
     box-shadow:0 0 18px rgba(34,255,200,.35);
     z-index:1;
   }
-  .progress-label{
-    position:absolute;left:10px;top:50%;transform:translateY(-50%);
-    font-size:13px;font-weight:800;color:#eafff8;
+  .bar-label{
+    position:absolute; left:10px; top:50%; transform:translateY(-50%);
+    font-size:13px; font-weight:800; color:#eafff8;
     z-index:2;
     text-shadow:0 0 2px #000,0 0 6px rgba(0,0,0,.85),0 0 12px rgba(0,0,0,.85);
     -webkit-text-stroke:.4px rgba(0,0,0,.55);
     pointer-events:none;
   }
 
-  .btn{appearance:none;border:0;cursor:pointer;font-weight:700;border-radius:12px;padding:10px 16px;transition:.15s;}
-  .btn-start{background:var(--ufo-green);color:#071a14;white-space:nowrap;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.2) inset;}
-  .btn-start:hover{transform:translateY(-1px);filter:brightness(1.06);}
+  /* ===== Card #2 : Key table ===== */
+  .key-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .key-title{ font-size:18px; color:#ffea63; display:flex; align-items:center; gap:8px; }
+  .new-btn{
+    appearance:none; border:0; cursor:pointer; font-weight:800;
+    padding:10px 14px; border-radius:12px; background:var(--ufo); color:#071a14;
+    box-shadow:0 6px 18px rgba(0,255,140,.25), 0 0 0 1px rgba(0,0,0,.25) inset;
+  }
 
-  /* ---------- BOTTOM CARD ---------- */
-  .key-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
-  .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px;}
-  .btn-new{background:var(--ufo-green);color:#071a14;padding:10px 14px;border-radius:12px;font-weight:800;}
-  .table{width:100%;border-collapse:collapse;font-size:14px;color:var(--text);}
-  .table th,.table td{padding:10px 8px;text-align:center;}
-  .table th{color:#77ffc8;font-weight:600;}
-  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(0,255,170,.1);color:var(--ufo-green);font-weight:800;font-size:12px;box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;}
+  table{ width:100%; border-collapse:collapse; color:var(--text); font-size:14px; }
+  th,td{ padding:10px 8px; text-align:center; }
+  th{ color:#77ffc8; font-weight:600; }
+  .pill{
+    display:inline-block; padding:6px 10px; border-radius:999px;
+    background:rgba(0,255,170,.1); color:var(--ufo); font-weight:800; font-size:12px;
+    box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;
+  }
 
+  /* responsive */
   @media (max-width:560px){
-    .title{font-size:30px}
-    .logo{width:76px;height:76px}
+    .head-title{font-size:34px}
+    .head-logo{width:66px;height:66px}
   }
 </style>
 </head>
 <body>
   <div class="container">
 
-    <!-- TOP CARD -->
+    <!-- HERO ART (รูปใหญ่ – แยกจาก UI 2 การ์ด) -->
+    <div class="hero">
+      <div class="hero-box"></div>
+    </div>
+
+    <!-- CARD #1 : Title + Progress + START -->
     <section class="card">
-      <div class="top-head">
-        <div class="logo"></div>
-        <div class="title-wrap">
-          <h1 class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-        </div>
+      <div class="head">
+        <div class="head-logo"></div>
+        <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
+        <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
       <div class="progress-row">
-        <div class="progress-wrap">
-          <div class="progress-bar" id="bar" style="width:0%"></div>
-          <div class="progress-label" id="label">Progress: 0/1</div>
+        <div class="bar-wrap">
+          <div class="bar" id="bar"></div>
+          <div class="bar-label" id="barLabel">Progress: 0/1</div>
         </div>
-        <button class="btn btn-start" id="startBtn">🟢 START</button>
       </div>
     </section>
 
-    <!-- BOTTOM CARD -->
+    <!-- CARD #2 : Your Key -->
     <section class="card">
       <div class="key-head">
         <div class="key-title">🔑 Your Key</div>
-        <button class="btn btn-new" id="getKey">+ GET A NEW KEY</button>
+        <button class="new-btn" id="getKey">+ GET A NEW KEY</button>
       </div>
 
-      <table class="table">
+      <table>
         <thead>
           <tr><th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th></tr>
         </thead>
-        <tbody id="keyRows"><!-- เติมด้วย JS ฝั่งคุณ --></tbody>
+        <tbody id="keyRows"><!-- เติมด้วยสคริปต์ฝั่งคุณ --></tbody>
       </table>
     </section>
+
   </div>
 
-  <script>
-    // ปุ่ม START: อัปเดตแถบและตัวเลข (เริ่มที่ 0/1 เสมอ)
-    const bar = document.getElementById('bar');
-    const label = document.getElementById('label');
-    document.getElementById('startBtn').addEventListener('click', () => {
-      label.textContent = 'Progress: 1/1';
-      bar.style.width = '100%';
-    });
-  </script>
+<script>
+  // START -> เติมแถบเต็มและปรับข้อความ
+  const bar = document.getElementById('bar');
+  const barLabel = document.getElementById('barLabel');
+  document.getElementById('startBtn').addEventListener('click', () => {
+    bar.style.width = '100%';
+    barLabel.textContent = 'Progress: 1/1';
+  });
+
+  // ป้องกันรูป BG กระพริบ: ถ้ารูปโหลดเสร็จค่อยเติม class (ถ้าต้องการ effect เพิ่ม)
+  const bgImg = new Image();
+  bgImg.src = '/img/bg';
+  bgImg.decode?.().catch(()=>{}); // เฉย ๆ แค่กระตุ้นโหลดล่วงหน้า
+</script>
 </body>
 </html>
