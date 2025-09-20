@@ -99,7 +99,6 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- เดิม -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
@@ -134,7 +133,6 @@
   </div>
 
 <script>
-  /* ===== CONFIG (ของเดิม) ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
@@ -144,7 +142,6 @@
   const DL_TOTAL_MS = 20000;
   const IMG_TIMEOUT = 20000;
 
-  /* ===== Elements ===== */
   const bar         = document.getElementById('bar');
   const barWrap     = document.getElementById('barWrap');
   const barUfo      = document.getElementById('barUfo');
@@ -152,23 +149,18 @@
   const percentEl   = document.getElementById('percentText');
   const startBtn    = document.getElementById('startBtn');
   const progressMeta= document.getElementById('progressMeta');
-
   const dlOverlay   = document.getElementById('dlOverlay');
   const dlSecondsEl = document.getElementById('dlSeconds');
 
   let raf = null;
 
-  /* ===== Progress / UFO (เดิม) ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
-
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-    const LEAD = 8; // px
-    barUfo.style.left = (tipInside + LEAD) + 'px';
-
+    barUfo.style.left = (tipInside + 8) + 'px';
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
@@ -183,34 +175,8 @@
       const p = pStart + (pTarget - pStart) * t;
       setProgress(p);
       if(t < 1){ raf = requestAnimationFrame(tick); }
-      else {
-        // setTimeout(()=>barUfo.classList.remove('on'), 300); // ถ้าอยากให้หายตอน 100%
-      }
     }
     raf = requestAnimationFrame(tick);
-  }
-
-  function showBarAfterDelay(){
-    setTimeout(()=>{
-      progressMeta.classList.remove('is-hidden');
-      barWrap.classList.remove('is-hidden');
-      setProgress(parseFloat(bar.style.width) || 0);
-      autoCompleteIfReturned(true);
-    }, ARM_DELAY);
-  }
-
-  function isValidReturn(){
-    try{
-      const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
-      if(!ts) return false;
-      return (Date.now() - ts) >= MIN_VISIT;
-    }catch(e){ return false; }
-  }
-  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY);}catch(e){} }
-  function autoCompleteIfReturned(onlyIfVisible=false){
-    if(location.hostname!==DOMAIN_OK) return;
-    if(onlyIfVisible && (progressMeta.classList.contains('is-hidden')||barWrap.classList.contains('is-hidden'))) return;
-    if(isValidReturn()){ clearReturnMark(); runProgress(100,5000); }
   }
 
   function showDownloadOverlay(){
@@ -230,18 +196,6 @@
     }, 100);
   }
 
-  function preloadImages(urls, timeoutMs=IMG_TIMEOUT){
-    return new Promise(resolve=>{
-      let done=false; const timer=setTimeout(()=>{if(!done){done=true;resolve();}},timeoutMs);
-      let loaded=0;
-      urls.forEach(u=>{
-        const img=new Image();
-        img.onload=img.onerror=()=>{ if(done) return; if(++loaded>=urls.length){done=true;clearTimeout(timer);resolve();}};
-        img.src=u;
-      });
-    });
-  }
-
   startBtn.addEventListener('click', ()=>{
     try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
     window.location.href = START_URL;
@@ -250,63 +204,28 @@
   document.addEventListener('DOMContentLoaded', ()=>{
     progressMeta.classList.add('is-hidden');
     barWrap.classList.add('is-hidden');
-
-    preloadImages([
-      '/img/bg',
-      '/img/profile',
-      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png'
-    ]);
-
-    showBarAfterDelay();
-    showDownloadOverlay();
   });
-
-  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- ADD-ONLY: แพตช์แก้หน้าเฟรมดำ/ค้าง + บังคับให้กรอบ Progress โผล่ทันที และชื่อเริ่ม 0/1 -->
+<!-- ADD-ONLY PATCH: โชว์ Progress หลัง 18 วิ -->
 <script>
-(async function ufoxFixBlankAndForceUI() {
-  try {
-    if (!sessionStorage.getItem('ufox_cache_busted')) {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const r of regs) { try { await r.unregister(); } catch(e){} }
-      }
-      if (window.caches && caches.keys) {
-        const keys = await caches.keys();
-        for (const k of keys) { try { await caches.delete(k); } catch(e){} }
-      }
-      sessionStorage.setItem('ufox_cache_busted','1');
-      const u = new URL(location.href);
-      u.searchParams.set('v', Date.now().toString());
-      location.replace(u.toString());
-      return;
-    }
-  } catch(e) {}
-
-  try {
-    const progressMeta = document.getElementById('progressMeta');
-    const barWrap      = document.getElementById('barWrap');
-    const pText        = document.getElementById('progressText');
-    const pPct         = document.getElementById('percentText');
-    const barUfo       = document.getElementById('barUfo');
-
-    progressMeta && progressMeta.classList.remove('is-hidden');
-    barWrap      && barWrap.classList.remove('is-hidden');
-    pText && (pText.textContent = 'Progress: 0/1');
-    pPct  && (pPct.textContent  = '0%');
-
-    // กันถูกซ่อนกลับ
-    const keepShown = (el)=> el && new MutationObserver(()=>el.classList.remove('is-hidden'))
-      .observe(el,{attributes:true,attributeFilter:['class']});
-    keepShown(progressMeta); keepShown(barWrap);
-
-    // บังคับภาพยานโหลดแน่ ๆ (ลิงก์เต็ม)
-    const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
-    if (barUfo) { barUfo.style.backgroundImage = `url("${UFO_EXACT}")`; (new Image()).src = UFO_EXACT; }
-  } catch(e){}
+(function(){
+  const DELAY_MS = 18000;
+  window.addEventListener("DOMContentLoaded", ()=>{
+    setTimeout(()=>{
+      const progressMeta = document.getElementById('progressMeta');
+      const barWrap      = document.getElementById('barWrap');
+      const pText        = document.getElementById('progressText');
+      const percentEl    = document.getElementById('percentText');
+      if (progressMeta) progressMeta.classList.remove('is-hidden');
+      if (barWrap)      barWrap.classList.remove('is-hidden');
+      if (pText) pText.textContent   = "Progress: 0/1";
+      if (percentEl) percentEl.textContent = "0%";
+    }, DELAY_MS);
+  });
 })();
 </script>
+<!-- /ADD-ONLY PATCH -->
+
 </body>
 </html>
