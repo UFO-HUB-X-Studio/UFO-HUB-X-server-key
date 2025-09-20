@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
+<!-- preload (คงไว้ทั้งหมด) -->
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
@@ -58,11 +59,13 @@
   .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);}
   .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
 
-  /* UFO เหนือปลายหลอด */
+  /* UFO: ให้อยู่ "กึ่งกลางหลอด" แบบไม่ล้ำกรอบ */
   .bar-ufo{
-    position:absolute; top:-28px;
-    transform:translateX(-50%);
-    width:48px; height:48px; opacity:0; transition:opacity .2s ease;
+    position:absolute;
+    top:50%;                                   /* ให้อยู่กลางแนวตั้งของหลอด */
+    transform:translate(-50%, calc(-100% - 4px)); /* ลอยเหนือหลอด 4px */
+    width:48px; height:48px;
+    opacity:0; transition:opacity .2s ease;
     background:var(--ufo-ship) center/contain no-repeat;
     filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px rgba(0,255,160,.9)) drop-shadow(0 0 18px rgba(0,255,160,.8));
     z-index:5; pointer-events:none;
@@ -78,7 +81,7 @@
 
   @media (max-width:560px){
     .head-title{font-size:34px}
-    .bar-ufo{width:44px;height:44px;top:-24px}
+    .bar-ufo{width:44px;height:44px}
   }
 </style>
 </head>
@@ -125,7 +128,7 @@
   </div>
 
 <script>
-  // ===== Progress + UFO (clamp ไม่ให้ยานเลยกรอบ) =====
+  // ===== Progress + UFO: วางยานตรง "กึ่งกลางปลายหลอด" เป๊ะ และไม่ล้ำโค้ง =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -137,14 +140,20 @@
     p = Math.max(0, Math.min(100, p));
     bar.style.width = p + '%';
 
-    // วางยานแบบ “พิกเซล” และหนีบขอบซ้าย/ขวา
-    const tipPx   = bar.clientWidth;        // ปลายหลอดจริง (px)
-    const wrapW   = barWrap.clientWidth;
-    const ufoHalf = barUfo.offsetWidth / 2;
+    // พิกัดจริงของปลายแถบ (ขอบขวา) เทียบกับกรอบหลอด
+    const barRect  = bar.getBoundingClientRect();
+    const wrapRect = barWrap.getBoundingClientRect();
+    const tipInside = (barRect.left + barRect.width) - wrapRect.left; // px ภายในกรอบ
 
-    // หนีบไม่ให้เลยกรอบ
-    const clampedPx = Math.max(ufoHalf, Math.min(tipPx, wrapW - ufoHalf));
-    barUfo.style.left = clampedPx + 'px';
+    // หนีบซ้าย/ขวา: เผื่อครึ่งยาน + รัศมีมุมโค้ง + กันชน 2px
+    const ufoHalf   = barUfo.offsetWidth / 2;
+    const corner    = parseFloat(getComputedStyle(barWrap).borderRadius) || 0;
+    const pad       = 2;
+    const minX      = ufoHalf + corner + pad;
+    const maxX      = barWrap.clientWidth - (ufoHalf + corner + pad);
+
+    const clampedX  = Math.max(minX, Math.min(tipInside, maxX));
+    barUfo.style.left = clampedX + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
