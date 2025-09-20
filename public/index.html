@@ -1,179 +1,363 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>UFO HUB X</title>
-<style>
-  :root{
-    --ufo-green:#00ff99;
-    --ufo-green-soft:#36ffb5;
-    --text:#d9fff5;
-    --panel1:rgba(9,16,23,.88);
-    --panel2:rgba(8,13,19,.92);
-    --glow:rgba(34,255,200,.09);
-  }
-  /* BG */
-  body{
-    margin:0;
-    font-family: "Orbitron", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: url("/img/bg") center/cover fixed no-repeat;
-    color:var(--text);
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UFO HUB X</title>
+  <style>
+    :root{
+      --bg:#0b1211;
+      --card:#0f1718;
+      --card2:#0e1617;
+      --text:#e9fffb;
+      --muted:#9fffdc;
+      --green:#00ffa0;
+      --green2:#00ff88;
+      --green3:#14ffb1;
+      --line:#0a2a25;
+      --shadow:0 10px 30px rgba(0,255,160,.12);
+      --shadow-strong:0 10px 35px rgba(0,255,160,.25);
+      --radius:18px;
+      --radius-sm:12px;
+      --glow:0 0 0 1px rgba(0,255,160,.15), 0 10px 30px rgba(0,255,160,.12) inset;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background: var(--bg) center/cover fixed no-repeat;
+      /* ภาพพื้นหลังจะถูกเซตผ่าน JS หลังโหลดเสร็จ */
+    }
+    /* fallback พื้นหลังแบบไล่สี ให้เห็นทันทีระหว่างรอรูป */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background: radial-gradient(60% 35% at 50% 100%, rgba(0,255,170,.18), transparent 65%),
+                  radial-gradient(140% 80% at 120% -20%, rgba(0,255,170,.10), transparent 60%),
+                  radial-gradient(140% 80% at -20% 0%, rgba(0,255,170,.10), transparent 60%),
+                  #0b1211;
+      z-index:-1;
+    }
 
-  .container{
-    max-width: 880px;           /* กว้างขึ้นกำลังดี */
-    margin: 22px auto 80px;
-    padding: 0 16px;
-  }
+    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
 
-  .card{
-    background:linear-gradient(180deg,var(--panel1),var(--panel2));
-    border-radius:18px;
-    box-shadow:
-      0 0 0 1px rgba(34,255,200,.06) inset,
-      0 10px 30px rgba(0,0,0,.55),
-      0 0 34px var(--glow);
-    padding:18px;
-    margin-bottom:22px;
-    backdrop-filter: blur(2px);
-  }
+    /* ======= CARD: หัวบน ======= */
+    .card{
+      background: linear-gradient(180deg, rgba(13,20,20,.92), rgba(13,20,20,.85));
+      border-radius:var(--radius);
+      padding:18px 18px 16px;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(0,255,160,.10);
+      backdrop-filter: blur(4px);
+    }
+    .head{
+      display:flex; align-items:center; gap:16px;
+      margin-bottom:12px;
+    }
+    .logoBox{
+      position:relative; width:72px; height:72px; flex:0 0 72px;
+      border-radius:14px; overflow:hidden;
+      background:#0d1616; box-shadow: var(--glow);
+    }
+    /* placeholder จะเห็นทันที */
+    .logoBox::before{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 50% 35%, rgba(0,255,160,.25) 0 30%, transparent 31% 100%),
+                  linear-gradient(180deg, rgba(0,255,160,.15), transparent 60%);
+      filter: blur(6px);
+    }
+    .logo{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .25s ease}
 
-  /* ---------- TOP CARD ---------- */
-  .top-head{
-    display:flex;
-    align-items:center;
-    gap:18px;
-  }
-  .logo{
-    width:88px;height:88px;border-radius:14px;
-    background:url("/img/profile") center/cover no-repeat;
-    box-shadow:0 0 18px rgba(0,255,170,.45);
-    flex:0 0 auto;
-  }
-  .title-wrap{
-    display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;
-    margin-top:6px;               /* ให้ชื่อห่างรูปเล็กน้อย */
-  }
-  .title{
-    font-size:36px; line-height:1; letter-spacing:.5px; margin:0;
-    text-shadow:0 0 12px rgba(0,255,170,.15);
-  }
-  .title .ufo{color:#ffffff;}       /* UFO ขาว */
-  .title .hubx{color:var(--ufo-green-soft);} /* HUB X เขียว */
+    .title{font-weight:800; letter-spacing:.5px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+    .title .ufo{color:#fff; font-size:28px}
+    .title .hubx{color:var(--green); font-size:28px; text-shadow:0 0 10px rgba(0,255,160,.5)}
+    .tag{
+      margin-left:auto; font-weight:700; font-size:14px;
+      color:#0e1b19; background:linear-gradient(180deg,#60ffc9,#27ffa8);
+      padding:8px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:8px;
+      box-shadow: var(--shadow-strong);
+    }
+    .tag::before{content:"🟢"}
 
-  /* Progress row: bar ซ้าย, ปุ่มขวา */
-  .progress-row{
-    display:flex; align-items:center; gap:14px; margin-top:16px;
-  }
-  .progress-wrap{
-    position:relative; flex:1 1 auto; height:14px;
-    background:rgba(0,0,0,.35); border-radius:8px; overflow:hidden;
-    box-shadow:inset 0 0 0 1px rgba(34,255,200,.06);
-  }
-  .progress-bar{
-    position:absolute; inset:0 0 0 auto; width:0%;
-    background:linear-gradient(90deg,#00ffa3,#3bffbf);
-    box-shadow:0 0 18px rgba(34,255,200,.35);
-  }
-  .progress-label{
-    position:absolute; left:10px; top:50%; transform:translateY(-50%);
-    font-size:13px; color:#cffff2; text-shadow:0 0 8px rgba(0,0,0,.6);
-    pointer-events:none;
-  }
+    /* แถว progress */
+    .progressRow{display:flex; align-items:center; gap:14px}
+    .barWrap{
+      flex:1; height:16px; border-radius:999px; overflow:hidden;
+      background: linear-gradient(180deg,#0a1312,#0f1d1b);
+      box-shadow: inset 0 0 0 1px rgba(0,255,160,.15), inset 0 8px 18px rgba(0,255,160,.08);
+    }
+    .bar{
+      height:100%; width:0%;
+      background: linear-gradient(90deg,#00ffa0,#00ffd2);
+      box-shadow: 0 0 18px rgba(0,255,160,.55);
+      transition: width .35s ease;
+    }
+    .start{
+      border:none; border-radius:999px; padding:10px 18px; font-weight:800;
+      background: linear-gradient(180deg,#14ffb1,#00e698);
+      color:#0a1412; cursor:pointer; box-shadow: var(--shadow-strong);
+      display:flex; align-items:center; gap:8px;
+    }
+    .start:hover{filter:brightness(1.05)}
 
-  .btn{
-    appearance:none; border:0; cursor:pointer; font-weight:700;
-    border-radius:12px; padding:10px 16px; transition:.15s;
-  }
-  .btn-start{
-    background:var(--ufo-green); color:#071a14; white-space:nowrap;
-    box-shadow:0 6px 18px rgba(0,255,140,.25), 0 0 0 1px rgba(0,0,0,.2) inset;
-  }
-  .btn-start:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+    .progressText{
+      margin-top:8px; text-align:right; color:var(--muted); font-size:14px;
+      text-shadow: 0 0 8px rgba(0,255,160,.5);
+    }
 
-  /* ---------- BOTTOM CARD ---------- */
-  .key-head{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:12px; margin-bottom:10px;
-  }
-  .key-title{ font-size:18px; color:#ffea63; display:flex; align-items:center; gap:8px;}
-  .btn-new{ background:var(--ufo-green); color:#071a14; padding:10px 14px; border-radius:12px; font-weight:800;}
-  .table{ width:100%; border-collapse:collapse; font-size:14px; color:var(--text);}
-  .table th, .table td{ padding:10px 8px; text-align:center;}
-  .table th{ color:#77ffc8; font-weight:600; }
-  .pill{
-    display:inline-block; padding:6px 10px; border-radius:999px;
-    background:rgba(0,255,170,.1); color:var(--ufo-green); font-weight:800; font-size:12px;
-    box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;
-  }
+    /* ======= CARD: ด้านล่าง (Key) ======= */
+    .card2{
+      margin-top:18px;
+      background: linear-gradient(180deg, rgba(11,18,17,.86), rgba(11,18,17,.80));
+      border-radius:var(--radius);
+      padding:14px 16px 10px;
+      border:1px solid rgba(0,255,160,.10);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+    }
+    .rowCap{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+    .cap{
+      display:flex; align-items:center; gap:10px; font-weight:800; color:var(--muted);
+    }
+    .cap::before{content:"🔑"}
+    .btnNew{
+      border:none; border-radius:999px; padding:9px 14px; font-weight:800;
+      background:linear-gradient(180deg,#14ffb1,#00e698); color:#0a1412; cursor:pointer;
+      box-shadow: var(--shadow-strong);
+    }
+    .tbl{width:100%; border-collapse:collapse; color:var(--text); font-size:14px}
+    .tbl th, .tbl td{padding:12px 10px; text-align:center}
+    .tbl thead th{color:var(--muted); font-weight:700; letter-spacing:.5px}
+    .tbl tbody tr{background:rgba(0,0,0,.18)}
+    .badge{
+      background:linear-gradient(180deg,#1affb3,#00e69a);
+      color:#0a1412; font-weight:900; border-radius:999px; padding:6px 12px; display:inline-block;
+      box-shadow: var(--shadow-strong); font-size:12px;
+    }
+    .actionRow{display:flex; gap:8px; justify-content:center}
+    .btnSm{
+      border:1px solid rgba(0,255,160,.25); background:rgba(0,0,0,.35);
+      color:var(--text); padding:6px 10px; border-radius:10px; cursor:pointer;
+      backdrop-filter: blur(2px);
+    }
+    .btnSm:hover{background:rgba(0,255,160,.08)}
 
-  /* Responsive tweak */
-  @media (max-width:560px){
-    .title{font-size:30px}
-    .logo{width:76px;height:76px}
-  }
-</style>
+    /* เลย์เอาต์มือถือ */
+    @media (max-width:640px){
+      .title .ufo,.title .hubx{font-size:24px}
+      .logoBox{width:64px;height:64px}
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-
-    <!-- TOP CARD -->
+  <div class="wrap">
+    <!-- ====== CARD บน ====== -->
     <section class="card">
-      <div class="top-head">
-        <div class="logo"></div>
-        <div class="title-wrap">
-          <h1 class="title">
-            <span class="ufo">UFO</span> <span class="hubx">HUB X</span>
-          </h1>
+      <div class="head">
+        <div class="logoBox">
+          <img id="logo" class="logo" src="" alt="logo" />
         </div>
+        <div class="title">
+          <span class="ufo">UFO</span>
+          <span class="hubx">HUB X</span>
+        </div>
+        <button id="startBtn" class="tag">START</button>
       </div>
 
-      <div class="progress-row">
-        <!-- progress bar + label -->
-        <div class="progress-wrap">
-          <div class="progress-bar" id="bar" style="width:0%"></div>
-          <div class="progress-label" id="label">Progress: 0/1</div>
-        </div>
-
-        <!-- START button อยู่ฝั่งขวา และมีไอคอน 🟢 -->
-        <button class="btn btn-start" id="startBtn">🟢 START</button>
+      <div class="progressRow">
+        <div class="barWrap"><div id="bar" class="bar"></div></div>
+        <!-- ปุ่ม START สำรอง (เผื่ออยากให้มีทั้งสองที่)
+        <button class="start" id="startBtn2">🟢 START</button> -->
       </div>
+      <div id="progText" class="progressText">Progress: 0/1</div>
     </section>
 
-    <!-- BOTTOM CARD -->
-    <section class="card">
-      <div class="key-head">
-        <div class="key-title">🔑 Your Key</div>
-        <button class="btn btn-new" id="getKey">+ GET A NEW KEY</button>
+    <!-- ====== CARD ล่าง (Key) ====== -->
+    <section class="card2">
+      <div class="rowCap">
+        <div class="cap">Your Key</div>
+        <button id="btnNew" class="btnNew">+ GET A NEW KEY</button>
       </div>
 
-      <table class="table">
+      <table class="tbl">
         <thead>
           <tr>
-            <th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th>
+            <th>KEY</th>
+            <th>TIME LEFT</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
           </tr>
         </thead>
-        <tbody id="keyRows">
-          <!-- ใส่แถวคีย์ด้วย JS ฝั่งคุณตามเดิม -->
+        <tbody id="tbody">
+          <!-- แถวคีย์จะแทรกที่นี่ -->
         </tbody>
       </table>
     </section>
-
   </div>
 
-  <!-- ตัวอย่างสคริปต์เล็กๆ ขยับ progress (ลบได้) -->
   <script>
-    // demo ขยับ progress 0 -> 100% เฉยๆ
-    let p = 0;
+    /* ========== รูปภาพให้ขึ้นทันที ========== 
+       - โหลดรูปผ่าน proxy ของเซิร์ฟเวอร์คุณ (/img/profile, /img/bg)
+       - ใช้ onload เพื่อค่อย ๆ เผยให้เห็น (จบปัญหา "ไม่ขึ้นทันที")
+    */
+    (function loadImagesFast(){
+      const logo = document.getElementById('logo');
+      const bgImg = new Image();
+      const bust = Date.now(); // กันแคช
+
+      // โลโก้
+      const logoImg = new Image();
+      logoImg.onload = () => { logo.src = logoImg.src; logo.style.opacity = 1; }
+      logoImg.onerror = () => { /* เงียบ ๆ ใช้ placeholder ต่อ */ }
+      logoImg.src = '/img/profile?t=' + bust;
+
+      // พื้นหลัง
+      bgImg.onload = () => {
+        document.body.style.backgroundImage = `url('${bgImg.src}')`;
+      };
+      bgImg.onerror = () => { /* คง fallback gradient ไว้ */ };
+      bgImg.src = '/img/bg?t=' + bust;
+    })();
+
+    /* ========== ตัวช่วย ========== */
+    const qs = Object.fromEntries(new URLSearchParams(location.search).entries());
+    const UID   = qs.uid   || '';   // แนะนำแนบ ?uid=...&place=... ตอนเปิดหน้า
+    const PLACE = qs.place || '';
+
+    const tbody = document.getElementById('tbody');
+    const progText = document.getElementById('progText');
     const bar = document.getElementById('bar');
-    const label = document.getElementById('label');
-    const t = setInterval(()=>{
-      p = Math.min(100, p+2);
-      bar.style.width = p + '%';
-      label.textContent = 'Progress: ' + (p>0? '1/1':'0/1'); // แค่วางตำแหน่ง label บนหลอด
-      if(p>=100) clearInterval(t);
-    }, 120);
+    const btnNew = document.getElementById('btnNew');
+    const startBtn = document.getElementById('startBtn');
+
+    function fmtLeft(sec){
+      if(!sec || sec<=0) return '00:00:00';
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = Math.floor(sec%60);
+      return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+    }
+
+    function setProgress(cur, total){
+      const pct = Math.max(0, Math.min(100, Math.round((cur/total)*100)));
+      bar.style.width = pct + '%';
+      progText.textContent = `Progress: ${cur}/${total}`;
+    }
+
+    /* ========== จัดการคีย์ ========== */
+    let current = null; // { key, expires_at }
+    let tickTimer = null;
+
+    function renderRow(){
+      tbody.innerHTML = '';
+      if(!current){ return; }
+
+      const tr = document.createElement('tr');
+      const tdKey = document.createElement('td');
+      const tdLeft = document.createElement('td');
+      const tdStat = document.createElement('td');
+      const tdAct = document.createElement('td');
+
+      tdKey.textContent = current.key;
+      tdLeft.textContent = '–:–:–';
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.textContent = 'ACTIVE';
+      tdStat.appendChild(badge);
+
+      const act = document.createElement('div');
+      act.className = 'actionRow';
+
+      const bCopy = document.createElement('button');
+      bCopy.className = 'btnSm';
+      bCopy.textContent = 'Copy';
+      bCopy.onclick = () => {
+        navigator.clipboard?.writeText(current.key);
+        bCopy.textContent = 'Copied!';
+        setTimeout(()=>bCopy.textContent='Copy', 800);
+      };
+
+      const bPlus = document.createElement('button');
+      bPlus.className = 'btnSm';
+      bPlus.textContent = '+5H ⏩';
+      bPlus.onclick = async () => {
+        // เพิ่มเวลาในฝั่ง client โชว์สวย ๆ (จริง ๆ ควรไปอัปที่เซิร์ฟเวอร์)
+        current.expires_at += 5 * 3600;
+      };
+
+      act.appendChild(bCopy);
+      act.appendChild(bPlus);
+      tdAct.appendChild(act);
+
+      tr.appendChild(tdKey);
+      tr.appendChild(tdLeft);
+      tr.appendChild(tdStat);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+
+      // เคานต์ดาวน์
+      clearInterval(tickTimer);
+      tickTimer = setInterval(()=>{
+        const left = current.expires_at - Math.floor(Date.now()/1000);
+        tdLeft.textContent = fmtLeft(left);
+        if(left<=0){
+          clearInterval(tickTimer);
+          badge.textContent = 'EXPIRED';
+          badge.style.background = 'linear-gradient(180deg,#ffb114,#ff7a00)';
+        }
+      }, 1000);
+    }
+
+    async function getKey(){
+      if(!UID || !PLACE){
+        alert('โปรดเปิดหน้านี้ด้วยพารามิเตอร์ ?uid=YOUR_UID&place=PLACEID เพื่อใช้งาน GET A NEW KEY');
+        return;
+      }
+      try{
+        const r = await fetch(`/getkey?uid=${encodeURIComponent(UID)}&place=${encodeURIComponent(PLACE)}`);
+        const j = await r.json();
+        if(j && j.ok){
+          current = { key:j.key, expires_at: j.expires_at };
+          renderRow();
+          // อัปเดต progress เป็น 1/1 เวลาได้คีย์
+          setProgress(1,1);
+        }else{
+          alert('getkey error');
+        }
+      }catch(e){
+        alert('getkey failed');
+      }
+    }
+
+    async function verify(){
+      if(!current || !UID || !PLACE) return;
+      try{
+        const r = await fetch(`/verify?key=${encodeURIComponent(current.key)}&uid=${encodeURIComponent(UID)}&place=${encodeURIComponent(PLACE)}`);
+        const j = await r.json();
+        if(j && j.ok && j.valid){
+          current.expires_at = j.expires_at || current.expires_at;
+          renderRow();
+        }
+      }catch(e){}
+    }
+
+    // เริ่มโหลด
+    btnNew.addEventListener('click', getKey);
+    startBtn.addEventListener('click', ()=>{ setProgress(1,1); });
+
+    // ตั้งค่าเริ่มต้น UI
+    setProgress(0,1);
+
+    // ถ้ามีพารามิเตอร์คีย์มากับ URL ก็ verify ให้เลย
+    (async ()=>{
+      if(qs.key && UID && PLACE){
+        current = { key: qs.key, expires_at: Math.floor(Date.now()/1000) + 60 }; // กันหน้าว่าง
+        await verify();
+      }
+    })();
   </script>
 </body>
 </html>
