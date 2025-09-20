@@ -4,6 +4,15 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>UFO HUB X</title>
+
+<!-- ทำให้แถบเบราเซอร์/ระบบเป็นธีมมืด -->
+<meta name="theme-color" content="#0a1411">
+<meta name="color-scheme" content="dark">
+
+<!-- ให้รูปโหลดก่อน เพื่อลดแฟลช -->
+<link rel="preload" as="image" href="/img/bg">
+<link rel="preload" as="image" href="/img/profile">
+
 <style>
   :root{
     --ufo-green:#00ff99;
@@ -13,18 +22,28 @@
     --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.09);
   }
-  /* BG */
+
+  /* BG: มีสีพื้นมืดทันที + รูปตามมาทีหลัง */
+  html,body{
+    height:100%;
+    background-color:#0a1411; /* <- กันจอขาว */
+  }
   body{
     margin:0;
-    font-family: "Orbitron", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: url("/img/bg") center/cover fixed no-repeat;
+    min-height:100svh;
+    font-family:"Orbitron",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background-image:url("/img/bg");
+    background-position:center;
+    background-repeat:no-repeat;
+    background-size:cover;
+    background-attachment:fixed;
     color:var(--text);
   }
 
   .container{
-    max-width: 880px;
-    margin: 22px auto 80px;
-    padding: 0 16px;
+    max-width:880px;
+    margin:22px auto 80px;
+    padding:0 16px;
   }
 
   .card{
@@ -40,83 +59,56 @@
   }
 
   /* ---------- TOP CARD ---------- */
-  .top-head{
-    display:flex;
-    align-items:center;
-    gap:18px;
-  }
+  .top-head{display:flex;align-items:center;gap:18px;}
   .logo{
     width:88px;height:88px;border-radius:14px;
-    background:url("/img/profile") center/cover no-repeat;
+    background-color:#0b1a15;              /* พื้นหลังเข้มระหว่างรอรูป */
+    background-image:url("/img/profile");   /* มาทีหลัง */
+    background-position:center;
+    background-size:cover;
     box-shadow:0 0 18px rgba(0,255,170,.45);
     flex:0 0 auto;
   }
-  .title-wrap{
-    display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;
-    margin-top:6px;
-  }
-  .title{
-    font-size:36px; line-height:1; letter-spacing:.5px; margin:0;
-    text-shadow:0 0 12px rgba(0,255,170,.15);
-  }
-  .title .ufo{color:#ffffff;}       /* UFO ขาว */
-  .title .hubx{color:var(--ufo-green-soft);} /* HUB X เขียว */
+  .title-wrap{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .title{font-size:36px;line-height:1;letter-spacing:.5px;margin:0;text-shadow:0 0 12px rgba(0,255,170,.15);}
+  .title .ufo{color:#fff;}              /* UFO ขาว */
+  .title .hubx{color:var(--ufo-green);} /* HUB X เขียว */
 
-  /* Progress row: bar ซ้าย, ปุ่มขวา */
-  .progress-row{
-    display:flex; align-items:center; gap:14px; margin-top:16px;
-  }
+  /* Progress row */
+  .progress-row{display:flex;align-items:center;gap:14px;margin-top:16px;}
   .progress-wrap{
-    position:relative; flex:1 1 auto; height:14px;
-    background:rgba(0,0,0,.35); border-radius:8px; overflow:hidden;
+    position:relative;flex:1 1 auto;height:14px;
+    background:rgba(0,0,0,.35);border-radius:8px;overflow:hidden;
     box-shadow:inset 0 0 0 1px rgba(34,255,200,.06);
   }
   .progress-bar{
-    position:absolute; inset:0 0 0 auto; width:0%;
+    position:absolute;inset:0 0 0 auto;width:0%;
     background:linear-gradient(90deg,#00ffa3,#3bffbf);
     box-shadow:0 0 18px rgba(34,255,200,.35);
-    z-index:1; /* อยู่ใต้ข้อความ */
+    z-index:1;
   }
   .progress-label{
-    position:absolute; left:10px; top:50%; transform:translateY(-50%);
-    font-size:13px; font-weight:800; color:#eafff8;
-    /* ทำให้เห็นชัดแม้อยู่บนสีเขียวสว่าง */
+    position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    font-size:13px;font-weight:800;color:#eafff8;
     z-index:2;
-    text-shadow:
-      0 0 2px #000,
-      0 0 6px rgba(0,0,0,.85),
-      0 0 12px rgba(0,0,0,.85);
-    -webkit-text-stroke: .4px rgba(0,0,0,.55);
+    text-shadow:0 0 2px #000,0 0 6px rgba(0,0,0,.85),0 0 12px rgba(0,0,0,.85);
+    -webkit-text-stroke:.4px rgba(0,0,0,.55);
     pointer-events:none;
   }
 
-  .btn{
-    appearance:none; border:0; cursor:pointer; font-weight:700;
-    border-radius:12px; padding:10px 16px; transition:.15s;
-  }
-  .btn-start{
-    background:var(--ufo-green); color:#071a14; white-space:nowrap;
-    box-shadow:0 6px 18px rgba(0,255,140,.25), 0 0 0 1px rgba(0,0,0,.2) inset;
-  }
-  .btn-start:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+  .btn{appearance:none;border:0;cursor:pointer;font-weight:700;border-radius:12px;padding:10px 16px;transition:.15s;}
+  .btn-start{background:var(--ufo-green);color:#071a14;white-space:nowrap;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.2) inset;}
+  .btn-start:hover{transform:translateY(-1px);filter:brightness(1.06);}
 
   /* ---------- BOTTOM CARD ---------- */
-  .key-head{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:12px; margin-bottom:10px;
-  }
-  .key-title{ font-size:18px; color:#ffea63; display:flex; align-items:center; gap:8px;}
-  .btn-new{ background:var(--ufo-green); color:#071a14; padding:10px 14px; border-radius:12px; font-weight:800;}
-  .table{ width:100%; border-collapse:collapse; font-size:14px; color:var(--text);}
-  .table th, .table td{ padding:10px 8px; text-align:center;}
-  .table th{ color:#77ffc8; font-weight:600; }
-  .pill{
-    display:inline-block; padding:6px 10px; border-radius:999px;
-    background:rgba(0,255,170,.1); color:var(--ufo-green); font-weight:800; font-size:12px;
-    box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;
-  }
+  .key-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px;}
+  .btn-new{background:var(--ufo-green);color:#071a14;padding:10px 14px;border-radius:12px;font-weight:800;}
+  .table{width:100%;border-collapse:collapse;font-size:14px;color:var(--text);}
+  .table th,.table td{padding:10px 8px;text-align:center;}
+  .table th{color:#77ffc8;font-weight:600;}
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(0,255,170,.1);color:var(--ufo-green);font-weight:800;font-size:12px;box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;}
 
-  /* Responsive tweak */
   @media (max-width:560px){
     .title{font-size:30px}
     .logo{width:76px;height:76px}
@@ -131,20 +123,15 @@
       <div class="top-head">
         <div class="logo"></div>
         <div class="title-wrap">
-          <h1 class="title">
-            <span class="ufo">UFO</span> <span class="hubx">HUB X</span>
-          </h1>
+          <h1 class="title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
         </div>
       </div>
 
       <div class="progress-row">
-        <!-- progress bar + label -->
         <div class="progress-wrap">
           <div class="progress-bar" id="bar" style="width:0%"></div>
           <div class="progress-label" id="label">Progress: 0/1</div>
         </div>
-
-        <!-- START button ขวา + ไอคอน 🟢 -->
         <button class="btn btn-start" id="startBtn">🟢 START</button>
       </div>
     </section>
@@ -158,25 +145,18 @@
 
       <table class="table">
         <thead>
-          <tr>
-            <th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th>
-          </tr>
+          <tr><th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th></tr>
         </thead>
-        <tbody id="keyRows">
-          <!-- ใส่แถวคีย์ด้วย JS ฝั่งคุณตามเดิม -->
-        </tbody>
+        <tbody id="keyRows"><!-- เติมด้วย JS ฝั่งคุณ --></tbody>
       </table>
     </section>
-
   </div>
 
   <script>
-    // เริ่มต้นให้เห็นเป็น 0/1 ชัดเจน
-    const bar   = document.getElementById('bar');
+    // ปุ่ม START: อัปเดตแถบและตัวเลข (เริ่มที่ 0/1 เสมอ)
+    const bar = document.getElementById('bar');
     const label = document.getElementById('label');
-
-    // กด START ค่อยอัปเดตเป็น 1/1 (หรือจะค่อย ๆ เพิ่ม bar ก็ได้)
-    document.getElementById('startBtn').addEventListener('click', ()=>{
+    document.getElementById('startBtn').addEventListener('click', () => {
       label.textContent = 'Progress: 1/1';
       bar.style.width = '100%';
     });
