@@ -18,7 +18,8 @@
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
-    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png");
+    /* ใช้รูป UFO ตัวเต็ม (มี query) เพื่อกันแคชเพี้ยน */
+    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
     --ufo-lead: 8px;
   }
 
@@ -87,29 +88,34 @@
 <body>
   <div class="container">
 
+    <!-- HERO -->
     <div class="hero">
       <div class="hero-box">
         <img class="hero-img" src="/img/profile" alt="UFO HUB X">
       </div>
     </div>
 
+    <!-- Title + Button + Progress -->
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
+      <!-- กรอบ + ตัวหนังสือ จะโผล่ที่ 18 วิ -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
 
+      <!-- หลอดจริง + ยาน -->
       <div class="bar-wrap is-hidden" id="barWrap">
         <div class="bar" id="bar"></div>
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
     </section>
 
+    <!-- Your Key -->
     <section class="card">
       <div class="key-head">
         <div class="key-title">🔑 Your Key</div>
@@ -123,9 +129,10 @@
 
   </div>
 
-  <div class="overlay hidden" id="dlOverlay">
+  <!-- Overlay (แสดงเฉพาะโดเมน onrender) -->
+  <div class="overlay hidden" id="dlOverlay" aria-live="polite" aria-busy="true">
     <div class="dl-box">
-      <div class="spinner"></div>
+      <div class="spinner" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
       <div class="dl-title">Preparing download…</div>
       <div class="dl-count"><span id="dlSeconds">0</span>%</div>
       <div class="dl-note">Please wait while we get things ready.</div>
@@ -133,15 +140,17 @@
   </div>
 
 <script>
+  /* ===== CONFIG ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY   = 23000;
-  const MIN_VISIT   = 5000;
-  const DL_TOTAL_MS = 22000;   // ✅ แก้เป็น 22 วิ
-  const IMG_TIMEOUT = 20000;
+  const ARM_DELAY        = 18000;   // ✅ UI กรอบโผล่หลัง 18 วิ
+  const MIN_VISIT        = 5000;    // ต้องออกไปอย่างน้อย 5 วิ
+  const OVERLAY_MS       = 20000;   // overlay 0-100% 20 วิ (โดเมน onrender)
+  const UFO_PROGRESS_MS  = 22000;   // ✅ หลอดสีเขียว + UFO วิ่ง 22 วิ
 
+  /* ===== Elements ===== */
   const bar         = document.getElementById('bar');
   const barWrap     = document.getElementById('barWrap');
   const barUfo      = document.getElementById('barUfo');
@@ -155,32 +164,74 @@
 
   let raf = null;
 
+  /* ===== Progress + UFO ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
+
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
     const LEAD = 8;
     barUfo.style.left = (tipInside + LEAD) + 'px';
+
     percentEl.textContent = p.toFixed(0) + '%';
+    // ชื่อขึ้น 0/1 จนกว่าจะครบ 100
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
 
-  function runProgress(pTarget=100, duration=DL_TOTAL_MS){
+  function runProgress(pTarget=100, duration=UFO_PROGRESS_MS){
     cancelAnimationFrame(raf);
-    barUfo.classList.add('on');
+    if (pTarget > 0) barUfo.classList.add('on');  // โผล่พร้อมหลอด
     const pStart = parseFloat(bar.style.width) || 0;
     const t0 = performance.now();
     function tick(ts){
       const t = Math.min(1, (ts - t0)/duration);
       const p = pStart + (pTarget - pStart) * t;
       setProgress(p);
-      if(t < 1){ raf = requestAnimationFrame(tick); }
+      if(t < 1){
+        raf = requestAnimationFrame(tick);
+      }else{
+        // จบแล้วค่อยเฟดออก
+        setTimeout(()=>barUfo.classList.remove('on'), 300);
+      }
     }
     raf = requestAnimationFrame(tick);
   }
 
+  /* ===== Show bar frame after 18s ===== */
+  function showBarAfterDelay(){
+    setTimeout(()=>{
+      progressMeta.classList.remove('is-hidden');
+      barWrap.classList.remove('is-hidden');
+      // ยืนยันชื่อเริ่มต้นและ % เป็น 0
+      pText.textContent = 'Progress: 0/1';
+      percentEl.textContent = '0%';
+      // ถ้ากลับมาจริงแล้ว ค่อยวิ่ง 22 วิ
+      autoCompleteIfReturned(true);
+    }, ARM_DELAY);
+  }
+
+  /* ===== Return detection ===== */
+  function isValidReturn(){
+    try{
+      const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
+      if(!ts) return false;
+      return (Date.now() - ts) >= MIN_VISIT;
+    }catch(e){ return false; }
+  }
+  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY);}catch(e){} }
+
+  function autoCompleteIfReturned(onlyIfVisible=false){
+    if(location.hostname!==DOMAIN_OK) return;
+    if(onlyIfVisible && (progressMeta.classList.contains('is-hidden')||barWrap.classList.contains('is-hidden'))) return;
+    if(isValidReturn()){
+      clearReturnMark();
+      runProgress(100, UFO_PROGRESS_MS); // ✅ วิ่ง 22 วิ
+    }
+  }
+
+  /* ===== Overlay 0→100% 20s (onrender only) ===== */
   function showDownloadOverlay(){
     if(location.hostname !== DOMAIN_OK) return;
     document.body.classList.add('locked');
@@ -188,26 +239,56 @@
     const start = Date.now();
     const timer = setInterval(()=>{
       const elapsed = Date.now() - start;
-      const percent = Math.min(100, Math.floor((elapsed / DL_TOTAL_MS)*100));
+      const percent = Math.min(100, Math.floor((elapsed / OVERLAY_MS)*100));
       dlSecondsEl.textContent = percent;
-      if(elapsed >= DL_TOTAL_MS){
+      const spinner = dlOverlay.querySelector('.spinner');
+      if (spinner) spinner.setAttribute('aria-valuenow', String(percent));
+      if(elapsed >= OVERLAY_MS){
         clearInterval(timer);
         dlOverlay.classList.add('hidden');
         document.body.classList.remove('locked');
-        runProgress(100, DL_TOTAL_MS);
       }
     }, 100);
   }
 
+  /* ===== Preload images (ไม่บล็อก UI) ===== */
+  function preloadImages(urls, timeoutMs=20000){
+    return new Promise(resolve=>{
+      let done=false; const timer=setTimeout(()=>{if(!done){done=true;resolve();}},timeoutMs);
+      let loaded=0;
+      urls.forEach(u=>{
+        const img=new Image();
+        img.onload=img.onerror=()=>{ if(done) return; if(++loaded>=urls.length){done=true;clearTimeout(timer);resolve();}};
+        img.src=u;
+      });
+    });
+  }
+
+  /* ===== Events ===== */
   startBtn.addEventListener('click', ()=>{
     try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
     window.location.href = START_URL;
   });
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    progressMeta.classList.remove('is-hidden');
-    barWrap.classList.remove('is-hidden');
+    // เริ่มแบบ “ปิดไว้ก่อน”
+    progressMeta.classList.add('is-hidden');
+    barWrap.classList.add('is-hidden');
+    // โหลดภาพ (ไม่บล็อก)
+    preloadImages([
+      '/img/bg',
+      '/img/profile',
+      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png'
+    ]);
+    // แสดง overlay (เฉพาะโดเมน onrender)
     showDownloadOverlay();
+    // โชว์กรอบที่ 18 วินาที
+    showBarAfterDelay();
+  });
+
+  // เคสกลับมาจากลิงก์ (BFCache)
+  window.addEventListener('pageshow', ()=>{
+    autoCompleteIfReturned(true);
   });
 </script>
 </body>
