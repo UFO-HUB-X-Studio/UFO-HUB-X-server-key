@@ -33,7 +33,7 @@ function saveIssued(obj) {
 
 app.get("/", (req, res) => res.json({ ok: true, service: "ufo-hub-x-key-server" }));
 
-// ---------------------- GETKEY (idempotent per uid+place) ----------------------
+// ---------------------- GETKEY (idempotent + random from pool) ----------------------
 app.get("/getkey", (req, res) => {
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
@@ -48,7 +48,7 @@ app.get("/getkey", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const id     = `${uid}:${place}`;
 
-    // 1) ถ้ามี “บัตรคีย์เดิม” และยังไม่หมดอายุ → คืนคีย์เดิม (idempotent)
+    // ถ้ามีบัตรเก่าและยังไม่หมดอายุ → คืนคีย์เดิม
     const ticket = issued[id];
     if (ticket && ticket.expires_at && now < ticket.expires_at) {
       return res.json({
@@ -60,29 +60,29 @@ app.get("/getkey", (req, res) => {
       });
     }
 
-    // 2) ถ้ายังไม่มีบัตร → สร้างบัตรใหม่จาก config
-    //    (เลือกตัวแรก หรือจะสุ่มก็ได้ แต่ให้ TTL ตาม config)
-    const first = (config.keys && config.keys[0]) ? config.keys[0] : null;
-    if (!first || !first.key) {
+    // เลือกคีย์แบบสุ่มจาก pool ใน config
+    const pool = (config.keys || []).filter(k => k && k.key);
+    if (!pool.length) {
       return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
     }
-    const ttl = Number(first.ttl || config.expires_default || 172800);
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    const ttl = Number(chosen.ttl || config.expires_default || 172800);
     const exp = now + ttl;
 
     issued[id] = {
-      key: first.key,
+      key: chosen.key,
       uid,
       place,
       issued_at: now,
       expires_at: exp,
-      reusable: !!first.reusable
+      reusable: !!chosen.reusable
     };
     saveIssued(issued);
 
     return res.json({
       ok: true,
       uid, place,
-      key: first.key,
+      key: chosen.key,
       expires_at: exp,
       reused: false
     });
@@ -107,20 +107,25 @@ app.get("/verify", (req, res) => {
     const issued = loadIssued();
     const id     = `${uid}:${place}`;
 
-    // 1) ถ้ามี “บัตรคีย์” สำหรับ uid+place อยู่แล้ว → ใช้บัตรนั้นตัดสินเป็นหลัก
+    // ตรวจสอบจาก issued.json ก่อน
     const ticket = issued[id];
     if (ticket) {
       if (key !== ticket.key) {
-        // มีบัตรอยู่ แต่คีย์ไม่ตรง → ไม่ผ่าน (ต้องใช้คีย์ตามบัตร)
         return res.json({ ok:true, valid:false, reason:"key_mismatch_for_uid_place" });
       }
       if (now > ticket.expires_at) {
         return res.json({ ok:true, valid:false, reason:"expired", expired_at: ticket.expires_at });
       }
-      return res.json({ ok:true, valid:true, key:ticket.key, expires_at:ticket.expires_at, reusable:ticket.reusable });
+      return res.json({
+        ok:true,
+        valid:true,
+        key:ticket.key,
+        expires_at:ticket.expires_at,
+        reusable:ticket.reusable
+      });
     }
 
-    // 2) ถ้ายัง “ไม่มีบัตร” แต่ key นี้มีใน config → อนุญาตสร้างบัตรครั้งแรก ณ ตอน verify
+    // ถ้ายังไม่มีบัตร → ตรวจจาก config แล้วออกบัตรใหม่
     const config = loadConfig();
     const found  = (config.keys || []).find(k => k.key === key);
     if (found) {
@@ -138,7 +143,6 @@ app.get("/verify", (req, res) => {
       return res.json({ ok:true, valid:true, key, expires_at: exp, reusable: !!found.reusable });
     }
 
-    // 3) ไม่พบทั้งใน issued และ config → ไม่ผ่าน
     return res.json({ ok:true, valid:false, reason:"invalid_key" });
   } catch (err) {
     console.error("verify error:", err);
