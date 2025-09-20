@@ -19,8 +19,7 @@
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    /* ระยะที่ให้ยาน "นำหน้า" ปลายแท่งสีเขียว (px) */
-    --ufo-lead: 8px;
+    --ufo-lead: 8px; /* ยานนำปลายแท่งสีเขียว */
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -49,7 +48,7 @@
     border-radius:18px;
     box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
     padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
-    overflow:visible; /* ให้ของด้านในโผล่พ้นการ์ดได้ */
+    overflow:visible;
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -59,10 +58,10 @@
 
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
 
-  /* ===== หลอด + ยาน ===== */
+  /* BAR + UFO */
   .bar-wrap{
     position:relative;width:100%;height:18px;border-radius:10px;
-    overflow:visible; /* ทะลุกรอบหลอดได้ */
+    overflow:visible;
     background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
     box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
   }
@@ -72,20 +71,15 @@
     box-shadow:0 0 18px rgba(34,255,200,.35);
     z-index:1;
   }
-  /* ยาน: ให้อยู่ "แนวกึ่งกลางเดียวกับหลอด" และโผล่พ้นกรอบได้ */
   .bar-ufo{
-    position:absolute;
-    top:50%;                         /* กลางแนวตั้งของหลอด */
-    transform:translate(-50%,-50%);  /* จับศูนย์ยานพอดี */
-    width:50px;height:50px;
-    opacity:0; transition:opacity .2s ease;
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:50px;height:50px; opacity:0; transition:opacity .2s ease;
     background:var(--ufo-ship) center/contain no-repeat;
     filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));
-    z-index:8; pointer-events:none;  /* เห็นชัด อยู่บน UI */
+    z-index:8; pointer-events:none;
   }
   .bar-ufo.on{opacity:1;}
 
-  /* TABLE */
   .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
   .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
   .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
@@ -113,6 +107,8 @@
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
+
+        <!-- ปุ่ม START (คงหน้าตาเดิม) -->
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
@@ -123,7 +119,6 @@
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
-        <!-- ยาน “ระดับเดียวกับหลอด” และทะลุกรอบได้ -->
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
     </section>
@@ -143,49 +138,74 @@
   </div>
 
 <script>
-  // ===== ให้ยาน “วิ่งนำปลายแท่งสีเขียว” แบบเป๊ะ ๆ และมองเห็นนอกกรอบได้ =====
+  // ===== CONFIG =====
+  const START_URL = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+  const RETURN_FLAG = "ufo_after_external"; // ธงบอกว่าไปทำลิงก์แล้วกำลังกลับมา
+
+  // ===== Progress + UFO =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
   const pText     = document.getElementById('progressText');
   const percentEl = document.getElementById('percentText');
-  let raf = null;
+  const startBtn  = document.getElementById('startBtn');
 
+  let raf = null;
   const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
 
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
-    // อัปเดตความกว้างแท่งสีเขียว
     bar.style.width = p + '%';
 
-    // ปลายแท่งเขียวจริง (ภายในกรอบหลอด)
+    // คำนวณตำแหน่งปลายแท่งสีเขียวภายในหลอด
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
 
-    // ให้ยานอยู่ตรง “ปลายแท่ง + ระยะนำหน้า” ไม่ clamp เพื่อให้ทะลุกรอบได้
+    // วางยานให้นำหน้าปลายแท่ง
     barUfo.style.left = (tipInside + LEAD) + 'px';
 
-    // อัปเดตตัวเลข
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
 
-  document.getElementById('startBtn').addEventListener('click', ()=>{
-    cancelAnimationFrame(raf);
-    barUfo.classList.add('on');
-    let t0 = null;
-    function tick(ts){
-      if(!t0) t0 = ts;
-      const p = Math.min(100, (ts - t0) / 1500 * 100);
-      setProgress(p);
-      if(p < 100) raf = requestAnimationFrame(tick);
-      else setTimeout(()=>barUfo.classList.remove('on'), 300);
-    }
-    raf = requestAnimationFrame(tick);
+  // เปิดลิงก์ START ในแท็บใหม่ + ตั้งธง
+  startBtn.addEventListener('click', ()=>{
+    try { localStorage.setItem(RETURN_FLAG, '1'); } catch(e){}
+    window.open(START_URL, '_blank'); // เปิดลิงก์
+    // แสดงแอนิเมชันระหว่างรอ (ไม่บังคับ)
+    runProgress(65, 900);
   });
 
-  // Preload รูป
+  // utility: วิ่งหลอดไปยังค่า pTarget ภายใน duration ms
+  function runProgress(pTarget=100, duration=1200){
+    cancelAnimationFrame(raf);
+    barUfo.classList.add('on');
+    const pStart = parseFloat(bar.style.width) || 0;
+    const t0 = performance.now();
+    function tick(ts){
+      const t = Math.min(1, (ts - t0)/duration);
+      const p = pStart + (pTarget - pStart) * t;
+      setProgress(p);
+      if(t < 1) raf = requestAnimationFrame(tick);
+      else if (pTarget === 100) setTimeout(()=>barUfo.classList.remove('on'), 300);
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  // ถ้า "กลับมาที่โดเมนนี้" หลังจากกด START => เติมหลอดจนเต็ม + ขึ้น 1/1 อัตโนมัติ
+  (function autoCompleteIfReturned(){
+    const onOurDomain = location.hostname === "ufo-hub-x-key-umoq.onrender.com";
+    let flag = null;
+    try { flag = localStorage.getItem(RETURN_FLAG); } catch(e){}
+    if(onOurDomain && flag === '1'){
+      // ลบธง แล้ววิ่งหลอดเต็ม 100%
+      try { localStorage.removeItem(RETURN_FLAG); } catch(e){}
+      runProgress(100, 1000); // เร็วหน่อย
+    }
+  })();
+
+  // Preload รูป (กันแฟลช)
   new Image().src = '/img/bg';
   new Image().src = '/img/profile';
   new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
