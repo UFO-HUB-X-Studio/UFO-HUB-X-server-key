@@ -8,7 +8,6 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
-<!-- preload (คงไว้ทั้งหมด) -->
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
@@ -20,6 +19,8 @@
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
+    /* เพิ่ม: ระยะ “นำหน้า” ของยาน (px) ปรับได้ตามใจ */
+    --ufo-lead: 8px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -59,11 +60,11 @@
   .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);}
   .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
 
-  /* UFO: ให้อยู่ "กึ่งกลางหลอด" แบบไม่ล้ำกรอบ */
+  /* UFO (ลอยเหนือหลอดนิด ๆ) */
   .bar-ufo{
     position:absolute;
-    top:50%;                                   /* ให้อยู่กลางแนวตั้งของหลอด */
-    transform:translate(-50%, calc(-100% - 4px)); /* ลอยเหนือหลอด 4px */
+    top:50%;
+    transform:translate(-50%, calc(-100% - 4px));
     width:48px; height:48px;
     opacity:0; transition:opacity .2s ease;
     background:var(--ufo-ship) center/contain no-repeat;
@@ -128,7 +129,7 @@
   </div>
 
 <script>
-  // ===== Progress + UFO: วางยานตรง "กึ่งกลางปลายหลอด" เป๊ะ และไม่ล้ำโค้ง =====
+  // ===== วางยานให้ "กึ่งกลางปลายหลอด" + นำหน้าหลอด (ปรับ offset ได้) =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -136,24 +137,28 @@
   const percentEl = document.getElementById('percentText');
   let raf = null;
 
+  // ดึงค่า offset ที่ตั้งไว้ใน CSS (เช่น 8px)
+  const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
+
   function setProgress(p){
     p = Math.max(0, Math.min(100, p));
     bar.style.width = p + '%';
 
-    // พิกัดจริงของปลายแถบ (ขอบขวา) เทียบกับกรอบหลอด
+    // ตำแหน่งปลายแถบจริงภายในกรอบหลอด (px)
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
-    const tipInside = (barRect.left + barRect.width) - wrapRect.left; // px ภายในกรอบ
+    const tipInside = (barRect.left + barRect.width) - wrapRect.left;
 
-    // หนีบซ้าย/ขวา: เผื่อครึ่งยาน + รัศมีมุมโค้ง + กันชน 2px
-    const ufoHalf   = barUfo.offsetWidth / 2;
-    const corner    = parseFloat(getComputedStyle(barWrap).borderRadius) || 0;
-    const pad       = 2;
-    const minX      = ufoHalf + corner + pad;
-    const maxX      = barWrap.clientWidth - (ufoHalf + corner + pad);
+    // เผื่อครึ่งยาน + รัศมีมุม + กันชน 2px
+    const ufoHalf = barUfo.offsetWidth / 2;
+    const corner  = parseFloat(getComputedStyle(barWrap).borderRadius) || 0;
+    const pad     = 2;
+    const minX    = ufoHalf + corner + pad;
+    const maxX    = barWrap.clientWidth - (ufoHalf + corner + pad);
 
-    const clampedX  = Math.max(minX, Math.min(tipInside, maxX));
-    barUfo.style.left = clampedX + 'px';
+    // ให้ยาน "นำหน้า" ปลายหลอดด้วย LEAD และหนีบไม่ให้ล้ำกรอบ
+    const targetX = Math.max(minX, Math.min(tipInside + LEAD, maxX));
+    barUfo.style.left = targetX + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
@@ -173,7 +178,7 @@
     raf = requestAnimationFrame(tick);
   });
 
-  // Preload images (กันแฟลช)
+  // Preload images
   new Image().src = '/img/bg';
   new Image().src = '/img/profile';
   new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
