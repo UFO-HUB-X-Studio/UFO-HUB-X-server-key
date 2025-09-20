@@ -10,11 +10,14 @@ const path = require("path");
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ✅ อนุญาต CORS เฉพาะหัว Access-Control (ไม่ไปบังคับ Content-Type ทั้งเว็บ)
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
   next();
 });
+
+// ✅ เสิร์ฟไฟล์หน้าเว็บจาก /public
+app.use(express.static(path.join(__dirname, "public")));
 
 const CONFIG_PATH = path.join(__dirname, "config.json");
 const ISSUED_PATH = path.join(__dirname, "issued.json");
@@ -31,10 +34,15 @@ function saveIssued(obj) {
   fs.writeFileSync(ISSUED_PATH, JSON.stringify(obj, null, 2), "utf8");
 }
 
-app.get("/", (req, res) => res.json({ ok: true, service: "ufo-hub-x-key-server" }));
+// ✅ หน้าเว็บหลัก → ส่ง index.html (ไม่ใช่ JSON)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // ---------------------- GETKEY (idempotent + random from pool) ----------------------
 app.get("/getkey", (req, res) => {
+  res.type("application/json"); // ตั้ง Content-Type แค่สำหรับ API นี้
+
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
 
@@ -94,6 +102,8 @@ app.get("/getkey", (req, res) => {
 
 // ---------------------- VERIFY (respect issued.json first) ----------------------
 app.get("/verify", (req, res) => {
+  res.type("application/json"); // ตั้ง Content-Type แค่สำหรับ API นี้
+
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
   const key   = String(req.query.key   || "").trim();
