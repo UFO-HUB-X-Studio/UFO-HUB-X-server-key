@@ -19,8 +19,6 @@
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    /* ตั้งค่านำหน้าเป็น 0 เพื่อให้อยู่กึ่งกลางเขียวเป๊ะ ๆ */
-    --ufo-lead: 0px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -33,7 +31,7 @@
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
-  /* HERO (คงเดิม) */
+  /* HERO */
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
   .hero-box{
     display:inline-block; max-width:320px; width:90vw;
@@ -57,19 +55,36 @@
   .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
 
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
-  .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);}
-  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
 
-  /* UFO ลอยเหนือหลอดเล็กน้อย */
+  /* ====== หลอด + ยาน (รวมเป็นหนึ่งเดียว) ====== */
+  .bar-wrap{
+    position:relative;width:100%;height:18px;border-radius:10px;
+    overflow:hidden; /* คลิปทุกอย่างไว้ในหลอด */
+    background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
+    box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
+  }
+  .bar{
+    position:absolute;left:0;top:0;bottom:0;width:0%;
+    background:linear-gradient(90deg,#00ffa3,#3bffbf);
+    box-shadow:0 0 18px rgba(34,255,200,.35);
+    z-index:1;
+  }
+  /* ยานอยู่ "ข้างในหลอด" เลย */
   .bar-ufo{
-    position:absolute;
-    top:50%;
-    transform:translate(-50%, calc(-100% - 4px));
-    width:48px; height:48px;
-    opacity:0; transition:opacity .2s ease;
+    position:absolute; top:50%;
+    transform:translate(-50%,-50%); /* กลางแนวตั้งของหลอด */
+    width:40px;height:28px; opacity:0; transition:opacity .2s ease;
     background:var(--ufo-ship) center/contain no-repeat;
-    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px rgba(0,255,160,.9)) drop-shadow(0 0 18px rgba(0,255,160,.8));
-    z-index:5; pointer-events:none;
+    filter:drop-shadow(0 0 6px rgba(0,255,160,.9));
+    z-index:2;  /* เหนือแถบสีแต่ยังอยู่ในหลอด */
+    pointer-events:none;
+  }
+  /* เสริมแสงใต้ยานให้กลมกลืนกับหลอด */
+  .bar-ufo::after{
+    content:""; position:absolute; left:50%; top:70%; transform:translate(-50%,-50%);
+    width:60%; height:70%;
+    background:radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.35), rgba(0,255,160,.0) 70%);
+    filter:blur(2px);
   }
   .bar-ufo.on{opacity:1;}
 
@@ -82,7 +97,7 @@
 
   @media (max-width:560px){
     .head-title{font-size:34px}
-    .bar-ufo{width:44px;height:44px}
+    .bar-ufo{width:36px;height:26px}
   }
 </style>
 </head>
@@ -110,6 +125,7 @@
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
+        <!-- ยาน “เป็นส่วนหนึ่ง” ของหลอด -->
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
     </section>
@@ -129,7 +145,7 @@
   </div>
 
 <script>
-  // ===== วางยานให้ “กึ่งกลางหลอดสีเขียว” เป๊ะ ๆ =====
+  // ===== ยานขยับ “ตามกึ่งกลางของแถบสีเขียว” และถูกคลิปอยู่ในหลอด =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -137,27 +153,22 @@
   const percentEl = document.getElementById('percentText');
   let raf = null;
 
-  // offset นำหน้าที่ปรับได้ (ดีฟอลต์ 0px เพื่อให้อยู่กึ่งกลางจริง ๆ)
-  const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
-
   function setProgress(p){
-    p = Math.max(0, Math.min(100, p));
+    if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
 
-    // กึ่งกลางของแท่งเขียวจริง (ไม่ใช่ปลาย) ภายในกรอบหลอด
-    const barRect  = bar.getBoundingClientRect();
-    const wrapRect = barWrap.getBoundingClientRect();
-    const centerInside = (barRect.left + barRect.width / 2) - wrapRect.left; // px
+    // กึ่งกลางของแถบสีเขียว (px) ภายในกรอบหลอด
+    const filledW = bar.clientWidth;
+    const centerX = filledW / 2;
 
-    // เผื่อครึ่งยาน + รัศมีมุม + กันชน 2px แล้วหนีบไม่ให้ล้ำกรอบ
+    // หนีบไม่ให้ล้ำกรอบโค้ง (เผื่อครึ่งยาน + กันชนเล็กน้อย)
     const ufoHalf = barUfo.offsetWidth / 2;
     const corner  = parseFloat(getComputedStyle(barWrap).borderRadius) || 0;
     const pad     = 2;
     const minX    = ufoHalf + corner + pad;
     const maxX    = barWrap.clientWidth - (ufoHalf + corner + pad);
 
-    const targetX = Math.max(minX, Math.min(centerInside + LEAD, maxX));
-    barUfo.style.left = targetX + 'px';
+    barUfo.style.left = Math.max(minX, Math.min(centerX, maxX)) + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
