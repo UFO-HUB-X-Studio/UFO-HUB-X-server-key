@@ -99,7 +99,6 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- จะถูกปลดซ่อนให้เห็นทันทีโดยแพตช์ด้านล่าง -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
@@ -134,12 +133,12 @@
   </div>
 
 <script>
-  /* ===== CONFIG (ของเดิม) ===== */
+  /* ===== CONFIG ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY   = 23000;  // ยังเก็บไว้ แต่เราจะโชว์กรอบทันทีด้วยแพตช์
+  const ARM_DELAY   = 23000;
   const MIN_VISIT   = 5000;
   const DL_TOTAL_MS = 20000;
   const IMG_TIMEOUT = 20000;
@@ -158,91 +157,16 @@
 
   let raf = null;
 
-  /* ===== Progress / UFO (เดิม) ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
-
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-    const LEAD = 8; // px
+    const LEAD = 8;
     barUfo.style.left = (tipInside + LEAD) + 'px';
-
     percentEl.textContent = p.toFixed(0) + '%';
-    // เดิม: เปลี่ยนเป็น 1/1 เฉพาะเมื่อเต็ม 100
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
-  }
-
-  function runProgress(pTarget=100, duration=5000){
-    cancelAnimationFrame(raf);
-    // UFO โผล่เมื่อเริ่มมี progress (พอเราเรียก runProgress)
-    barUfo.classList.add('on');
-    const pStart = parseFloat(bar.style.width) || 0;
-    const t0 = performance.now();
-    function tick(ts){
-      const t = Math.min(1, (ts - t0)/duration);
-      const p = pStart + (pTarget - pStart) * t;
-      setProgress(p);
-      if(t < 1){ raf = requestAnimationFrame(tick); }
-      else {
-        // จบ 100% ไม่ซ่อน UFO (ถ้าต้องให้หาย คอมเมนต์ข้างล่างออก)
-        // setTimeout(()=>barUfo.classList.remove('on'), 300);
-      }
-    }
-    raf = requestAnimationFrame(tick);
-  }
-
-  function showBarAfterDelay(){
-    setTimeout(()=>{
-      progressMeta.classList.remove('is-hidden');
-      barWrap.classList.remove('is-hidden');
-      setProgress(parseFloat(bar.style.width) || 0);
-      autoCompleteIfReturned(true);
-    }, ARM_DELAY);
-  }
-
-  function isValidReturn(){
-    try{
-      const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
-      if(!ts) return false;
-      return (Date.now() - ts) >= MIN_VISIT;
-    }catch(e){ return false; }
-  }
-  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY);}catch(e){} }
-  function autoCompleteIfReturned(onlyIfVisible=false){
-    if(location.hostname!==DOMAIN_OK) return;
-    if(onlyIfVisible && (progressMeta.classList.contains('is-hidden')||barWrap.classList.contains('is-hidden'))) return;
-    if(isValidReturn()){ clearReturnMark(); runProgress(100,5000); }
-  }
-
-  function showDownloadOverlay(){
-    if(location.hostname !== DOMAIN_OK) return;
-    document.body.classList.add('locked');
-    dlOverlay.classList.remove('hidden');
-    const start = Date.now();
-    const timer = setInterval(()=>{
-      const elapsed = Date.now() - start;
-      const percent = Math.min(100, Math.floor((elapsed / DL_TOTAL_MS)*100));
-      dlSecondsEl.textContent = percent;
-      if(elapsed >= DL_TOTAL_MS){
-        clearInterval(timer);
-        dlOverlay.classList.add('hidden');
-        document.body.classList.remove('locked');
-      }
-    }, 100);
-  }
-
-  function preloadImages(urls, timeoutMs=IMG_TIMEOUT){
-    return new Promise(resolve=>{
-      let done=false; const timer=setTimeout(()=>{if(!done){done=true;resolve();}},timeoutMs);
-      let loaded=0;
-      urls.forEach(u=>{
-        const img=new Image();
-        img.onload=img.onerror=()=>{ if(done) return; if(++loaded>=urls.length){done=true;clearTimeout(timer);resolve();}};
-        img.src=u;
-      });
-    });
   }
 
   startBtn.addEventListener('click', ()=>{
@@ -251,63 +175,45 @@
   });
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    // เดิมซ่อน — เดี๋ยวปลดด้วยแพตช์ add-only ข้างล่าง
-    progressMeta.classList.add('is-hidden');
-    barWrap.classList.add('is-hidden');
-
-    preloadImages([
-      '/img/bg',
-      '/img/profile',
-      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png'
-    ]);
-
-    showBarAfterDelay();
-    showDownloadOverlay();
+    progressMeta.classList.remove('is-hidden');
+    barWrap.classList.remove('is-hidden');
+    setProgress(0);
   });
-
-  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- ========== ADD-ONLY PATCH: โชว์กรอบทันที + บังคับชื่อเริ่มที่ 0/1 + UFO โผล่พร้อมหลอด ========== -->
+<!-- === ADD-ONLY PATCH: บังคับให้ Progress UI โผล่ตลอด === -->
+<style>
+  #progressMeta, #barWrap{
+    opacity:1 !important;
+    pointer-events:auto !important;
+  }
+</style>
 <script>
 (function(){
-  const progressMeta = document.getElementById('progressMeta');
-  const barWrap      = document.getElementById('barWrap');
-  const pText        = document.getElementById('progressText');
-  const percentEl    = document.getElementById('percentText');
-  const barUfo       = document.getElementById('barUfo');
+  const progressMeta=document.getElementById('progressMeta');
+  const barWrap=document.getElementById('barWrap');
+  const pText=document.getElementById('progressText');
+  const percent=document.getElementById('percentText');
+  const barUfo=document.getElementById('barUfo');
 
-  // 1) โชว์ "ขอบดาวน์โหลด" ทันทีตั้งแต่เปิดหน้า
-  if (progressMeta) progressMeta.classList.remove('is-hidden');
-  if (barWrap)      barWrap.classList.remove('is-hidden');
+  if(progressMeta) progressMeta.classList.remove('is-hidden');
+  if(barWrap) barWrap.classList.remove('is-hidden');
+  if(pText) pText.textContent='Progress: 0/1';
+  if(percent) percent.textContent='0%';
 
-  // 2) บังคับชื่อเริ่มต้นเป็น 0/1 เสมอ (กันคืนค่าอื่น)
-  if (pText) pText.textContent = "Progress: 0/1";
-  if (percentEl) percentEl.textContent = "0%";
-
-  // 3) ครอบ setProgress: ถ้า p<100 ให้แสดง 0/1, ถ้า p>=100 ค่อยเป็น 1/1
-  const _origSet = window.setProgress;
-  if (typeof _origSet === 'function') {
-    window.setProgress = function(p){
-      _origSet(p);
-      if (pText) pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
-      // UFO โผล่เมื่อเริ่มมีหลอด (p>0) และคงอยู่ตอน 100
-      if (barUfo) {
-        if (p > 0) barUfo.classList.add('on');
-        // ถ้าต้องการให้หายตอนเต็ม 100 ให้ใช้:
-        // if (p >= 100) setTimeout(()=>barUfo.classList.remove('on'), 300);
+  const _orig=window.setProgress;
+  if(typeof _orig==='function'){
+    window.setProgress=function(p){
+      _orig(p);
+      if(pText) pText.textContent='Progress: '+(p>=100?'1/1':'0/1');
+      if(barUfo){
+        if(p>0) barUfo.classList.add('on');
+        else barUfo.classList.remove('on');
       }
-    };
-  }
-
-  // 4) กันเคสภาพยานไม่โหลด: บังคับตั้ง backgroundImage เป็นลิงก์เต็ม
-  const UFO_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
-  if (barUfo) {
-    barUfo.style.backgroundImage = `url("${UFO_EXACT}")`;
-    const _img = new Image(); _img.src = UFO_EXACT;
+    }
   }
 })();
 </script>
-<!-- ========== /ADD-ONLY PATCH ========== -->
+<!-- === /PATCH === -->
 </body>
 </html>
