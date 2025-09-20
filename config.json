@@ -2,6 +2,13 @@
   "expires_default": 600,
   "keys": [
     { "key": "UFO-KEY-AAA111", "reusable": true, "ttl": 600 },
-    { "key": "UFO-KEY-BBB222", "reusable": true,  "ttl": 600 }
+    { "key": "UFO-KEY-BBB222", "reusable": true,  "ttl": 600 },
+    { "key": "UFO-KEY-AAA333", "reusable": true, "ttl": 600 },
+    { "key": "UFO-KEY-AAA444", "reusable": true, "ttl": 600 },
+    { "key": "UFO-KEY-AAA555", "reusable": true, "ttl": 600 },
+    { "key": "UFO-KEY-AAA666", "reusable": true, "ttl": 600 },
+    { "key": "UFO-KEY-AAA777", "reusable": true, "ttl": 600 },
+    { "key": "UFO-KEY-AAA888", "reusable": true, "ttl": 600 },
+    { "key": "UFO-KEY-AAA999", "reusable": true, "ttl": 600 },
   ]
 }
