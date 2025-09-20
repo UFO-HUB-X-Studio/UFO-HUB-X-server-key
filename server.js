@@ -1,9 +1,8 @@
-// UFO-HUB-X Key Server + Image Proxy (Max Edition)
-// -----------------------------------------------
+// UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Original Version
 // Endpoints:
 //   GET /                     -> หน้าเว็บ (index.html)
-//   GET /getkey?uid=&place=   -> ออกคีย์
-//   GET /verify?key=&uid=&place= -> ตรวจสอบคีย์
+//   GET /getkey?uid=&place=   -> สุ่ม/คืนคีย์จากบัตร uid:place
+//   GET /verify?key=&uid=&place=
 //   GET /img/profile          -> proxy Discord profile
 //   GET /img/bg               -> proxy Discord bg
 
@@ -31,8 +30,8 @@ app.use((req, res, next) => {
 });
 
 /* ---------- Discord image URLs ---------- */
-const DISCORD_PROFILE = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png";
-const DISCORD_BG      = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png";
+const DISCORD_PROFILE = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cf8acb&is=68ce394b&hm=3c3e5b4819a3d0e07794caa3fc39bafbeee7a3bbc0b35796e16e0e21f663113b&";
+const DISCORD_BG      = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cf8b1a&is=68ce399a&hm=f73f6eefa017f23aee5effcad7154a69bafc0b052affd2b558cc5d37e5e3ff9d&";
 
 /* ---------- Proxy helper ---------- */
 function proxyImage(targetUrl, res) {
@@ -76,6 +75,11 @@ function loadIssued() {
 function saveIssued(obj) {
   fs.writeFileSync(ISSUED_PATH, JSON.stringify(obj, null, 2), "utf8");
 }
+
+/* ---------- Web ---------- */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 /* ---------- API: GETKEY ---------- */
 app.get("/getkey", (req, res) => {
@@ -144,25 +148,6 @@ app.get("/verify", (req, res) => {
     console.error("verify error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
   }
-});
-
-/* ---------- UI fix (สำคัญ): เสิร์ฟ index.html ให้เสมอเวลาคนเข้าเว็บ ---------- */
-const API_PREFIXES = ["/getkey", "/verify", "/img/"];
-app.get(["/", "/index.html"], (req, res) => {
-  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
-  res.type("text/html; charset=utf-8");
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-app.get("*", (req, res, next) => {
-  if (req.method !== "GET") return next();
-  const acceptHtml = (req.headers.accept || "").includes("text/html");
-  const isApi = API_PREFIXES.some(p => req.path.startsWith(p));
-  if (acceptHtml && !isApi) {
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
-    res.type("text/html; charset=utf-8");
-    return res.sendFile(path.join(__dirname, "public", "index.html"));
-  }
-  return next();
 });
 
 /* ---------- START ---------- */
