@@ -5,275 +5,147 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>UFO HUB X — Keys</title>
 <style>
-  /* ==================== THEME ==================== */
   :root{
-    --bg:#050806;                 /* ดำอมเขียว */
-    --panel:#0b1210;              /* แผงหลัก */
-    --panel-2:#0a1612;            /* แผงรอง */
-    --line:#103424;               /* เส้นกรอบ */
-    --text:#eafff4;               /* ตัวอักษร */
-    --muted:#99cdb6;              /* ตัวอักษรรอง */
-    --neon:#00ff8c;               /* เขียว UFO */
-    --neon-2:#00c36d;             /* เขียวเข้ม */
-    --danger:#ff6a6a;
-    --shadow:0 18px 60px rgba(0,0,0,.55);
+    --bg:#050806; --panel:#0b1210; --panel2:#0a1612; --line:#103424;
+    --text:#eafff4; --muted:#99cdb6; --neon:#00ff8c; --neon2:#00c36d;
+    --danger:#ff6a6a; --shadow:0 18px 60px rgba(0,0,0,.55);
     --glow:0 0 18px rgba(0,255,140,.35), 0 0 60px rgba(0,255,140,.2);
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif}
 
-  /* ===== Background layers ===== */
   .bgNoise{position:fixed;inset:0;z-index:-3;background:
     radial-gradient(1200px 600px at 80% -10%, rgba(0,255,140,.12), transparent 60%),
     radial-gradient(900px 520px at 10% 110%, rgba(0,255,140,.10), transparent 60%),
     var(--bg);}
   .bgImg{position:fixed;inset:0;z-index:-2;opacity:.28;
-    background:url("images/bg.png") center/cover no-repeat;
+    background:url("images/bg.png?v=2") center/cover no-repeat;
     filter:saturate(1.1) brightness(.9);}
 
   .container{max-width:1200px;margin:24px auto;padding:0 20px}
 
-  /* ===== Hero / Header ===== */
   .hero{
-    position:relative;
     background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.18));
-    border:1px solid var(--line);
-    border-radius:22px;
-    padding:22px 22px;
-    box-shadow:var(--shadow);
-    backdrop-filter: blur(6px);
-    overflow:hidden;
+    border:1px solid var(--line); border-radius:22px; padding:22px;
+    box-shadow:var(--shadow); backdrop-filter:blur(6px); position:relative; overflow:hidden;
   }
-  .hero::after{
-    content:"";
-    position:absolute; inset:-2px;
-    border-radius:22px;
-    pointer-events:none;
-    box-shadow: inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow);
-  }
+  .hero::after{content:"";position:absolute;inset:-2px;border-radius:22px;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow)}
   .heroRow{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center}
-  .avatar{
-    width:64px;height:64px;border-radius:50%;
-    border:1px solid var(--line); overflow:hidden; background:#0d1a14; box-shadow:var(--glow)
-  }
+  .avatar{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);overflow:hidden;background:#0d1a14;box-shadow:var(--glow)}
   .avatar img{width:100%;height:100%;object-fit:cover;display:block}
-  .title h1{margin:0;font-size:32px;line-height:1.1;letter-spacing:.3px}
+  .title h1{margin:0;font-size:32px;line-height:1.1}
   .title p{margin:4px 0 0;color:var(--muted)}
-  .progBox{min-width:320px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
-  .btn{
-    appearance:none;border:none;border-radius:14px;
-    padding:12px 18px;font-weight:800;cursor:pointer;
-    color:#00170a;background:var(--neon);box-shadow:var(--glow);
-  }
+  .prog{min-width:320px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+  .btn{appearance:none;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer;color:#00170a;background:var(--neon);box-shadow:var(--glow)}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .bar{height:12px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#07140e}
   .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--neon),#67ffb8);box-shadow:var(--glow);transition:width .35s ease}
 
-  /* ===== Board ===== */
-  .board{
-    margin-top:18px;
-    background:linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.18));
-    border:1px solid var(--line);
-    border-radius:22px;
-    box-shadow:var(--shadow);
-    overflow:hidden;
-  }
-  .boardHead{
-    display:grid;grid-template-columns:1.8fr 1fr .9fr .9fr;gap:14px;
-    padding:16px 18px;color:var(--muted);border-bottom:1px solid var(--line);
-    background:rgba(0,0,0,.1)
-  }
+  .board{margin-top:18px;background:linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.18));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+  .boardHead{display:grid;grid-template-columns:1.8fr 1fr .9fr .9fr;gap:14px;padding:16px 18px;color:var(--muted);border-bottom:1px solid var(--line);background:rgba(0,0,0,.1)}
   .list{padding:6px 10px}
-  .row{
-    display:grid;grid-template-columns:1.8fr 1fr .9fr .9fr;gap:14px;
-    align-items:center;padding:14px 8px;border-bottom:1px dashed var(--line)
-  }
+  .row{display:grid;grid-template-columns:1.8fr 1fr .9fr .9fr;gap:14px;align-items:center;padding:14px 8px;border-bottom:1px dashed var(--line)}
   .row:last-child{border-bottom:none}
   .kcell{display:flex;align-items:center;gap:12px}
-  .copy{
-    width:44px;height:44px;border-radius:14px;background:var(--panel-2);
-    border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;color:var(--text)
-  }
-  .pill{
-    display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;
-    background:#07150f;border:1px solid var(--line);font-weight:800
-  }
+  .copy{width:44px;height:44px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;color:var(--text)}
+  .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:#07150f;border:1px solid var(--line);font-weight:800}
   .pill i{color:#ffd966}
   .muted{color:var(--muted)}
-  .badge{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-weight:900;font-size:12px;letter-spacing:.3px}
-  .ok{background:rgba(0,255,140,.12); color:var(--neon); border:1px solid rgba(0,255,140,.4)}
-  .bad{background:rgba(255,106,106,.12); color:var(--danger); border:1px solid rgba(255,106,106,.35)}
-
+  .badge{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-weight:900;font-size:12px}
+  .ok{background:rgba(0,255,140,.12);color:var(--neon);border:1px solid rgba(0,255,140,.4)}
   .actions{display:flex;gap:10px}
-  .btnGhost{
-    padding:10px 14px;border-radius:12px;background:#0c1914;color:var(--text);
-    border:1px solid var(--line);font-weight:800;cursor:pointer
-  }
-
-  .boardFoot{
-    display:flex;justify-content:center;padding:16px;border-top:1px solid var(--line);
-    background:rgba(0,0,0,.06)
-  }
-  .btnPlus{
-    background:#0e1b15;color:var(--text);border:1px solid var(--line);box-shadow:none
-  }
-
-  .inputs{
-    display:flex;gap:12px;flex-wrap:wrap;padding:16px;border-top:1px solid var(--line);
-    background:rgba(0,0,0,.06)
-  }
-  .inp{
-    background:#08140f;border:1px solid var(--line);color:var(--text);
-    padding:12px;border-radius:12px;min-width:220px;flex:1
-  }
+  .btnGhost{padding:10px 14px;border-radius:12px;background:#0c1914;color:var(--text);border:1px solid var(--line);font-weight:800;cursor:pointer}
+  .boardFoot{display:flex;justify-content:center;padding:16px;border-top:1px solid var(--line);background:rgba(0,0,0,.06)}
+  .btnPlus{background:#0e1b15;color:var(--text);border:1px solid var(--line);box-shadow:none}
+  .inputs{display:flex;gap:12px;flex-wrap:wrap;padding:16px;border-top:1px solid var(--line);background:rgba(0,0,0,.06)}
+  .inp{background:#08140f;border:1px solid var(--line);color:var(--text);padding:12px;border-radius:12px;min-width:220px;flex:1}
   .note{padding:0 16px 18px;color:var(--muted);font-size:12px}
 
-  /* ===== Mobile ===== */
-  @media (max-width:900px){
-    .heroRow{grid-template-columns:auto 1fr;gap:14px}
-    .progBox{grid-column:1 / -1}
-    .boardHead, .row{grid-template-columns:1.6fr 1fr .8fr 1fr}
-  }
-  @media (max-width:640px){
-    .title h1{font-size:26px}
-    .boardHead{display:none}
-    .row{
-      grid-template-columns:1fr;
-      gap:6px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      margin:10px 0;
-      background:rgba(0,0,0,.06)
-    }
-    .actions{justify-content:flex-end}
-  }
+  @media (max-width:900px){.heroRow{grid-template-columns:auto 1fr;gap:14px}.prog{grid-column:1/-1}.boardHead,.row{grid-template-columns:1.6fr 1fr .8fr 1fr}}
+  @media (max-width:640px){.title h1{font-size:26px}.boardHead{display:none}.row{grid-template-columns:1fr;gap:6px;border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(0,0,0,.06)}.actions{justify-content:flex-end}}
 </style>
 </head>
 <body>
-  <div class="bgNoise"></div>
-  <div class="bgImg"></div>
+<div class="bgNoise"></div>
+<div class="bgImg"></div>
 
-  <div class="container">
-    <!-- ============== HERO ============== -->
-    <section class="hero">
-      <div class="heroRow">
-        <div class="avatar">
-          <!-- รูปโปรไฟล์จากเซิร์ฟเวอร์เราเอง -->
-          <img src="images/profile.png" alt="profile">
-        </div>
-        <div class="title">
-          <h1>Speed<br/>Hub X<br/>Linkvertise</h1>
-          <p>Progress: <span id="ptext">0/2</span></p>
-        </div>
-        <div class="progBox">
-          <button id="startBtn" class="btn" onclick="onStart()">START</button>
-          <div class="bar"><i id="pfill"></i></div>
-        </div>
+<div class="container">
+  <section class="hero">
+    <div class="heroRow">
+      <div class="avatar">
+        <img src="images/profile.png?v=2" alt="profile"
+             onerror="this.onerror=null;this.src='';this.style.background='radial-gradient(50px 50px at 50% 50%, rgba(0,255,140,.35), transparent 60%)';">
       </div>
-    </section>
-
-    <!-- ============== BOARD ============== -->
-    <section class="board">
-      <div class="boardHead">
-        <div>YOUR KEYS (<span id="kcount">0</span>/6)</div>
-        <div>TIME LEFT</div>
-        <div>STATUS</div>
-        <div>ACTIONS</div>
+      <div class="title">
+        <h1>Speed<br/>Hub X<br/>Linkvertise</h1>
+        <p>Progress: <span id="ptext">0/2</span></p>
       </div>
-
-      <div id="list" class="list"></div>
-
-      <div class="boardFoot">
-        <button class="btn btnPlus" onclick="requestKey()">＋ GET A NEW KEY</button>
+      <div class="prog">
+        <button id="startBtn" class="btn" onclick="onStart()">START</button>
+        <div class="bar"><i id="pfill"></i></div>
       </div>
+    </div>
+  </section>
 
-      <div class="inputs">
-        <input id="uid"   class="inp" placeholder="UID (e.g. 123)">
-        <input id="place" class="inp" placeholder="Place (e.g. 999)">
-      </div>
-      <div class="note">กรอก UID/Place ของคุณ แล้วกด “GET A NEW KEY”</div>
-    </section>
-  </div>
+  <section class="board">
+    <div class="boardHead">
+      <div>YOUR KEYS (<span id="kcount">0</span>/6)</div>
+      <div>TIME LEFT</div>
+      <div>STATUS</div>
+      <div>ACTIONS</div>
+    </div>
+
+    <div id="list" class="list"></div>
+
+    <div class="boardFoot">
+      <button class="btn btnPlus" onclick="requestKey()">＋ GET A NEW KEY</button>
+    </div>
+
+    <div class="inputs">
+      <input id="uid" class="inp" placeholder="UID (e.g. 123)">
+      <input id="place" class="inp" placeholder="Place (e.g. 999)">
+    </div>
+    <div class="note">กรอก UID/Place ของคุณ แล้วกด “GET A NEW KEY”</div>
+  </section>
+</div>
 
 <script>
-  /* ==================== CONFIG ==================== */
-  const API_BASE = ""; // ถ้า API อยู่โดเมนเดียวกับเว็บ ปล่อยว่างไว้ได้
+  const API_BASE = ""; // ถ้า API อยู่โดเมนเดียวกับเว็บ ปล่อยว่างไว้
 
-  /* ==================== STATE ===================== */
-  let progress = 0; // 0..2
-  let keys = [];    // [{key, expires_at}]
+  let progress = 0;         // 0..2
+  let keys = [];            // [{key, expires_at}]
 
-  /* ==================== HELPERS =================== */
   const $ = s => document.querySelector(s);
-  function fmtLeft(sec){
-    if (sec<=0) return "00:00:00";
-    const h = String(Math.floor(sec/3600)).padStart(2,"0");
-    const m = String(Math.floor((sec%3600)/60)).padStart(2,"0");
-    const s = String(sec%60).padStart(2,"0");
-    return `${h}:${m}:${s}`;
-  }
-  function toast(msg){
-    const el = document.createElement("div");
-    el.textContent = msg;
-    el.style.cssText = "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#0a1a14;color:#eafff4;border:1px solid #103424;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999";
-    document.body.appendChild(el);
-    setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s' }, 1200);
-    setTimeout(()=>el.remove(), 1600);
-  }
+  function fmtLeft(sec){ if(sec<=0) return "00:00:00"; const h=String(Math.floor(sec/3600)).padStart(2,"0"); const m=String(Math.floor((sec%3600)/60)).padStart(2,"0"); const s=String(sec%60).padStart(2,"0"); return `${h}:${m}:${s}`; }
+  function toast(msg){ const el=document.createElement("div"); el.textContent=msg; el.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#0a1a14;color:#eafff4;border:1px solid #103424;padding:10px 14px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:9999"; document.body.appendChild(el); setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .25s'},1200); setTimeout(()=>el.remove(),1600); }
   function copyText(s){ navigator.clipboard.writeText(s).then(()=>toast("Copied")).catch(()=>toast("Copy failed")); }
 
-  /* ==================== RENDER ==================== */
   function render(){
     $("#kcount").textContent = Math.min(keys.length, 6);
     const list = $("#list"); list.innerHTML = "";
 
     keys.forEach((k, idx)=>{
-      const row = document.createElement("div");
-      row.className = "row";
+      const row = document.createElement("div"); row.className="row";
 
-      // col 1: key
-      const c1 = document.createElement("div");
-      c1.className = "kcell";
-      const bCopy = document.createElement("button");
-      bCopy.className = "copy"; bCopy.textContent = "📋";
-      bCopy.onclick = ()=>copyText(k.key);
-      const pill = document.createElement("span");
-      pill.className = "pill";
-      pill.innerHTML = `<i>🔑</i> ${k.key.slice(0,6)}…${k.key.slice(-6)}`;
+      const c1 = document.createElement("div"); c1.className="kcell";
+      const bCopy = document.createElement("button"); bCopy.className="copy"; bCopy.textContent="📋"; bCopy.onclick=()=>copyText(k.key);
+      const pill = document.createElement("span"); pill.className="pill"; pill.innerHTML=`<i>🔑</i> ${k.key.slice(0,6)}…${k.key.slice(-6)}`;
       c1.append(bCopy, pill);
 
-      // col 2: time left
-      const c2 = document.createElement("div");
-      c2.className = "muted"; c2.id = `left-${idx}`;
+      const c2 = document.createElement("div"); c2.className="muted"; c2.id=`left-${idx}`;
 
-      // col 3: status
       const c3 = document.createElement("div");
-      const badge = document.createElement("span");
-      badge.className = "badge ok"; badge.textContent = "ACTIVE";
+      const badge = document.createElement("span"); badge.className="badge ok"; badge.textContent="ACTIVE";
       c3.appendChild(badge);
 
-      // col 4: actions
-      const c4 = document.createElement("div");
-      c4.className = "actions";
-      const ex = document.createElement("button");
-      ex.className = "btnGhost"; ex.textContent = "⏳ +24H";
-      ex.onclick = ()=>toast("ยังไม่รองรับ /extend");
+      const c4 = document.createElement("div"); c4.className="actions";
+      const ex = document.createElement("button"); ex.className="btnGhost"; ex.textContent="⏳ +24H"; ex.onclick=()=>toast("ยังไม่รองรับ /extend");
       c4.appendChild(ex);
 
-      row.append(c1,c2,c3,c4);
-      list.appendChild(row);
+      row.append(c1,c2,c3,c4); list.appendChild(row);
     });
 
-    tick(); // อัปเดตเวลาเริ่มต้นทันที
+    tick();
   }
 
   function tick(){
@@ -285,40 +157,28 @@
   }
   setInterval(tick, 1000);
 
-  // header progress
-  function setProgress(v){
-    progress = Math.max(0, Math.min(2, v));
-    $("#ptext").textContent = `${progress}/2`;
-    $("#pfill").style.width = (progress/2*100) + "%";
-    $("#startBtn").textContent = progress>=1 ? "NEXT" : "START";
-  }
+  function setProgress(v){ progress=Math.max(0,Math.min(2,v)); $("#ptext").textContent=`${progress}/2`; $("#pfill").style.width=(progress/2*100)+"%"; $("#startBtn").textContent=progress>=1?"NEXT":"START"; }
   function onStart(){ setProgress(progress+1); }
 
-  /* ==================== API ====================== */
   async function requestKey(){
     const uid = $("#uid").value.trim();
     const place = $("#place").value.trim();
     if(!uid || !place){ toast("กรอก UID และ Place ก่อน"); return; }
-
     try{
       const res = await fetch(`${API_BASE}/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
       const data = await res.json();
       if(!data || !data.ok){ toast("getkey ล้มเหลว"); return; }
-
       const exp = data.expires_at || (Date.now()/1000 + 600);
       keys = [{ key: data.key, expires_at: exp }];
-      render();
-      setProgress(1);
-      toast("ได้คีย์แล้ว!");
-    }catch(e){
-      console.error(e);
-      toast("ติดต่อเซิร์ฟเวอร์ไม่ได้");
-    }
+      render(); setProgress(1); toast("ได้คีย์แล้ว!");
+    }catch(e){ console.error(e); toast("ติดต่อเซิร์ฟเวอร์ไม่ได้"); }
   }
 
-  // init
-  setProgress(0);
-  render();
+  // ช่วย debug ถ้ารูปหาย
+  fetch("images/profile.png?v=2").then(r=>{ if(!r.ok) console.warn("profile.png missing"); });
+  fetch("images/bg.png?v=2").then(r=>{ if(!r.ok) console.warn("bg.png missing"); });
+
+  setProgress(0); render();
 </script>
 </body>
 </html>
