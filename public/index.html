@@ -145,9 +145,9 @@
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY        = 18000;   // ✅ UI กรอบโผล่หลัง 18 วิ
+  const ARM_DELAY        = 18000;   // ✅ กรอบโผล่หลัง 18 วิ
   const MIN_VISIT        = 5000;    // ต้องออกไปอย่างน้อย 5 วิ
-  const OVERLAY_MS       = 20000;   // overlay 0-100% 20 วิ (โดเมน onrender)
+  const OVERLAY_MS       = 20000;   // overlay 0-100% 20 วิ (เฉพาะโดเมน onrender)
   const UFO_PROGRESS_MS  = 22000;   // ✅ หลอดสีเขียว + UFO วิ่ง 22 วิ
 
   /* ===== Elements ===== */
@@ -164,7 +164,7 @@
 
   let raf = null;
 
-  /* ===== Progress + UFO ===== */
+  /* ===== Progress + UFO (ของเดิม) ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
@@ -176,7 +176,7 @@
     barUfo.style.left = (tipInside + LEAD) + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
-    // ชื่อขึ้น 0/1 จนกว่าจะครบ 100
+    // ขึ้น 0/1 จนกว่าจะครบ 100
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
 
@@ -199,12 +199,12 @@
     raf = requestAnimationFrame(tick);
   }
 
-  /* ===== Show bar frame after 18s ===== */
+  /* ===== โชว์กรอบหลัง 18 วิ ===== */
   function showBarAfterDelay(){
     setTimeout(()=>{
       progressMeta.classList.remove('is-hidden');
       barWrap.classList.remove('is-hidden');
-      // ยืนยันชื่อเริ่มต้นและ % เป็น 0
+      // ตั้งค่าเริ่มให้ถูกต้อง
       pText.textContent = 'Progress: 0/1';
       percentEl.textContent = '0%';
       // ถ้ากลับมาจริงแล้ว ค่อยวิ่ง 22 วิ
@@ -212,7 +212,7 @@
     }, ARM_DELAY);
   }
 
-  /* ===== Return detection ===== */
+  /* ===== ตรวจการกลับมา ===== */
   function isValidReturn(){
     try{
       const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
@@ -231,7 +231,7 @@
     }
   }
 
-  /* ===== Overlay 0→100% 20s (onrender only) ===== */
+  /* ===== Overlay 0→100% 20s (เฉพาะโดเมน onrender) ===== */
   function showDownloadOverlay(){
     if(location.hostname !== DOMAIN_OK) return;
     document.body.classList.add('locked');
@@ -266,7 +266,11 @@
 
   /* ===== Events ===== */
   startBtn.addEventListener('click', ()=>{
-    try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
+    // เซ็ต timestamp กลับมา “จริง” + ธงเริ่มต้นของ session (patch จะอ่าน)
+    try{
+      localStorage.setItem(RETURN_KEY, String(Date.now()));
+      sessionStorage.setItem('ufo_started_session','1');
+    }catch(e){}
     window.location.href = START_URL;
   });
 
@@ -291,5 +295,69 @@
     autoCompleteIfReturned(true);
   });
 </script>
+
+<!-- ========== ADD-ONLY PATCH: กัน “หลอดสีเขียว+UFO” วิ่งก่อนกด START และคุมชื่อ 0/1 -> 1/1 ========== -->
+<script>
+(function(){
+  const bar        = document.getElementById('bar');
+  const barUfo     = document.getElementById('barUfo');
+  const pText      = document.getElementById('progressText');
+  const percentEl  = document.getElementById('percentText');
+  const startBtn   = document.getElementById('startBtn');
+
+  /* ---------- สถานะเริ่มต้น (กันเคสเพิ่งเข้าเว็บแล้วขึ้นผิด) ---------- */
+  if (bar){
+    // ซ่อนหลอดสีเขียวไว้จนกว่าจะ “ผ่านเกต”
+    bar.style.width = '0%';
+    bar.style.opacity = '0';
+  }
+  if (barUfo){ barUfo.classList.remove('on'); }
+  if (pText){ pText.textContent = 'Progress: 0/1'; }
+  if (percentEl){ percentEl.textContent = '0%'; }
+
+  /* ---------- เกตของเซสชันนี้: ต้องกด START ก่อน ---------- */
+  const SESSION_FLAG = 'ufo_started_session';
+  function markStarted(){ try{ sessionStorage.setItem(SESSION_FLAG,'1'); }catch(e){} }
+  function isStarted(){ try{ return sessionStorage.getItem(SESSION_FLAG)==='1'; }catch(e){ return false; } }
+
+  // ติดธงทันทีที่กด START (ก่อน redirect)
+  if (startBtn){
+    startBtn.addEventListener('click', markStarted, { capture:true });
+  }
+
+  /* ---------- ห่อ runProgress: ยังไม่กด START ⇒ ไม่ให้วิ่ง ---------- */
+  const _runProgress = window.runProgress;
+  if (typeof _runProgress === 'function'){
+    window.runProgress = function(pTarget, duration){
+      if (!isStarted()) return;      // บล็อกก่อนกด START
+      if (bar) bar.style.opacity = '1';  // ผ่านเกตแล้วค่อยโชว์แท่งเขียว
+      return _runProgress.apply(this, arguments);
+    };
+  }
+
+  /* ---------- ห่อ autoCompleteIfReturned: ต้องผ่านเกตด้วย ---------- */
+  const _autoComplete = window.autoCompleteIfReturned;
+  if (typeof _autoComplete === 'function'){
+    window.autoCompleteIfReturned = function(onlyIfVisible){
+      if (!isStarted()) return;      // ยังไม่กด START ในเซสชันนี้ ⇒ ไม่ต้องวิ่ง
+      return _autoComplete.apply(this, arguments);
+    };
+  }
+
+  /* ---------- ห่อ setProgress: บังคับชื่อ 0/1 จนถึง 100 และซิงก์ UFO ---------- */
+  const _setProgress = window.setProgress;
+  if (typeof _setProgress === 'function'){
+    window.setProgress = function(p){
+      _setProgress(p);
+      if (pText) pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
+      if (barUfo){
+        if (p > 0 && isStarted()) barUfo.classList.add('on');  // เริ่มมีหลอดแล้ว + ผ่านเกต ⇒ โชว์ UFO
+        else barUfo.classList.remove('on');
+      }
+    };
+  }
+})();
+</script>
+<!-- ========== /ADD-ONLY PATCH ========== -->
 </body>
 </html>
