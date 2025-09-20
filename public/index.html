@@ -10,7 +10,6 @@
 
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
-<link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
 
 <style>
   :root{
@@ -18,9 +17,6 @@
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
-    /* ใช้ลิงก์ยานแบบ exact ที่ให้ */
-    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    --ufo-lead: 8px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -30,11 +26,9 @@
     color:var(--text);
     background:url("/img/bg") center/cover fixed no-repeat;
   }
-  body.locked{overflow:hidden;}
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
-  /* HERO */
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
   .hero-box{
     display:inline-block; max-width:320px; width:90vw;
@@ -44,13 +38,11 @@
   }
   .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
 
-  /* CARD */
   .card{
     background:linear-gradient(180deg,var(--panel1),var(--panel2));
     border-radius:18px;
     box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
     padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
-    overflow:visible;
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -58,32 +50,10 @@
   .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
   .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
 
-  /* Progress UI */
-  .progress-meta{
-    display:flex;align-items:center;justify-content:space-between;
-    margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;
-    text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;
-  }
-  .bar-wrap{
-    position:relative;width:100%;height:18px;border-radius:10px;
-    overflow:visible;
-    background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
-    box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
-  }
-  .bar{
-    position:absolute;left:0;top:0;bottom:0;width:0%;
-    background:linear-gradient(90deg,#00ffa3,#3bffbf);
-    box-shadow:0 0 18px rgba(34,255,200,.35);
-    z-index:1; opacity:0; transition:opacity .25s ease;
-  }
-  .bar.visible{opacity:1;}
-  .bar-ufo{
-    position:absolute; top:50%; transform:translate(-50%,-50%);
-    width:50px;height:50px; opacity:0; transition:opacity .2s ease;
-    background:var(--ufo-ship) center/contain no-repeat;
-    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));
-    z-index:8; pointer-events:none;
-  }
+  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75)}
+  .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);}
+  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35)}
+  .bar-ufo{position:absolute; top:50%; transform:translate(-50%,-50%);width:50px;height:50px; opacity:0; background:url("/img/profile") center/contain no-repeat;filter:drop-shadow(0 0 14px rgba(0,255,160,.9));z-index:8;}
   .bar-ufo.on{opacity:1;}
 
   .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
@@ -92,53 +62,34 @@
   table{width:100%;border-collapse:collapse;color:var(--text);font-size:14px}
   th,td{padding:10px 8px;text-align:center}
   th{color:#77ffc8;font-weight:600}
-
-  @media (max-width:560px){
-    .head-title{font-size:34px}
-    .bar-ufo{width:46px;height:46px}
-  }
-
-  /* Overlay ดาวน์โหลด */
-  .overlay{position:fixed; inset:0; z-index:9999;display:flex; align-items:center; justify-content:center;background:rgba(4,10,9,.75);backdrop-filter: blur(4px);}
-  .overlay.hidden{display:none;}
-  .dl-box{width:min(360px, 92vw);padding:22px 20px;border-radius:18px;background:linear-gradient(180deg, rgba(9,16,23,.92), rgba(8,13,19,.96));box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(0,255,160,.2);text-align:center;}
-  .spinner{margin:8px auto 12px; width:72px; height:72px; border-radius:50%;border:6px solid rgba(0,255,160,.18);border-top-color:#00ffa3;animation:spin 1s linear infinite;box-shadow:0 0 20px rgba(0,255,160,.35) inset;}
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .dl-title{font-weight:900; font-size:20px; color:#cffff2; margin:2px 0 8px;}
-  .dl-count{font-size:24px; font-weight:900; color:#ffea63; text-shadow:0 0 10px rgba(255,234,99,.35);}
-  .dl-note{font-size:12px; opacity:.85; color:#b9ffee; margin-top:8px;}
 </style>
 </head>
 <body>
   <div class="container">
 
-    <!-- HERO -->
     <div class="hero">
       <div class="hero-box">
         <img class="hero-img" src="/img/profile" alt="UFO HUB X">
       </div>
     </div>
 
-    <!-- Title + Button + Progress -->
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- กรอบ + ข้อความโชว์ตั้งแต่แรก และบังคับชื่อเป็น 1/1 -->
       <div class="progress-meta" id="progressMeta">
-        <div id="progressText">Progress: 1/1</div>
+        <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
-        <div class="bar-ufo" id="barUfo" style="left:0px"></div>
+        <div class="bar-ufo" id="barUfo"></div>
       </div>
     </section>
 
-    <!-- Your Key -->
     <section class="card">
       <div class="key-head">
         <div class="key-title">🔑 Your Key</div>
@@ -152,166 +103,36 @@
 
   </div>
 
-  <!-- Overlay ดาวน์โหลด (เฉพาะโดเมนที่กำหนด) -->
-  <div class="overlay hidden" id="dlOverlay" aria-live="polite" aria-busy="true">
-    <div class="dl-box">
-      <div class="spinner" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-      <div class="dl-title">Preparing download…</div>
-      <div class="dl-count"><span id="dlSeconds">0</span>%</div>
-      <div class="dl-note">Please wait while we get things ready.</div>
-    </div>
-  </div>
-
 <script>
-  /* ===== CONFIG ===== */
-  const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com"; // ให้ overlay ทำงานเฉพาะโดเมนนี้
-  const RETURN_KEY  = "ufo_return_ts";
-
-  const ARM_DELAY   = 23000;     // เก็บค่าเดิมไว้ (เราโชว์กรอบทันทีอยู่แล้ว)
-  const MIN_VISIT   = 5000;      // ต้องออกไปอย่างน้อย 5 วิ ถึงจะถือว่ากลับจริง
-  const DL_TOTAL_MS = 20000;     // overlay 20 วิ (0→100)
-  const IMG_TIMEOUT = 20000;     // preload รูปภายใน 20 วิ
-
-  /* ===== Elements ===== */
-  const bar         = document.getElementById('bar');
-  const barWrap     = document.getElementById('barWrap');
-  const barUfo      = document.getElementById('barUfo');
-  const pText       = document.getElementById('progressText');
-  const percentEl   = document.getElementById('percentText');
-  const startBtn    = document.getElementById('startBtn');
-
-  const dlOverlay   = document.getElementById('dlOverlay');
-  const dlSecondsEl = document.getElementById('dlSeconds');
-
+  const bar       = document.getElementById('bar');
+  const barUfo    = document.getElementById('barUfo');
+  const pText     = document.getElementById('progressText');
+  const percentEl = document.getElementById('percentText');
   let raf = null;
 
-  /* ===== Progress / UFO ===== */
   function setProgress(p){
-    p = Math.max(0, Math.min(100, p));
+    if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
-
-    const barRect  = bar.getBoundingClientRect();
-    const wrapRect = barWrap.getBoundingClientRect();
-    const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-    const LEAD = 8;
-    barUfo.style.left = (tipInside + LEAD) + 'px';
-
     percentEl.textContent = p.toFixed(0) + '%';
-    // บังคับชื่อเป็น 1/1 เสมอ (แก้บัคเปิดครั้งแรกเป็น 0/1)
-    if (pText) pText.textContent = 'Progress: 1/1';
+    pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
+    if(p>0){ barUfo.classList.add('on'); }
   }
 
-  // ความเร็วหลอด 5 วิ และให้ UFO คงอยู่ (ไม่ซ่อนหลังครบ 100)
   function runProgress(pTarget=100, duration=5000){
     cancelAnimationFrame(raf);
-    bar.classList.add('visible');   // โชว์แท่งสีเขียวเมื่อเริ่มวิ่ง
-    barUfo.classList.add('on');     // UFO ขึ้นพร้อมกัน
     const pStart = parseFloat(bar.style.width) || 0;
     const t0 = performance.now();
     function tick(ts){
       const t = Math.min(1, (ts - t0)/duration);
       const p = pStart + (pTarget - pStart) * t;
       setProgress(p);
-      if(t < 1){
-        raf = requestAnimationFrame(tick);
-      }else{
-        // ครบ 100% แล้ว "ไม่ซ่อน" UFO ตามที่สั่ง
-        setProgress(100);
-      }
+      if(t < 1){ raf = requestAnimationFrame(tick); }
     }
     raf = requestAnimationFrame(tick);
   }
 
-  function isValidReturn(){
-    try{
-      const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
-      if(!ts) return false;
-      return (Date.now() - ts) >= MIN_VISIT;
-    }catch(e){ return false; }
-  }
-  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY);}catch(e){} }
-  function autoCompleteIfReturned(onlyIfVisible=false){
-    // โดเมนเช็คเฉพาะงานกลับจาก START
-    if(location.hostname!==DOMAIN_OK) return;
-
-    if(onlyIfVisible){
-      // กรอบเราโชว์ตั้งแต่แรกแล้ว แต่กันไว้ให้ครบ
-      if(!barWrap || !bar) return;
-    }
-    if(isValidReturn()){
-      clearReturnMark();
-      runProgress(100,5000);
-    }
-  }
-
-  /* ===== Overlay ดาวน์โหลด 0→100% ใน 20 วิ (เฉพาะโดเมน) ===== */
-  function showDownloadOverlay(){
-    if(location.hostname !== DOMAIN_OK) return;
-    document.body.classList.add('locked');
-    dlOverlay.classList.remove('hidden');
-    const start = Date.now();
-    const timer = setInterval(()=>{
-      const elapsed = Date.now() - start;
-      const percent = Math.min(100, Math.floor((elapsed / DL_TOTAL_MS)*100));
-      dlSecondsEl.textContent = percent;
-      const spinner = dlOverlay.querySelector('.spinner');
-      if (spinner) spinner.setAttribute('aria-valuenow', String(percent));
-      if(elapsed >= DL_TOTAL_MS){
-        clearInterval(timer);
-        dlOverlay.classList.add('hidden');
-        document.body.classList.remove('locked');
-      }
-    }, 100);
-  }
-
-  /* ===== Preload รูปภายใน 20 วิ ===== */
-  function preloadImages(urls, timeoutMs=IMG_TIMEOUT){
-    return new Promise(resolve=>{
-      let done=false; const timer=setTimeout(()=>{if(!done){done=true;resolve();}},timeoutMs);
-      let loaded=0;
-      urls.forEach(u=>{
-        const img=new Image();
-        img.onload=img.onerror=()=>{ if(done) return; if(++loaded>=urls.length){done=true;clearTimeout(timer);resolve();}};
-        img.src=u;
-      });
-    });
-  }
-
-  /* ===== ปุ่ม START ===== */
-  startBtn.addEventListener('click', ()=>{
-    try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
-    window.location.href = START_URL;
-  });
-
-  /* ===== เริ่มทำงานเมื่อเข้าเว็บ ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
-    // กรอบ + ชื่อ โชว์ตั้งแต่แรก
-    if (pText) pText.textContent = 'Progress: 1/1';
-    // ซ่อนแท่งสีเขียวไว้ก่อนจนกว่าจะเริ่มวิ่ง
-    bar.classList.remove('visible');
-    bar.style.width = '0%';
-    // UFO เริ่มซ่อนจนกว่าจะ p>0
-    barUfo.classList.remove('on');
-
-    // พรีโหลดรูป (ไม่บล็อก UI)
-    preloadImages([
-      '/img/bg',
-      '/img/profile',
-      // ใช้ลิงก์ exact เดิม (มี query)
-      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&'
-    ]);
-
-    // ถ้ากลับมาจาก START แล้ว ให้วิ่ง 5 วิ
-    autoCompleteIfReturned(true);
-
-    // Overlay 20 วิ (เฉพาะโดเมน)
-    showDownloadOverlay();
-  });
-
-  // เผื่อ BFCache/Back-Forward
-  window.addEventListener('pageshow', ()=>{
-    autoCompleteIfReturned(true);
+    setProgress(0); // บังคับเริ่ม 0/1
   });
 </script>
 </body>
