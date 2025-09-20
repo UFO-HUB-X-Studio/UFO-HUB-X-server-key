@@ -1,269 +1,200 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>UFO HUB X</title>
-
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
-
 <style>
   :root{
-    --bg:#07100c;
-    --card:#0b1512;
-    --card2:#0c1714;
-    --line:#123a27;
-    --soft:#0a2017;
-    --text:#ecfff6;
-    --muted:#9cdac0;
-    --neon:#1dfc9d;
-    --neon-2:#00ff84;
-    --accent:#00f58a;
-    --danger:#ff6b6b;
-    --shadow:0 18px 60px rgba(0,0,0,.6);
-    --glow:0 0 24px rgba(0,255,132,.35), 0 0 60px rgba(0,255,132,.18);
+    --bg:#07100c; --panel:#0b1411; --line:#103b28;
+    --text:#ecfff6; --muted:#9edbc2; --neon:#00ff8c; --neon2:#27ffb1;
+    --shadow:0 14px 40px rgba(0,0,0,.55);
+    --glow:0 0 16px rgba(0,255,140,.28), 0 0 38px rgba(0,255,140,.16);
+    --r-lg:18px;
   }
-
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:'Inter',system-ui,Segoe UI,Roboto,Arial; -webkit-font-smoothing:antialiased;
+    margin:0; color:var(--text); background:var(--bg);
+    font-family:'Inter',system-ui,Segoe UI,Roboto,Arial;
     background-image:
-      radial-gradient(1200px 600px at 90% -10%, rgba(0,255,132,.12), transparent 60%),
-      radial-gradient(900px 520px at 10% 110%, rgba(0,255,132,.10), transparent 60%),
+      radial-gradient(900px 420px at 90% -10%, rgba(0,255,140,.10), transparent 60%),
+      radial-gradient(700px 380px at 10% 110%, rgba(0,255,140,.08), transparent 60%),
       url("/img/bg");
     background-size:cover; background-attachment:fixed; background-position:center;
   }
+  .wrap{max-width:680px; margin:18px auto; padding:0 12px}
 
-  .wrap{max-width:880px;margin:30px auto;padding:0 16px}
-
-  /* ----- generic card ----- */
   .card{
-    background:linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.15));
-    border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow);
-    backdrop-filter:blur(6px); position:relative; overflow:hidden;
+    background:linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.14));
+    border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--shadow); backdrop-filter:blur(4px); overflow:hidden; position:relative;
   }
-  .card::after{
-    content:""; position:absolute; inset:-2px; border-radius:22px; pointer-events:none;
-    box-shadow:inset 0 0 0 1px rgba(0,255,140,.08), inset var(--glow);
-  }
+  .card::after{content:""; position:absolute; inset:-1px; border-radius:var(--r-lg); pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(0,255,140,.07), inset var(--glow);}
 
-  /* ===== TOP VISUAL ===== */
-  .visual{
-    padding:26px 26px 18px;
-    display:flex; justify-content:center;
-  }
-  .art{
-    width:360px; max-width:86vw; aspect-ratio:1/1;
-    border-radius:18px; background:#0f1f19; overflow:hidden;
-    border:1px solid var(--line); box-shadow:var(--glow);
-  }
-  .art img{width:100%; height:100%; object-fit:cover; display:block}
+  .visual{padding:14px 14px 6px; display:flex; justify-content:center}
+  .art{width:280px; border-radius:14px; background:#0f1f19; border:1px solid var(--line); overflow:hidden; box-shadow:var(--glow)}
+  .art img{display:block; width:100%; height:100%; object-fit:cover}
 
-  /* ===== HEADER BAR (UFO HUB X + START) ===== */
-  .bar{
-    margin-top:16px; padding:14px 18px 18px;
-    display:flex; align-items:center; gap:12px;
+  .strip{display:flex; align-items:center; gap:10px; padding:10px 12px}
+  .pill{
+    background:#0b2119; border:1px solid var(--line); color:#b2ffe0;
+    font:700 13px 'Orbitron',sans-serif; padding:8px 12px; border-radius:999px; box-shadow:var(--glow)
   }
-  .pillTitle{
-    background:#0a2219; border:1px solid var(--line);
-    color:#a9ffd6; font:700 15px/1 'Orbitron',sans-serif; letter-spacing:.8px;
-    padding:10px 14px; border-radius:999px; box-shadow:var(--glow);
-  }
-  .spacer{flex:1}
-  .btn{
-    appearance:none; border:none; cursor:pointer; font-weight:800;
-    padding:12px 18px; border-radius:14px; transition:.16s;
-  }
-  .btnPrimary{
-    background:var(--neon); color:#042417; box-shadow:var(--glow);
-  }
+  .sp{flex:1}
+  .btn{appearance:none; border:none; cursor:pointer; font-weight:800; padding:10px 14px; border-radius:12px; transition:.16s}
+  .btnPrimary{background:var(--neon); color:#052318; box-shadow:var(--glow)}
   .btnPrimary:hover{filter:brightness(.95)}
-  .statusDot{width:10px; height:10px; border-radius:50%; background:var(--neon); box-shadow:0 0 10px var(--neon)}
-  .btnWithDot{display:flex; align-items:center; gap:10px}
 
-  .progressBox{padding:0 18px 18px}
-  .progressLabel{color:var(--muted); font-weight:700}
-  .barLine{margin-top:10px; height:10px; border:1px solid var(--line); border-radius:12px; background:#07140e; overflow:hidden}
-  .barFill{height:100%; width:0%; background:linear-gradient(90deg,var(--neon),#67ffb8); box-shadow:var(--glow); transition:width .35s ease}
+  .prog{padding:2px 12px 12px}
+  .label{color:var(--muted); font-weight:700; font-size:13px}
+  .bar{margin-top:6px; height:8px; border:1px solid var(--line); border-radius:12px; background:#07140e; overflow:hidden}
+  .fill{height:100%; width:0%; background:linear-gradient(90deg,var(--neon),var(--neon2)); box-shadow:var(--glow); transition:width .3s}
 
-  /* ===== KEY CARD ===== */
-  .keyCard{margin-top:18px}
-  .keyHead{
-    padding:14px 18px; display:flex; align-items:center; justify-content:space-between;
-    border-bottom:1px solid var(--line); background:rgba(0,0,0,.06);
-  }
-  .keyTitle{
-    display:inline-flex; align-items:center; gap:10px;
-    background:#0a2219; border:1px solid var(--line);
-    padding:10px 14px; border-radius:999px; font:700 16px 'Orbitron',sans-serif; color:var(--neon);
-    box-shadow:var(--glow);
-  }
-  .btnGet{background:var(--neon); color:#052016; box-shadow:var(--glow)}
+  .kHead{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid var(--line); background:rgba(0,0,0,.06)}
+  .kTitle{display:inline-flex; align-items:center; gap:8px; background:#0b2119; border:1px solid var(--line); padding:8px 12px; border-radius:999px; font:700 14px 'Orbitron',sans-serif; color:var(--neon)}
+  .kGet{padding:10px 12px}
 
-  .thead{display:grid; grid-template-columns:1.6fr 1fr .9fr 1fr; gap:12px;
-         padding:12px 18px; color:var(--muted); font-weight:700; border-bottom:1px solid var(--line)}
-  .tbody{padding:6px}
-  .row{display:grid; grid-template-columns:1.6fr 1fr .9fr 1fr; gap:12px;
-       padding:12px 18px; align-items:center; border-bottom:1px dashed var(--line)}
+  .thead,.row{display:grid; grid-template-columns:1.5fr .9fr .9fr .9fr; gap:8px; align-items:center}
+  .thead{padding:10px 12px; color:var(--muted); font-weight:700; border-bottom:1px solid var(--line)}
+  .tbody{padding:4px}
+  .row{padding:10px 12px; border-bottom:1px dashed var(--line)}
   .row:last-child{border-bottom:none}
 
-  .keyPill{
-    display:inline-flex; align-items:center; gap:10px;
-    background:#091b15; border:1px solid var(--line); padding:10px 14px; border-radius:999px; font-weight:800;
-  }
-  .copyBtn{
-    width:46px; height:46px; display:grid; place-items:center;
-    background:#0c1814; border:1px solid var(--line); border-radius:12px; color:var(--text); cursor:pointer;
-  }
-  .actions{display:flex; gap:10px; justify-content:flex-end}
-  .btnTiny{padding:10px 12px; border-radius:12px; background:#0e1c17; border:1px solid var(--line); color:#d7ffee}
-  .badge{
-    padding:7px 12px; border-radius:999px; font-weight:900; font-size:12px; display:inline-flex; align-items:center;
-  }
-  .active{background:rgba(0,255,132,.12); color:var(--neon); border:1px solid rgba(0,255,132,.45)}
-  .expired{background:rgba(255,107,107,.12); color:#ff9da3; border:1px solid rgba(255,107,107,.45)}
-  .time{color:#cfeedd; font-weight:700; letter-spacing:.5px}
+  .keypill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:#0a1915; border:1px solid var(--line); font-weight:800; font-size:13px}
+  .time{color:#d7ffee; font-weight:700; letter-spacing:.4px; font-size:13px}
+  .badge{padding:6px 10px; border-radius:999px; font-weight:900; font-size:11px; display:inline-flex; align-items:center}
+  .ok{background:rgba(0,255,140,.12); color:var(--neon); border:1px solid rgba(0,255,140,.42)}
+  .ex{background:rgba(255,110,110,.12); color:#ff9aa1; border:1px solid rgba(255,110,110,.45)}
+  .act{display:flex; gap:8px; justify-content:flex-end}
+  .copy{width:38px; height:38px; display:grid; place-items:center; border-radius:10px; background:#0c1814; border:1px solid var(--line); color:var(--text); cursor:pointer; font-size:14px}
+  .tiny{padding:8px 10px; border-radius:10px; background:#0e1d17; border:1px solid var(--line); color:#e7fff5; font-weight:800; font-size:12px}
 
-  .foot{
-    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
-    padding:14px 18px; border-top:1px solid var(--line); background:rgba(0,0,0,.06)
-  }
-  .inp{
-    background:#08140f; border:1px solid var(--line); color:var(--text);
-    padding:12px 14px; border-radius:12px; min-width:220px; flex:1;
-  }
-  .hint{color:var(--muted); font-size:12px}
-
-  @media (max-width:760px){
+  /* mobile */
+  @media (max-width:560px){
+    .art{width:240px}
     .thead{display:none}
     .row{grid-template-columns:1fr}
-    .actions{justify-content:flex-start}
+    .act{justify-content:flex-start}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <!-- ========== TOP VISUAL ========== -->
-  <section class="card">
-    <div class="visual">
-      <div class="art">
-        <img src="/img/profile" alt="UFO HUB X"
-             onerror="this.onerror=null;this.src='';this.style.background='radial-gradient(70px 70px at 50% 50%, rgba(0,255,140,.35), transparent 60%)'">
+  <div class="wrap">
+    <!-- TOP CARD -->
+    <section class="card">
+      <div class="visual">
+        <div class="art">
+          <img src="/img/profile" alt="UFO"
+               onerror="this.onerror=null;this.src='';this.style.background='radial-gradient(60px 60px at 50% 50%, rgba(0,255,140,.3), transparent 60%)'">
+        </div>
       </div>
-    </div>
+      <div class="strip">
+        <span class="pill">UFO&nbsp;&nbsp;<span style="color:#9fffdc">HUB&nbsp;X</span></span>
+        <div class="sp"></div>
+        <button id="btnStart" class="btn btnPrimary">START</button>
+      </div>
+      <div class="prog">
+        <div class="label">Progress: <b id="ptext">0/1</b></div>
+        <div class="bar"><div id="pfill" class="fill"></div></div>
+      </div>
+    </section>
 
-    <div class="bar">
-      <span class="pillTitle">UFO&nbsp;&nbsp;<span style="color:#00ff9b">HUB X</span></span>
-      <div class="spacer"></div>
-      <button id="btnStart" class="btn btnPrimary btnWithDot"><span class="statusDot"></span> START</button>
-    </div>
+    <!-- KEY PANEL -->
+    <section class="card" style="margin-top:12px">
+      <div class="kHead">
+        <div class="kTitle">🔑 Your Key</div>
+        <button id="btnGet" class="btn btnPrimary kGet">+ GET A NEW KEY</button>
+      </div>
 
-    <div class="progressBox">
-      <div class="progressLabel">Progress: <b id="ptext">0/1</b></div>
-      <div class="barLine"><div id="pfill" class="barFill"></div></div>
-    </div>
-  </section>
-
-  <!-- ========== KEY PANEL ========== -->
-  <section class="card keyCard">
-    <div class="keyHead">
-      <div class="keyTitle">🔑 Your Key</div>
-      <button id="btnGet" class="btn btnPrimary btnGet">+ GET A NEW KEY</button>
-    </div>
-
-    <div class="thead">
-      <div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
-    </div>
-
-    <div id="tbody" class="tbody"></div>
-
-    <div class="foot">
-      <input id="uid"   class="inp" placeholder="UID (e.g. 123)">
-      <input id="place" class="inp" placeholder="Place (e.g. 999)">
-      <div class="hint">กรอก UID/Place แล้วกด “GET A NEW KEY”</div>
-    </div>
-  </section>
-</div>
+      <div class="thead">
+        <div>KEY</div><div>TIME LEFT</div><div>STATUS</div><div>ACTIONS</div>
+      </div>
+      <div id="tbody" class="tbody"></div>
+    </section>
+  </div>
 
 <script>
-  // ---------- Progress ----------
-  const pText = document.getElementById('ptext');
-  const pFill = document.getElementById('pfill');
-  const btnStart = document.getElementById('btnStart');
-  let progress = 0;
+  // ----- Progress -----
+  const pText=document.getElementById('ptext');
+  const pFill=document.getElementById('pfill');
+  const btnStart=document.getElementById('btnStart');
+  let progress=0;
   function setProgress(v){
-    progress = Math.max(0, Math.min(1, v));
-    pText.textContent = `${progress}/1`;
-    pFill.style.width = (progress*100) + '%';
-    btnStart.textContent = progress >= 1 ? 'DONE' : 'START';
+    progress=Math.max(0,Math.min(1,v));
+    pText.textContent=`${progress}/1`;
+    pFill.style.width=(progress*100)+'%';
+    btnStart.textContent=progress>=1?'DONE':'START';
   }
-  btnStart.onclick = ()=> setProgress(progress+1);
+  btnStart.onclick=()=>setProgress(progress+1);
 
-  // ---------- Utils ----------
-  const $ = s => document.querySelector(s);
+  // ----- Small helpers -----
+  const $=s=>document.querySelector(s);
+  const tbody=$('#tbody');
   function hhmmss(sec){
-    if (sec<=0) return '00:00:00';
+    if(sec<=0) return '00:00:00';
     const h=String(Math.floor(sec/3600)).padStart(2,'0');
     const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
     const s=String(sec%60).padStart(2,'0');
     return `${h}:${m}:${s}`;
   }
 
-  // ---------- State & Render ----------
-  let items = []; // [{key, expires_at}]
-  const tbody = $('#tbody');
+  // ----- UID/Place auto (URL -> localStorage -> random) -----
+  function getParam(name){ return new URL(location.href).searchParams.get(name) }
+  function ensureIds(){
+    let uid   = getParam('uid')   || localStorage.getItem('ufo_uid');
+    let place = getParam('place') || localStorage.getItem('ufo_place');
+    if(!uid){ uid = String(Math.floor(900000000*Math.random())+100000000); }
+    if(!place){ place = '999'; }
+    localStorage.setItem('ufo_uid', uid);
+    localStorage.setItem('ufo_place', place);
+    return {uid, place};
+  }
 
+  // ----- Table render -----
+  let items=[];
   function render(){
-    tbody.innerHTML = '';
-    items.forEach((it, i)=>{
-      const left = Math.max(0, Math.floor(it.expires_at - Date.now()/1000));
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = `
-        <div class="keyPill">🔑 ${it.key}</div>
+    tbody.innerHTML='';
+    items.forEach((it,i)=>{
+      const left=Math.max(0,Math.floor(it.expires_at - Date.now()/1000));
+      const row=document.createElement('div');
+      row.className='row';
+      row.innerHTML=`
+        <div class="keypill">🔑 ${it.key}</div>
         <div class="time" id="left-${i}">${hhmmss(left)}</div>
-        <div><span class="badge ${left>0?'active':'expired'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
-        <div class="actions">
-          <button class="copyBtn" title="Copy">📋</button>
-          <button class="btnTiny" disabled>+ 5H ⏩</button>
-        </div>
-      `;
-      row.querySelector('.copyBtn').onclick = ()=> navigator.clipboard.writeText(it.key);
+        <div><span class="badge ${left>0?'ok':'ex'}">${left>0?'ACTIVE':'EXPIRED'}</span></div>
+        <div class="act">
+          <button class="copy" title="Copy">📋</button>
+          <button class="tiny" disabled>+5H ⏩</button>
+        </div>`;
+      row.querySelector('.copy').onclick=()=>navigator.clipboard.writeText(it.key);
       tbody.appendChild(row);
     });
   }
-
-  // countdown update
   setInterval(()=>{
-    items.forEach((it, i)=>{
-      const el = document.getElementById(`left-${i}`);
-      if (!el) return;
-      const left = Math.max(0, Math.floor(it.expires_at - Date.now()/1000));
-      el.textContent = hhmmss(left);
+    items.forEach((it,i)=>{
+      const el=document.getElementById(`left-${i}`);
+      if(!el) return;
+      const left=Math.max(0,Math.floor(it.expires_at - Date.now()/1000));
+      el.textContent=hhmmss(left);
     });
-  }, 1000);
+  },1000);
 
-  // ---------- API ----------
+  // ----- API -----
   async function getKey(){
-    const uid   = $('#uid').value.trim();
-    const place = $('#place').value.trim();
-    if (!uid || !place){ alert('กรอก UID และ Place ก่อน'); return; }
+    const {uid,place}=ensureIds();
     try{
-      const res  = await fetch(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
-      const data = await res.json();
-      if (!data || !data.ok){ alert('getkey ล้มเหลว'); return; }
-      items = [{ key: data.key, expires_at: data.expires_at || (Date.now()/1000+600) }];
+      const res=await fetch(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+      const data=await res.json();
+      if(!data || !data.ok){ alert('getkey ล้มเหลว'); return; }
+      items=[{ key:data.key, expires_at:data.expires_at || (Date.now()/1000+600) }];
       render(); setProgress(1);
-      document.querySelector('.keyCard').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(err){
-      console.error(err); alert('ติดต่อเซิร์ฟเวอร์ไม่ได้');
-    }
+      document.querySelector('.kHead').scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){ console.error(e); alert('ติดต่อเซิร์ฟเวอร์ไม่ได้'); }
   }
-  document.getElementById('btnGet').onclick = getKey;
+  document.getElementById('btnGet').onclick=getKey;
 
   // init
   setProgress(0); render();
