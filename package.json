@@ -1,8 +1,6 @@
 {
-  "name": "ufo-hub-x-key-server",
-  "version": "1.0.0",
-  "main": "server.js",
-  "license": "MIT",
+  "name": "ufo-hub-x",
+  "private": true,
   "scripts": {
     "start": "node server.js"
   },
