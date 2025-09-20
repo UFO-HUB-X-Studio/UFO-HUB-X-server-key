@@ -19,8 +19,8 @@
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    /* เพิ่ม: ระยะ “นำหน้า” ของยาน (px) ปรับได้ตามใจ */
-    --ufo-lead: 8px;
+    /* ตั้งค่านำหน้าเป็น 0 เพื่อให้อยู่กึ่งกลางเขียวเป๊ะ ๆ */
+    --ufo-lead: 0px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -33,7 +33,7 @@
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
-  /* HERO */
+  /* HERO (คงเดิม) */
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
   .hero-box{
     display:inline-block; max-width:320px; width:90vw;
@@ -60,7 +60,7 @@
   .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);}
   .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
 
-  /* UFO (ลอยเหนือหลอดนิด ๆ) */
+  /* UFO ลอยเหนือหลอดเล็กน้อย */
   .bar-ufo{
     position:absolute;
     top:50%;
@@ -129,7 +129,7 @@
   </div>
 
 <script>
-  // ===== วางยานให้ "กึ่งกลางปลายหลอด" + นำหน้าหลอด (ปรับ offset ได้) =====
+  // ===== วางยานให้ “กึ่งกลางหลอดสีเขียว” เป๊ะ ๆ =====
   const bar       = document.getElementById('bar');
   const barWrap   = document.getElementById('barWrap');
   const barUfo    = document.getElementById('barUfo');
@@ -137,27 +137,26 @@
   const percentEl = document.getElementById('percentText');
   let raf = null;
 
-  // ดึงค่า offset ที่ตั้งไว้ใน CSS (เช่น 8px)
+  // offset นำหน้าที่ปรับได้ (ดีฟอลต์ 0px เพื่อให้อยู่กึ่งกลางจริง ๆ)
   const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
 
   function setProgress(p){
     p = Math.max(0, Math.min(100, p));
     bar.style.width = p + '%';
 
-    // ตำแหน่งปลายแถบจริงภายในกรอบหลอด (px)
+    // กึ่งกลางของแท่งเขียวจริง (ไม่ใช่ปลาย) ภายในกรอบหลอด
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
-    const tipInside = (barRect.left + barRect.width) - wrapRect.left;
+    const centerInside = (barRect.left + barRect.width / 2) - wrapRect.left; // px
 
-    // เผื่อครึ่งยาน + รัศมีมุม + กันชน 2px
+    // เผื่อครึ่งยาน + รัศมีมุม + กันชน 2px แล้วหนีบไม่ให้ล้ำกรอบ
     const ufoHalf = barUfo.offsetWidth / 2;
     const corner  = parseFloat(getComputedStyle(barWrap).borderRadius) || 0;
     const pad     = 2;
     const minX    = ufoHalf + corner + pad;
     const maxX    = barWrap.clientWidth - (ufoHalf + corner + pad);
 
-    // ให้ยาน "นำหน้า" ปลายหลอดด้วย LEAD และหนีบไม่ให้ล้ำกรอบ
-    const targetX = Math.max(minX, Math.min(tipInside + LEAD, maxX));
+    const targetX = Math.max(minX, Math.min(centerInside + LEAD, maxX));
     barUfo.style.left = targetX + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
@@ -178,7 +177,7 @@
     raf = requestAnimationFrame(tick);
   });
 
-  // Preload images
+  // Preload
   new Image().src = '/img/bg';
   new Image().src = '/img/profile';
   new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
