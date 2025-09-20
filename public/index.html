@@ -1,146 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UFO HUB X</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      background: url("img/bg") no-repeat center center fixed;
-      background-size: cover;
-      color: #d9fff5;
-    }
-    .container {
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 10px;
-    }
-    .card {
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    /* ใช้โทนเดียวกันทั้งบนและล่าง */
-    .card.top,
-    .card.bottom {
-      background: linear-gradient(180deg, rgba(9,16,23,.88), rgba(8,13,19,.92));
-      box-shadow:
-        0 0 0 1px rgba(34,255,200,.06) inset,
-        0 10px 30px rgba(0,0,0,.55),
-        0 0 34px rgba(34,255,200,.09);
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    .header img {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      margin-right: 15px;
-      box-shadow: 0 0 15px rgba(0,255,170,.6);
-    }
-    .header h1 {
-      font-size: 24px;
-      color: #36ffb5;
-      margin: 0;
-    }
-    .status {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    .progress {
-      width: 100%;
-      height: 6px;
-      background: rgba(0,0,0,.3);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 15px;
-    }
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background: #00ff99;
-      transition: width 0.3s;
-    }
-    .btn {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #00ff99;
-      color: #000;
-      font-weight: bold;
-      transition: 0.2s;
-    }
-    .btn:hover {
-      background: #1affb5;
-    }
-    .key-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      font-size: 18px;
-      color: #ffea63;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      color: #d9fff5;
-      font-size: 14px;
-    }
-    th, td {
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      color: #77ffc8;
-      font-weight: 500;
-    }
-    .status-active {
-      color: #00ff99;
-      font-weight: bold;
-    }
-    .actions button {
-      margin: 0 4px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UFO HUB X</title>
+<style>
+  :root{
+    --ufo-green:#00ff99;
+    --ufo-green-soft:#36ffb5;
+    --text:#d9fff5;
+    --panel1:rgba(9,16,23,.88);
+    --panel2:rgba(8,13,19,.92);
+    --glow:rgba(34,255,200,.09);
+  }
+  /* BG */
+  body{
+    margin:0;
+    font-family: "Orbitron", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: url("/img/bg") center/cover fixed no-repeat;
+    color:var(--text);
+  }
+
+  .container{
+    max-width: 880px;           /* กว้างขึ้นกำลังดี */
+    margin: 22px auto 80px;
+    padding: 0 16px;
+  }
+
+  .card{
+    background:linear-gradient(180deg,var(--panel1),var(--panel2));
+    border-radius:18px;
+    box-shadow:
+      0 0 0 1px rgba(34,255,200,.06) inset,
+      0 10px 30px rgba(0,0,0,.55),
+      0 0 34px var(--glow);
+    padding:18px;
+    margin-bottom:22px;
+    backdrop-filter: blur(2px);
+  }
+
+  /* ---------- TOP CARD ---------- */
+  .top-head{
+    display:flex;
+    align-items:center;
+    gap:18px;
+  }
+  .logo{
+    width:88px;height:88px;border-radius:14px;
+    background:url("/img/profile") center/cover no-repeat;
+    box-shadow:0 0 18px rgba(0,255,170,.45);
+    flex:0 0 auto;
+  }
+  .title-wrap{
+    display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;
+    margin-top:6px;               /* ให้ชื่อห่างรูปเล็กน้อย */
+  }
+  .title{
+    font-size:36px; line-height:1; letter-spacing:.5px; margin:0;
+    text-shadow:0 0 12px rgba(0,255,170,.15);
+  }
+  .title .ufo{color:#ffffff;}       /* UFO ขาว */
+  .title .hubx{color:var(--ufo-green-soft);} /* HUB X เขียว */
+
+  /* Progress row: bar ซ้าย, ปุ่มขวา */
+  .progress-row{
+    display:flex; align-items:center; gap:14px; margin-top:16px;
+  }
+  .progress-wrap{
+    position:relative; flex:1 1 auto; height:14px;
+    background:rgba(0,0,0,.35); border-radius:8px; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(34,255,200,.06);
+  }
+  .progress-bar{
+    position:absolute; inset:0 0 0 auto; width:0%;
+    background:linear-gradient(90deg,#00ffa3,#3bffbf);
+    box-shadow:0 0 18px rgba(34,255,200,.35);
+  }
+  .progress-label{
+    position:absolute; left:10px; top:50%; transform:translateY(-50%);
+    font-size:13px; color:#cffff2; text-shadow:0 0 8px rgba(0,0,0,.6);
+    pointer-events:none;
+  }
+
+  .btn{
+    appearance:none; border:0; cursor:pointer; font-weight:700;
+    border-radius:12px; padding:10px 16px; transition:.15s;
+  }
+  .btn-start{
+    background:var(--ufo-green); color:#071a14; white-space:nowrap;
+    box-shadow:0 6px 18px rgba(0,255,140,.25), 0 0 0 1px rgba(0,0,0,.2) inset;
+  }
+  .btn-start:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+
+  /* ---------- BOTTOM CARD ---------- */
+  .key-head{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin-bottom:10px;
+  }
+  .key-title{ font-size:18px; color:#ffea63; display:flex; align-items:center; gap:8px;}
+  .btn-new{ background:var(--ufo-green); color:#071a14; padding:10px 14px; border-radius:12px; font-weight:800;}
+  .table{ width:100%; border-collapse:collapse; font-size:14px; color:var(--text);}
+  .table th, .table td{ padding:10px 8px; text-align:center;}
+  .table th{ color:#77ffc8; font-weight:600; }
+  .pill{
+    display:inline-block; padding:6px 10px; border-radius:999px;
+    background:rgba(0,255,170,.1); color:var(--ufo-green); font-weight:800; font-size:12px;
+    box-shadow:0 0 0 1px rgba(34,255,200,.18) inset;
+  }
+
+  /* Responsive tweak */
+  @media (max-width:560px){
+    .title{font-size:30px}
+    .logo{width:76px;height:76px}
+  }
+</style>
 </head>
 <body>
   <div class="container">
-    <!-- การ์ดบน -->
-    <div class="card top">
-      <div class="header">
-        <img src="/img/profile" alt="logo">
-        <h1>UFO HUB X</h1>
-      </div>
-      <div class="status">Progress: <span id="progress">0/1</span></div>
-      <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
-      <button class="btn" id="startBtn">START</button>
-    </div>
 
-    <!-- การ์ดล่าง -->
-    <div class="card bottom">
-      <div class="key-header">
-        <span>🔑 Your Key</span>
-        <button class="btn" id="newKeyBtn">+ GET A NEW KEY</button>
+    <!-- TOP CARD -->
+    <section class="card">
+      <div class="top-head">
+        <div class="logo"></div>
+        <div class="title-wrap">
+          <h1 class="title">
+            <span class="ufo">UFO</span> <span class="hubx">HUB X</span>
+          </h1>
+        </div>
       </div>
-      <table>
+
+      <div class="progress-row">
+        <!-- progress bar + label -->
+        <div class="progress-wrap">
+          <div class="progress-bar" id="bar" style="width:0%"></div>
+          <div class="progress-label" id="label">Progress: 0/1</div>
+        </div>
+
+        <!-- START button อยู่ฝั่งขวา และมีไอคอน 🟢 -->
+        <button class="btn btn-start" id="startBtn">🟢 START</button>
+      </div>
+    </section>
+
+    <!-- BOTTOM CARD -->
+    <section class="card">
+      <div class="key-head">
+        <div class="key-title">🔑 Your Key</div>
+        <button class="btn btn-new" id="getKey">+ GET A NEW KEY</button>
+      </div>
+
+      <table class="table">
         <thead>
           <tr>
-            <th>KEY</th>
-            <th>TIME LEFT</th>
-            <th>STATUS</th>
-            <th>ACTIONS</th>
+            <th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th>
           </tr>
         </thead>
-        <tbody id="keyTable"></tbody>
+        <tbody id="keyRows">
+          <!-- ใส่แถวคีย์ด้วย JS ฝั่งคุณตามเดิม -->
+        </tbody>
       </table>
-    </div>
+    </section>
+
   </div>
+
+  <!-- ตัวอย่างสคริปต์เล็กๆ ขยับ progress (ลบได้) -->
+  <script>
+    // demo ขยับ progress 0 -> 100% เฉยๆ
+    let p = 0;
+    const bar = document.getElementById('bar');
+    const label = document.getElementById('label');
+    const t = setInterval(()=>{
+      p = Math.min(100, p+2);
+      bar.style.width = p + '%';
+      label.textContent = 'Progress: ' + (p>0? '1/1':'0/1'); // แค่วางตำแหน่ง label บนหลอด
+      if(p>=100) clearInterval(t);
+    }, 120);
+  </script>
 </body>
 </html>
