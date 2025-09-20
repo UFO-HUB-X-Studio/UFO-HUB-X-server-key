@@ -29,6 +29,7 @@
     color:var(--text);
     background:url("/img/bg") center/cover fixed no-repeat;
   }
+  body.locked{overflow:hidden;}
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
@@ -64,7 +65,7 @@
     box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
     transition:opacity .35s ease;
   }
-  /* ซ่อนตอนแรกเพื่อดีเลย์ 5 วิ */
+  /* ซ่อนตอนแรก (ดีเลย์) */
   .is-hidden{opacity:0; pointer-events:none;}
 
   .bar{
@@ -93,6 +94,35 @@
     .head-title{font-size:34px}
     .bar-ufo{width:46px;height:46px}
   }
+
+  /* ===== Overlay ดาวน์โหลดแบบวงกลมหมุน + ตัวเลข ===== */
+  .overlay{
+    position:fixed; inset:0; z-index:9999;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(4,10,9,.75);
+    backdrop-filter: blur(4px);
+  }
+  .overlay.hidden{display:none;}
+  .dl-box{
+    width:min(360px, 92vw);
+    padding:22px 20px;
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(9,16,23,.92), rgba(8,13,19,.96));
+    box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(0,255,160,.2);
+    text-align:center;
+  }
+  .spinner{
+    margin:8px auto 12px;
+    width:72px; height:72px; border-radius:50%;
+    border:6px solid rgba(0,255,160,.18);
+    border-top-color:#00ffa3;
+    animation:spin 1s linear infinite;
+    box-shadow:0 0 20px rgba(0,255,160,.35) inset;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .dl-title{font-weight:900; font-size:20px; color:#cffff2; margin:2px 0 8px;}
+  .dl-count{font-size:24px; font-weight:900; color:#ffea63; text-shadow:0 0 10px rgba(255,234,99,.35);}
+  .dl-note{font-size:12px; opacity:.85; color:#b9ffee; margin-top:8px;}
 </style>
 </head>
 <body>
@@ -109,18 +139,17 @@
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-
         <!-- ปุ่ม START ไปยังลิงก์ที่ให้ -->
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- จะถูกซ่อน 5 วิแรก -->
+      <!-- ซ่อน 12 วินาทีแรก -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
 
-      <!-- จะถูกซ่อน 5 วิแรก -->
+      <!-- ซ่อน 12 วินาทีแรก -->
       <div class="bar-wrap is-hidden" id="barWrap">
         <div class="bar" id="bar"></div>
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
@@ -141,13 +170,26 @@
 
   </div>
 
+  <!-- ===== Overlay ดาวน์โหลด (โดเมน onrender เท่านั้น) ===== -->
+  <div class="overlay hidden" id="dlOverlay" aria-live="polite" aria-busy="true">
+    <div class="dl-box">
+      <div class="spinner" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10"></div>
+      <div class="dl-title">Preparing download…</div>
+      <div class="dl-count"><span id="dlSeconds">10</span>s</div>
+      <div class="dl-note">Please wait while we get things ready.</div>
+    </div>
+  </div>
+
 <script>
-  /* ===== CONFIG ===== */
+  /* ===== CONFIG (คงของเดิม + ปรับดีเลย์) ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com"; // โดเมนปลายทางที่บอกไว้
+  const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com"; // โดเมนปลายทาง
   const RETURN_KEY  = "ufo_return_ts";  // timestamp ตอนกด START
-  const ARM_DELAY   = 5000;             // ดีเลย์โชว์หลอด 5 วิ
-  const MIN_VISIT   = 5000;             // ต้องหายไปอย่างน้อย 5 วิ ถึงจะถือว่า “ไปทำลิงก์จริง”
+
+  const ARM_DELAY   = 12000;            // ดีเลย์โชว์หลอด 12 วิ (จาก 5 → 12)
+  const MIN_VISIT   = 5000;             // ต้องออกไปอย่างน้อย 5 วิ ถึงจะถือว่ากลับมาจริง
+
+  const DL_TOTAL_MS = 10000;            // ระยะเวลา overlay ดาวน์โหลด ~10 วิ
 
   /* ===== Elements ===== */
   const bar         = document.getElementById('bar');
@@ -158,10 +200,13 @@
   const startBtn    = document.getElementById('startBtn');
   const progressMeta= document.getElementById('progressMeta');
 
+  const dlOverlay   = document.getElementById('dlOverlay');
+  const dlSecondsEl = document.getElementById('dlSeconds');
+
   let raf = null;
   const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
 
-  /* ===== Helpers ===== */
+  /* ===== Helpers: Progress / UFO ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
@@ -171,7 +216,7 @@
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
 
-    // ยานนำปลายแท่ง + LEAD (ไม่ clamp เพื่อให้ทะลุกรอบได้)
+    // ยานนำปลายแท่ง + LEAD (ปล่อยให้ทะลุกรอบได้)
     barUfo.style.left = (tipInside + LEAD) + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
@@ -205,7 +250,7 @@
     }, ARM_DELAY);
   }
 
-  // เงื่อนไข “กลับมาจริง” = มี timestamp ใน localStorage และเวลาที่หายไป >= MIN_VISIT
+  // เงื่อนไข “กลับมาจริง” = มี timestamp และหายไป >= MIN_VISIT
   function isValidReturn(){
     try{
       const ts = parseInt(localStorage.getItem(RETURN_KEY) || "0", 10);
@@ -214,17 +259,14 @@
       return elapsed >= MIN_VISIT;
     }catch(e){ return false; }
   }
-
   function clearReturnMark(){
     try{ localStorage.removeItem(RETURN_KEY); }catch(e){}
   }
 
   function autoCompleteIfReturned(onlyIfBarVisible=false){
-    // ตรวจโดเมนที่กำหนด
     const onOurDomain = location.hostname === DOMAIN_OK;
     if(!onOurDomain) return;
 
-    // ถ้าต้องเช็กว่า UI โชว์แล้ว
     if(onlyIfBarVisible){
       const hidden = progressMeta.classList.contains('is-hidden') || barWrap.classList.contains('is-hidden');
       if(hidden) return;
@@ -236,24 +278,52 @@
     }
   }
 
+  /* ===== Overlay ดาวน์โหลด (โดเมน onrender เท่านั้น) ===== */
+  function showDownloadOverlay(){
+    if(location.hostname !== DOMAIN_OK) return; // เฉพาะโดเมน onrender
+
+    // ล็อกหน้า
+    document.body.classList.add('locked');
+    dlOverlay.classList.remove('hidden');
+
+    // นับถอยหลัง ~10 วิ และบล็อกการกดทั้งหมด (overlay คลุมอยู่แล้ว)
+    const start = Date.now();
+    const timer = setInterval(()=>{
+      const elapsed = Date.now() - start;
+      const remain = Math.max(0, DL_TOTAL_MS - elapsed);
+      const seconds = Math.ceil(remain / 1000);
+      dlSecondsEl.textContent = seconds;
+      const spinner = dlOverlay.querySelector('.spinner');
+      if (spinner) spinner.setAttribute('aria-valuenow', String(seconds));
+
+      if(remain <= 0){
+        clearInterval(timer);
+        // ปลดล็อก
+        dlOverlay.classList.add('hidden');
+        document.body.classList.remove('locked');
+      }
+    }, 200);
+  }
+
   /* ===== Events ===== */
-  // ปุ่ม START: เซ็ต timestamp แล้วออกไปยังลิงก์ (แท็บเดียว เพื่อตัดปัญหา popup)
+  // ปุ่ม START: เซ็ต timestamp แล้วไปยังลิงก์ (window.location)
   startBtn.addEventListener('click', ()=>{
     try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
     window.location.href = START_URL;
   });
 
-  // โชว์หลอดช้า 5 วิ ทุกครั้งที่เข้าหน้าเว็บ
+  // เมื่อเข้าหน้าเว็บ: ซ่อนหลอด 12s และถ้าอยู่โดเมน onrender ให้แสดง overlay 10s
   document.addEventListener('DOMContentLoaded', ()=>{
-    // ซ่อนตอนแรก (สำรอง เผื่อ HTML ถูกแก้ไขก่อนหน้านี้)
+    // ซ่อนตอนแรกเผื่อมีการแก้ไข HTML มาก่อน
     progressMeta.classList.add('is-hidden');
     barWrap.classList.add('is-hidden');
-    showBarAfterDelay();
+
+    showBarAfterDelay();     // ดีเลย์ 12 วิ แล้วค่อยโชว์หลอด
+    showDownloadOverlay();   // โชว์ overlay 10 วิ (เฉพาะโดเมน onrender)
   });
 
-  // กรณีใช้ปุ่ม Back/Forward (BFCache) ให้ตรวจซ้ำเมื่อหน้า active
+  // กรณี BFCache/Back-Forward ให้ตรวจกลับมาจริงหลัง UI โผล่แล้ว
   window.addEventListener('pageshow', ()=>{
-    // ถ้า UI โผล่แล้ว ค่อยเช็คว่ากลับมาจริงหรือไม่
     autoCompleteIfReturned(true);
   });
 
