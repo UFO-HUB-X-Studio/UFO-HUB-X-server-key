@@ -18,7 +18,8 @@
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
     --hero-img:url("/img/profile");
-    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png");
+    /* ใช้รูป UFO ตัวเต็ม (มี query) เพื่อกันแคชเพี้ยน */
+    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
     --ufo-lead: 8px;
   }
 
@@ -58,7 +59,7 @@
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;transition:opacity .35s ease;}
   .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);transition:opacity .35s ease;}
   .is-hidden{opacity:0; pointer-events:none;}
-  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
+  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;opacity:0;}
   .bar-ufo{position:absolute; top:50%; transform:translate(-50%,-50%);width:50px;height:50px; opacity:0; transition:opacity .2s ease;background:var(--ufo-ship) center/contain no-repeat;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));z-index:8; pointer-events:none;}
   .bar-ufo.on{opacity:1;}
 
@@ -101,11 +102,13 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
+      <!-- กรอบ/หัวข้อ จะปลดซ่อนที่ 18 วิ -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
 
+      <!-- หลอดจริง + ยาน -->
       <div class="bar-wrap is-hidden" id="barWrap">
         <div class="bar" id="bar"></div>
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
@@ -126,9 +129,10 @@
 
   </div>
 
-  <div class="overlay hidden" id="dlOverlay">
+  <!-- Overlay (เฉพาะโดเมน onrender) -->
+  <div class="overlay hidden" id="dlOverlay" aria-live="polite" aria-busy="true">
     <div class="dl-box">
-      <div class="spinner"></div>
+      <div class="spinner" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
       <div class="dl-title">Preparing download…</div>
       <div class="dl-count"><span id="dlSeconds">0</span>%</div>
       <div class="dl-note">Please wait while we get things ready.</div>
@@ -136,15 +140,17 @@
   </div>
 
 <script>
+  /* ===== CONFIG (ของเดิม) ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY        = 18000;
-  const MIN_VISIT        = 5000;
-  const OVERLAY_MS       = 20000;
-  const UFO_PROGRESS_MS  = 22000;
+  const ARM_DELAY        = 18000;   // กรอบโผล่หลัง 18 วิ
+  const MIN_VISIT        = 5000;    // ต้องออกไปอย่างน้อย 5 วิ
+  const OVERLAY_MS       = 20000;   // overlay 0-100% 20 วิ (เฉพาะโดเมน onrender)
+  const UFO_PROGRESS_MS  = 22000;   // หลอดสีเขียว + UFO วิ่ง 22 วิ
 
+  /* ===== Elements ===== */
   const bar         = document.getElementById('bar');
   const barWrap     = document.getElementById('barWrap');
   const barUfo      = document.getElementById('barUfo');
@@ -158,29 +164,40 @@
 
   let raf = null;
 
+  /* ===== Progress + UFO (เดิม) ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
+
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
     const LEAD = 8;
     barUfo.style.left = (tipInside + LEAD) + 'px';
+
     percentEl.textContent = p.toFixed(0) + '%';
+    // แสดง 0/1 จนกว่าจะครบ 100
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
 
   function runProgress(pTarget=100, duration=UFO_PROGRESS_MS){
     cancelAnimationFrame(raf);
-    if (pTarget > 0) barUfo.classList.add('on');
+    if (pTarget > 0) {
+      barUfo.classList.add('on');   // โผล่พร้อมหลอด
+      bar.style.opacity = '1';      // โชว์แท่งสีเขียวเมื่อเริ่มวิ่ง
+    }
     const pStart = parseFloat(bar.style.width) || 0;
     const t0 = performance.now();
     function tick(ts){
       const t = Math.min(1, (ts - t0)/duration);
       const p = pStart + (pTarget - pStart) * t;
       setProgress(p);
-      if(t < 1){ raf = requestAnimationFrame(tick); }
-      else { setTimeout(()=>barUfo.classList.remove('on'), 300); }
+      if(t < 1){
+        raf = requestAnimationFrame(tick);
+      }else{
+        // จบแล้วค่อยเฟด UFO ออก
+        setTimeout(()=>barUfo.classList.remove('on'), 300);
+      }
     }
     raf = requestAnimationFrame(tick);
   }
@@ -189,8 +206,10 @@
     setTimeout(()=>{
       progressMeta.classList.remove('is-hidden');
       barWrap.classList.remove('is-hidden');
+      // ค่าเริ่มต้น
       pText.textContent = 'Progress: 0/1';
       percentEl.textContent = '0%';
+      // ถ้ากลับมาจริง (และผ่านเกต) ค่อยวิ่ง
       autoCompleteIfReturned(true);
     }, ARM_DELAY);
   }
@@ -207,7 +226,8 @@
   function autoCompleteIfReturned(onlyIfVisible=false){
     if(location.hostname!==DOMAIN_OK) return;
     if(onlyIfVisible && (progressMeta.classList.contains('is-hidden')||barWrap.classList.contains('is-hidden'))) return;
-    if(isValidReturn()){
+    // ต้อง "ผ่านเกตของเซสชัน" ด้วย (กด START แล้ว)
+    if(isValidReturn() && sessionStorage.getItem('ufo_started_session')==='1'){
       clearReturnMark();
       runProgress(100, UFO_PROGRESS_MS);
     }
@@ -222,6 +242,8 @@
       const elapsed = Date.now() - start;
       const percent = Math.min(100, Math.floor((elapsed / OVERLAY_MS)*100));
       dlSecondsEl.textContent = percent;
+      const spinner = dlOverlay.querySelector('.spinner');
+      if (spinner) spinner.setAttribute('aria-valuenow', String(percent));
       if(elapsed >= OVERLAY_MS){
         clearInterval(timer);
         dlOverlay.classList.add('hidden');
@@ -242,46 +264,75 @@
     });
   }
 
+  /* ===== Events ===== */
   startBtn.addEventListener('click', ()=>{
-    try{ localStorage.setItem(RETURN_KEY, String(Date.now())); sessionStorage.setItem('ufo_started_session','1'); }catch(e){}
+    try{
+      localStorage.setItem(RETURN_KEY, String(Date.now()));
+      sessionStorage.setItem('ufo_started_session','1'); // เกตของเซสชันนี้
+    }catch(e){}
     window.location.href = START_URL;
   });
 
   document.addEventListener('DOMContentLoaded', ()=>{
+    // เริ่มแบบ “ปิดไว้ก่อน”
     progressMeta.classList.add('is-hidden');
     barWrap.classList.add('is-hidden');
-    preloadImages(['/img/bg','/img/profile',
-      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png']);
-    showDownloadOverlay();
-    showBarAfterDelay();
+    // กันหลอดวิ่งเอง
+    bar.style.width = '0%';
+    bar.style.opacity = '0';
+    barUfo.classList.remove('on');
+
+    preloadImages([
+      '/img/bg',
+      '/img/profile',
+      'https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png'
+    ]);
+
+    showDownloadOverlay();  // เฉพาะโดเมน onrender
+    showBarAfterDelay();    // กรอบโผล่ 18 วิ
   });
 
-  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
+  window.addEventListener('pageshow', ()=>{
+    autoCompleteIfReturned(true);
+  });
 </script>
 
-<!-- ✅ Rescue Patch -->
+<!-- ========== ADD-ONLY SAFETY WRAPS: บังคับพฤติกรรมให้ถูกเงื่อนไข ========== -->
 <script>
 (function(){
-  const START_HOST = (()=>{ try { return new URL(START_URL).hostname.replace(/^www\./,''); } catch(e){ return 'direct-link.net'; }})();
-  function visitedFromLink(){ return (document.referrer||'').includes(START_HOST); }
-  function recentReturn(maxMs=15*60*1000){
-    try{ const ts=parseInt(localStorage.getItem(RETURN_KEY)||'0',10); return ts && (Date.now()-ts)<maxMs; }catch(e){return false;}
+  const SESSION_FLAG = 'ufo_started_session';
+  const bar    = document.getElementById('bar');
+  const barUfo = document.getElementById('barUfo');
+  const pText  = document.getElementById('progressText');
+
+  function isStarted(){
+    try{ return sessionStorage.getItem(SESSION_FLAG)==='1'; }catch(e){ return false; }
   }
-  function whenBarVisible(cb){
-    const meta=document.getElementById('progressMeta'); const wrap=document.getElementById('barWrap');
-    if(meta && wrap && !meta.classList.contains('is-hidden') && !wrap.classList.contains('is-hidden')){ cb();return; }
-    const t=setInterval(()=>{ if(meta && wrap && !meta.classList.contains('is-hidden') && !wrap.classList.contains('is-hidden')){clearInterval(t);cb();}},100);
+
+  // ห่อ runProgress: ไม่ให้วิ่งก่อนกด START
+  const _runProgress = window.runProgress;
+  if (typeof _runProgress === 'function'){
+    window.runProgress = function(pTarget, duration){
+      if (!isStarted()) return;              // บล็อกถ้ายังไม่กด START ในเซสชันนี้
+      if (bar) bar.style.opacity = '1';      // โชว์แท่งสีเขียวเมื่อผ่านเกต
+      return _runProgress.apply(this, arguments);
+    };
   }
-  function kickProgress(){ if(typeof runProgress==='function'){ const bar=document.getElementById('bar'); if(bar) bar.style.opacity='1'; runProgress(100, UFO_PROGRESS_MS); } }
-  function tryStart(){
-    const started=sessionStorage.getItem('ufo_started_session')==='1';
-    if(started && (visitedFromLink()||recentReturn())){ kickProgress(); return; }
-    if(visitedFromLink()){ kickProgress(); return; }
+
+  // ห่อ setProgress: คุมข้อความ 0/1 -> 1/1 และซิงก์ UFO
+  const _setProgress = window.setProgress;
+  if (typeof _setProgress === 'function'){
+    window.setProgress = function(p){
+      _setProgress(p);
+      if (pText) pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
+      if (barUfo){
+        if (p > 0 && isStarted()) barUfo.classList.add('on');
+        else barUfo.classList.remove('on');
+      }
+    };
   }
-  document.addEventListener('DOMContentLoaded',()=>whenBarVisible(tryStart));
-  window.addEventListener('pageshow',()=>whenBarVisible(tryStart));
 })();
 </script>
-
+<!-- ========== /ADD-ONLY SAFETY WRAPS ========== -->
 </body>
 </html>
