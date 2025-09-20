@@ -12,8 +12,10 @@
 <!-- เร่งโหลดรูป -->
 <link rel="preload" as="image" href="/img/bg">
 <link rel="preload" as="image" href="/img/profile">
-<!-- เพิ่ม: พรีโหลดรูป Hero ใหม่ -->
+<!-- เดิม: พรีโหลดรูป Hero ที่เคยใช้ล่าสุด (คงไว้ตามที่คุณให้มา) -->
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
+<!-- เพิ่ม: พรีโหลด “รูปเดิม” ที่ต้องการให้ใช้ -->
+<link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cf8acb&is=68ce394b&hm=3c3e5b4819a3d0e07794caa3fc39bafbeee7a3bbc0b35796e16e0e21f663113b&">
 
 <style>
   :root{
@@ -23,8 +25,8 @@
     --panel1:rgba(9,16,23,.88);
     --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
-    /* เพิ่ม: ตัวแปรรูป hero (ใช้แทน /img/profile เฉพาะตรง hero-box) */
-    --hero-img:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
+    /* ใช้ “รูปเดิม” สำหรับ hero */
+    --hero-img:url("https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cf8acb&is=68ce394b&hm=3c3e5b4819a3d0e07794caa3fc39bafbeee7a3bbc0b35796e16e0e21f663113b&");
   }
 
   /* ===== Base & BG (กันหน้าขาว) ===== */
@@ -46,11 +48,11 @@
     margin:6px 0 18px 0;
   }
   .hero-box{
-    /* ปรับ: ให้เล็กลงและเป็นอัตราส่วนแนวนอนเหมือนตัวอย่าง */
     width:min(420px, 90vw);
     aspect-ratio:16/9;
     border-radius:18px;
-    background:#0b1a15 var(--hero-img) center/cover no-repeat; /* ใช้รูปใหม่ */
+    /* ใช้รูปเดิมผ่านตัวแปร, มีพื้นสีมืดกันแฟลช */
+    background:#0b1a15 var(--hero-img) center/cover no-repeat;
     box-shadow:
       0 0 0 2px rgba(34,255,200,.16) inset,
       0 0 40px rgba(0,255,160,.18),
@@ -79,7 +81,7 @@
   }
   .head-logo{
     width:74px; height:74px; border-radius:14px;
-    background:#0b1a15 url("/img/profile") center/cover no-repeat; /* โลโก้เดิม */
+    background:#0b1a15 url("/img/profile") center/cover no-repeat;
     box-shadow:0 0 18px rgba(0,255,170,.45);
   }
   .head-title{
@@ -194,10 +196,10 @@
     barLabel.textContent = 'Progress: 1/1';
   });
 
-  // กระตุ้นให้รูป BG และรูป hero โหลดเร็ว (กันแฟลช/ว่าง)
+  // กระตุ้นให้รูป BG และ "รูปเดิม" สำหรับ hero โหลดเร็ว (กันแฟลช/ว่าง)
   const bgImg = new Image(); bgImg.src = '/img/bg';
   const heroImg = new Image();
-  heroImg.src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  heroImg.src = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cf8acb&is=68ce394b&hm=3c3e5b4819a3d0e07794caa3fc39bafbeee7a3bbc0b35796e16e0e21f663113b&";
   heroImg.decode?.().catch(()=>{});
 </script>
 </body>
