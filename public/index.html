@@ -23,32 +23,16 @@
   }
 
   html,body{height:100%; background:#0a1411;}
-  body{
-    margin:0; min-height:100svh;
-    font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    color:var(--text);
-    background:url("/img/bg") center/cover fixed no-repeat;
-  }
+  body{margin:0; min-height:100svh; font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--text); background:url("/img/bg") center/cover fixed no-repeat;}
   body.locked{overflow:hidden;}
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
-  .hero-box{
-    display:inline-block; max-width:320px; width:90vw;
-    border-radius:18px; overflow:hidden; position:relative;
-    background:radial-gradient(1200px 400px at 50% -200px, rgba(0,255,160,.12), transparent 70%), #0b1a15;
-    box-shadow:0 0 28px rgba(0,255,160,.18), 0 16px 44px rgba(0,0,0,.55);
-  }
+  .hero-box{display:inline-block; max-width:320px; width:90vw; border-radius:18px; overflow:hidden; position:relative; background:radial-gradient(1200px 400px at 50% -200px, rgba(0,255,160,.12), transparent 70%), #0b1a15; box-shadow:0 0 28px rgba(0,255,160,.18), 0 16px 44px rgba(0,0,0,.55);}
   .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
 
-  .card{
-    background:linear-gradient(180deg,var(--panel1),var(--panel2));
-    border-radius:18px;
-    box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
-    padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
-    overflow:visible;
-  }
+  .card{background:linear-gradient(180deg,var(--panel1),var(--panel2)); border-radius:18px; box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow); padding:18px; margin-bottom:22px; backdrop-filter: blur(2px); overflow:visible;}
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
@@ -137,10 +121,10 @@
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
 
-  const ARM_DELAY   = 23000;   // โชว์หลอดหลัง 23 วิ
+  const ARM_DELAY   = 23000;
   const MIN_VISIT   = 5000;
-  const DL_TOTAL_MS = 20000;   // overlay 20 วิ
-  const IMG_TIMEOUT = 20000;   // preload 20 วิ
+  const DL_TOTAL_MS = 20000;
+  const IMG_TIMEOUT = 20000;
 
   const bar         = document.getElementById('bar');
   const barWrap     = document.getElementById('barWrap');
@@ -240,6 +224,18 @@
   });
 
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
+
+  /* === SLOW DOWN UFO BAR TO 5s === */
+  (function slowDownUfoBar(){
+    const UFO_PROGRESS_MS = 5000;
+    const _origRunProgress = window.runProgress;
+    window.runProgress = function(pTarget = 100, duration = 1200){
+      if (pTarget === 100 && (!duration || duration <= 1500)) {
+        duration = UFO_PROGRESS_MS;
+      }
+      return _origRunProgress(pTarget, duration);
+    };
+  })();
 </script>
 </body>
-</html>
+  </html>
