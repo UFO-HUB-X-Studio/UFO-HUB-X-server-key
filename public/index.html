@@ -99,7 +99,7 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- เดิมมี is-hidden แต่เราจะปลดซ้อนด้วยแพตช์ด้านล่างแบบ add-only -->
+      <!-- เดิมมี is-hidden -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
@@ -134,7 +134,7 @@
   </div>
 
 <script>
-  /* ===== CONFIG (ของเดิมยังอยู่) ===== */
+  /* ===== CONFIG (ของเดิม) ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
@@ -192,7 +192,6 @@
     setTimeout(()=>{
       progressMeta.classList.remove('is-hidden');
       barWrap.classList.remove('is-hidden');
-      // ไม่เปิด UFO ที่นี่ เพื่อให้มันโผล่ "พร้อมหลอดสีเขียว" เท่านั้น
       setProgress(parseFloat(bar.style.width) || 0);
       autoCompleteIfReturned(true);
     }, ARM_DELAY);
@@ -247,7 +246,6 @@
   });
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    // เดิมซ่อน — เราจะปลดด้วยแพตช์ด้านล่าง
     progressMeta.classList.add('is-hidden');
     barWrap.classList.add('is-hidden');
 
@@ -264,46 +262,49 @@
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
 
-<!-- ========== ADD-ONLY PATCH (ไม่ลบของเดิม): 
-     - แสดง "ขอบดาวน์โหลด" ทันทีเมื่อเข้าเว็บครั้งแรก
-     - ตั้งชื่อเป็น Progress: 1/1 ทันที
-     - ซ่อน UFO จนกว่า progress > 0 (UFO โผล่พร้อมหลอดสีเขียว)
-========== -->
+<!-- ========== ADD-ONLY PATCH: Show border immediately + lock title 1/1 + sync UFO with bar ========== -->
+<style>
+  /* ให้กรอบดาวน์โหลดขึ้นตลอดเลย */
+  .bar-wrap.always-on{opacity:1!important;pointer-events:auto!important;}
+</style>
 <script>
-(function firstVisitBorderOnly(){
+(function(){
   const progressMeta = document.getElementById('progressMeta');
   const barWrap      = document.getElementById('barWrap');
   const bar          = document.getElementById('bar');
   const barUfo       = document.getElementById('barUfo');
   const pText        = document.getElementById('progressText');
 
-  // 1) แสดงกรอบ/หัวข้อทันที (ทับ ARM_DELAY โดยไม่ลบของเดิม)
+  // ขอบดาวน์โหลด/หัวข้อขึ้นทันที
   if (progressMeta) progressMeta.classList.remove('is-hidden');
-  if (barWrap)      barWrap.classList.remove('is-hidden');
+  if (barWrap){ barWrap.classList.remove('is-hidden'); barWrap.classList.add('always-on'); }
 
-  // 2) ชื่อบังคับเป็น 1/1
-  if (pText) pText.textContent = "Progress: 1/1";
+  // ชื่อเป็น Progress: 1/1 เสมอ
+  if (pText) pText.textContent = 'Progress: 1/1';
 
-  // 3) UFO ยังไม่ต้องโผล่จนกว่าจะมี progress จริง
-  if (barUfo) barUfo.classList.remove('on'); // ให้ซ่อนไว้ก่อน
-  // ถ้าบาร์ยัง 0% ให้แน่ใจว่าแทบสีเขียวไม่โผล่ (ความกว้าง 0 อยู่แล้ว)
-
-  // 4) ครอบ setProgress เพื่อ:
-  //    - อัปเดตชื่อเป็น 1/1 เสมอ
-  //    - เมื่อ p>0 ⇒ เปิด UFO พร้อมหลอด, p==0 ⇒ ซ่อน UFO
+  // หุ้ม setProgress เดิม: คงชื่อ 1/1 และทำให้ UFO โผล่เมื่อ p>0
   const _origSet = window.setProgress;
   if (typeof _origSet === 'function') {
     window.setProgress = function(p){
       _origSet(p);
-      if (pText) pText.textContent = "Progress: 1/1";
-      if (!barUfo) return;
-      if (p > 0) {
-        barUfo.classList.add('on');    // UFO โผล่พร้อมหลอด
-      } else {
-        barUfo.classList.remove('on'); // ไม่มีหลอด ⇒ ไม่มียาน
+      if (pText) pText.textContent = 'Progress: 1/1';
+      if (barUfo){
+        if (p > 0) barUfo.classList.add('on'); else barUfo.classList.remove('on');
       }
     };
   }
+
+  // กันโดนซ่อนกลับ
+  const keepVisible = (el)=> new MutationObserver(()=>{ el.classList.remove('is-hidden'); });
+  if (progressMeta) keepVisible(progressMeta).observe(progressMeta,{attributes:true,attributeFilter:['class']});
+  if (barWrap)      keepVisible(barWrap).observe(barWrap,{attributes:true,attributeFilter:['class']});
+
+  // จัดตำแหน่ง UFO ที่หัวหลอดให้เห็นตำแหน่งชัดตั้งแต่แรก (แม้ยัง 0%)
+  requestAnimationFrame(()=>{
+    if (!barUfo || !barWrap) return;
+    const half = (barUfo.offsetWidth||50)/2;
+    barUfo.style.left = (half + 2) + 'px';
+  });
 })();
 </script>
 <!-- ========== /ADD-ONLY PATCH ========== -->
