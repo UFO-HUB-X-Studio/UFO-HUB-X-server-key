@@ -283,57 +283,56 @@
   });
 </script>
 
-<!-- ========== ADD-ONLY PATCH: Force UFO image + Show shell immediately, hide green fill until running ========== -->
+<!-- ========== ADD-ONLY: ซิงก์ให้ UFO โผล่พร้อมหลอด และ “ไม่หาย” หลังครบ 100% ========== -->
+<style>
+  /* ซ่อน UFO จนกว่าจะเริ่มมี progress จริง ๆ */
+  .bar-ufo.sync-hide{opacity:0 !important;}
+</style>
 <script>
-(function () {
-  // ใช้รูปยานตามลิงก์ “ตัวเต็ม” ที่ให้ (มี query params)
+(function syncUFOWithBar(){
   const UFO_URL_EXACT = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
-  const barUfo       = document.getElementById('barUfo');
-  const bar          = document.getElementById('bar');
-  const barWrap      = document.getElementById('barWrap');
-  const progressMeta = document.getElementById('progressMeta');
-  const pText        = document.getElementById('progressText');
 
-  // บังคับภาพยาน + พรีโหลด
-  if (barUfo) {
-    barUfo.style.backgroundImage = `url("${UFO_URL_EXACT}")`;
-    const img = new Image(); img.src = UFO_URL_EXACT;
-  }
+  const barUfo = document.getElementById('barUfo');
+  const bar    = document.getElementById('bar');
 
-  // ให้ “กรอบดาวน์โหลด + ข้อความ” โผล่ทันที (แต่ยังไม่โชว์แท่งสีเขียว)
-  if (progressMeta) progressMeta.classList.remove('is-hidden');
-  if (barWrap)      barWrap.classList.remove('is-hidden');
+  if(!barUfo || !bar) return;
 
-  // ตั้งชื่อเป็น Progress: 1/1 ตามที่ขอ
-  if (pText) pText.textContent = "Progress: 1/1";
+  /* บังคับใช้ภาพยานที่ให้ และซ่อนจนกว่าจะเริ่มวิ่ง */
+  barUfo.style.backgroundImage = `url("${UFO_URL_EXACT}")`;
+  barUfo.classList.add('sync-hide');
 
-  // ซ่อน “แท่งสีเขียว” ไว้ก่อนจนกว่าจะเริ่มวิ่งจริง
-  if (bar) bar.style.opacity = '0';
+  /* กันไม่ให้ใครถอด .on ออกหลัง 100% (ให้ยานคงอยู่) */
+  const mo = new MutationObserver(() => {
+    if (!barUfo.classList.contains('on')) {
+      barUfo.classList.add('on');
+    }
+  });
+  mo.observe(barUfo, { attributes:true, attributeFilter:['class'] });
 
-  // โชว์ยานทันที และวางไว้ต้นหลอดชั่วคราว
-  if (barUfo) {
-    barUfo.classList.add('on');
-    requestAnimationFrame(() => {
-      try {
-        const ufoW = barUfo.offsetWidth || 50;
-        const leftX = Math.max(ufoW/2 + 2, 0);
-        barUfo.style.left = leftX + 'px';
-      } catch(e){}
-    });
-  }
-
-  // ครอบ setProgress เดิม: เมื่อเริ่มมี progress จริง ค่อยให้แท่งสีเขียวโผล่
+  /* ครอบ setProgress: เมื่อ p>0 ⇒ แสดง UFO พร้อมหลอด */
   const _origSet = window.setProgress;
   if (typeof _origSet === 'function') {
-    window.setProgress = function(p) {
+    window.setProgress = function(p){
       _origSet(p);
-      if (bar && p > 0) {
-        bar.style.opacity = '1';
+      if (p > 0) {
+        barUfo.classList.add('on');
+        barUfo.classList.remove('sync-hide');
       }
+      // ไม่ซ่อนตอน 100% เพื่อให้ "ยานไม่หายไป"
     };
+  } else {
+    // เผื่อไม่มี setProgress: ดูความกว้างแท่งแทน
+    const ro = new ResizeObserver(() => {
+      if (bar.clientWidth > 0) {
+        barUfo.classList.add('on');
+        barUfo.classList.remove('sync-hide');
+        ro.disconnect();
+      }
+    });
+    ro.observe(bar);
   }
 })();
 </script>
-<!-- ========== /ADD-ONLY PATCH ========== -->
+<!-- ========== /ADD-ONLY ========== -->
 </body>
 </html>
