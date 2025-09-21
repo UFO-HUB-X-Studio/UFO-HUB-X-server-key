@@ -1,8 +1,3 @@
--- index.html
--- HTML content embedded as a Lua multiline string.
--- Return the string so you can do:  local html = dofile('ufo-hub-x.lua')
-
-local html = [[
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,9 +92,42 @@ local html = [[
     .head-title{font-size:34px}
     .bar-ufo{width:46px;height:46px}
   }
+
+  /* ============ NEW: Splash Overlay (วงกลม 0-100) ============ */
+  .splash{
+    position:fixed; inset:0; background:rgba(0,0,0,.78);
+    display:none; align-items:center; justify-content:center;
+    z-index:9999; /* สูงสุด บล็อกทุกคลิก */
+    backdrop-filter: blur(2px);
+  }
+  .splash.show{display:flex;}
+  .splash-card{
+    width:180px; height:180px; border-radius:20px;
+    background:linear-gradient(180deg, rgba(8,13,19,.95), rgba(9,16,23,.95));
+    box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 12px 40px rgba(0,0,0,.6), 0 0 34px var(--glow);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .splash-svg{position:absolute; inset:0; transform:rotate(-90deg);}
+  .splash-circle-bg{stroke:rgba(255,255,255,.12); stroke-width:10; fill:none;}
+  .splash-circle{stroke:var(--ufo); stroke-width:10; fill:none; filter:drop-shadow(0 0 10px rgba(0,255,170,.6)); stroke-linecap:round;}
+  .splash-num{
+    font-weight:900; font-size:34px; letter-spacing:1px;
+    text-shadow:0 0 12px rgba(0,255,170,.25); color:var(--text);
+  }
 </style>
 </head>
 <body>
+  <!-- ============ NEW: Splash Overlay ============ -->
+  <div class="splash" id="splash">
+    <div class="splash-card">
+      <svg class="splash-svg" viewBox="0 0 200 200">
+        <circle class="splash-circle-bg" cx="100" cy="100" r="80"></circle>
+        <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="80" stroke-dasharray="0 999"></circle>
+      </svg>
+      <div class="splash-num" id="splashNum">0%</div>
+    </div>
+  </div>
+
   <div class="container">
 
     <!-- HERO -->
@@ -150,24 +178,36 @@ local html = [[
   const RETURN_KEY   = "ufo_return_ts";
   const VISIT_FLAG   = "ufo_visit_inflight";     // (สำรอง) กัน back
   const EXTEND_PENDING = "ufo_extend_pending";   // ตั้งไว้ตอนกด +5H
+
   const MIN_VISIT    = 5000;                     // ต้องอยู่อย่างน้อย 5 วิ
   const UFO_MS       = 4000;                     // หลอดเขียววิ่ง 4 วิ
   const BASE_HOURS   = 48;                       // อายุคีย์เริ่มต้น 48 ชม.
   const EXTEND_HOURS = 5;                        // ต่อครั้งละ 5 ชม.
+
   const LOCK_KEY     = "ufo_start_locked_until";
   const USER_ID_KEY  = "ufo_user_id";
   const KEY_STORE    = "ufo_key_store_v1";
   const CONFIG_URL   = "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
 
+  /* ===== NEW: Splash config ===== */
+  const SPLASH_MS    = 10000;                    // ~10 วินาที
+  const SPLASH_FLAG  = "ufo_splash_shown";       // แสดงครั้งเดียวต่อ session
+  const SPLASH_SKIP  = "ufo_skip_splash_once";   // ข้ามเมื่อลิงก์กลับมา
+
   /* ===== Elements ===== */
-  const bar         = document.getElementById('bar');
-  const barWrap     = document.getElementById('barWrap');
-  const barUfo      = document.getElementById('barUfo');
-  const pText       = document.getElementById('progressText');
-  const percentEl   = document.getElementById('percentText');
-  const startBtn    = document.getElementById('startBtn');
-  const getKeyBtn   = document.getElementById('getKey');
-  const keyRows     = document.getElementById('keyRows');
+  const bar       = document.getElementById('bar');
+  const barWrap   = document.getElementById('barWrap');
+  const barUfo    = document.getElementById('barUfo');
+  const pText     = document.getElementById('progressText');
+  const percentEl = document.getElementById('percentText');
+  const startBtn  = document.getElementById('startBtn');
+  const getKeyBtn = document.getElementById('getKey');
+  const keyRows   = document.getElementById('keyRows');
+
+  /* Splash elems */
+  const splash       = document.getElementById('splash');
+  const splashCircle = document.getElementById('splashCircle');
+  const splashNum    = document.getElementById('splashNum');
 
   let raf = null, lockTimer=null, keyTimer=null;
   let isCompleted = false;
@@ -208,7 +248,7 @@ local html = [[
       startBtn.textContent = '✅'; // อิโมจิอย่างเดียว
       // ยานค้างไว้
       enableOnlyGetKey();
-      // (ยังคงไว้) ถ้ามี EXTEND_PENDING ระหว่างวิ่ง progress
+      // ถ้ามี EXTEND_PENDING ระหว่างวิ่ง progress — (กรณี START) จะต่อเวลาอัตโนมัติ
       if (localStorage.getItem(EXTEND_PENDING)==='1'){
         localStorage.removeItem(EXTEND_PENDING);
         autoExtend5h();
@@ -232,20 +272,18 @@ local html = [[
   }
   function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY); }catch(e){} }
 
-  // ✅ แก้: ถ้ากลับจากการกด +5H ให้ "ไม่" วิ่งหลอดเขียว แต่อัปเดตเวลาเงียบๆ
+  // ถ้ากลับจาก +5H ให้ "ไม่" วิ่งหลอดเขียว (อัปเดตเวลาเงียบๆ)
   function autoCompleteIfReturned(){
     if(location.hostname!==DOMAIN_OK) return;
     if(!isValidReturn()) return;
     clearReturnMark();
 
     if (localStorage.getItem(EXTEND_PENDING)==='1'){
-      // ต่อเวลา 5 ชม. แบบไม่วิ่ง progress
       localStorage.removeItem(EXTEND_PENDING);
-      autoExtend5h();
-      return; // จบ ไม่เรียก runProgress
+      autoExtend5h();           // ต่อเวลาเงียบ ๆ
+      return;
     }
-
-    // กรณีปกติค่อยวิ่งหลอด
+    // กรณี START ปกติ → ค่อยวิ่ง progress
     runProgress(100, UFO_MS);
   }
 
@@ -299,11 +337,12 @@ local html = [[
       try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
     });
 
-    // +5H → พาออกลิงก์ แล้วกลับมาจะต่อเวลาให้อัตโนมัติ "แบบไม่วิ่งหลอด"
+    // +5H → ออกลิงก์ก่อน แล้วกลับมาจะต่อเวลาให้อัตโนมัติ "แบบไม่วิ่งหลอด"
     btnAdd5.addEventListener('click', ()=>{
       const mine=getMyKey();
       if(!mine || now()>=mine.until) return;
       try{
+        sessionStorage.setItem(SPLASH_SKIP,'1');           // ข้าม splash ตอนกลับ
         localStorage.setItem(RETURN_KEY, String(now()));
         localStorage.setItem(EXTEND_PENDING,'1');
       }catch(e){}
@@ -353,10 +392,50 @@ local html = [[
     return s+'-48H';
   }
 
+  /* ===== NEW: Splash logic ===== */
+  function shouldShowSplash(){
+    // แสดงครั้งแรกของ session เท่านั้น และไม่แสดงถ้ากลับจากลิงก์
+    if (sessionStorage.getItem(SPLASH_SKIP) === '1') {
+      // ใช้แล้วลบ เพื่อครั้งถัดไปแสดงได้ถ้าต้องการ (ตาม session ใหม่)
+      sessionStorage.removeItem(SPLASH_SKIP);
+      return false;
+    }
+    if (sessionStorage.getItem(SPLASH_FLAG) === '1') return false;
+    return true;
+  }
+
+  function showSplash(){
+    splash.classList.add('show');
+    const R = 80;                         // r ของวงกลม
+    const C = 2*Math.PI*R;                // เส้นรอบวง
+    splashCircle.setAttribute('stroke-dasharray', `${0} ${C}`);
+    splashNum.textContent = '0%';
+
+    const t0 = performance.now();
+    function tick(ts){
+      const t = Math.min(1, (ts - t0)/SPLASH_MS);
+      const pct = Math.round(t*100);
+      splashNum.textContent = pct + '%';
+      const dash = C * t;
+      splashCircle.setAttribute('stroke-dasharray', `${dash} ${C}`);
+      if (t < 1) requestAnimationFrame(tick);
+      else hideSplash();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function hideSplash(){
+    splash.classList.remove('show');
+    sessionStorage.setItem(SPLASH_FLAG,'1'); // ทำให้หน้าโหลดรอบนี้ไม่ขึ้นอีก
+  }
+
   /* ===== Events ===== */
   startBtn.addEventListener('click', ()=>{
     if(startBtn.disabled) return;
-    try{ localStorage.setItem(RETURN_KEY,String(now())); }catch(e){}
+    try{
+      sessionStorage.setItem(SPLASH_SKIP,'1');      // กลับมาจาก START → ไม่โชว์ splash
+      localStorage.setItem(RETURN_KEY,String(now()));
+    }catch(e){}
     window.location.href = START_URL;
   });
 
@@ -384,8 +463,12 @@ local html = [[
 
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
+    // Splash ก่อน (ถ้าควรแสดง)
+    if (shouldShowSplash()) showSplash();
+
     setProgress(0);
-    autoCompleteIfReturned();   // ถ้ากลับจาก START → วิ่งหลอด | ถ้ากลับจาก +5H → ต่อเวลาเงียบๆ
+    autoCompleteIfReturned();   // กลับจาก START → วิ่งหลอด | กลับจาก +5H → ต่อเวลาเงียบๆ
+
     const mine=getMyKey();
     if(mine){
       renderKeyRow(mine);
@@ -407,19 +490,3 @@ local html = [[
 </script>
 </body>
 </html>
-
-]]
-
--- Optional helper: write the HTML to a file when executed directly with: lua ufo-hub-x.lua
-local function save(path, text)
-  local f = assert(io.open(path, "w"))
-  f:write(text)
-  f:close()
-end
-
-if arg and arg[0] and (arg[0]:match("ufo%-hub%-x%.lua") or arg[0]:match("ufo_hub_x%.lua")) then
-  save("ufo-hub-x.html", html)
-  print("Saved ufo-hub-x.html")
-end
-
-return html
