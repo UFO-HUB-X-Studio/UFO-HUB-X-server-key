@@ -143,11 +143,11 @@
   const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK    = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY   = "ufo_return_ts";
-  const VISIT_FLAG   = "ufo_visit_inflight";     // กันเคสกด Back ไม่ให้ได้เครดิต
-  const EXTEND_CRED  = "ufo_extend_credit";      // 1 เครดิตต่อรอบ เมื่อกลับมาจริง
+  const VISIT_FLAG   = "ufo_visit_inflight";     // กันเคสกด Back ให้ไม่ได้นับ
+  const EXTEND_PENDING = "ufo_extend_pending";   // ตั้งค้างไว้ตอนกด +5H
   const MIN_VISIT    = 5000;                     // ต้องอยู่อย่างน้อย 5 วิ
   const UFO_MS       = 4000;                     // หลอดเขียววิ่ง 4 วิ
-  const BASE_HOURS   = 48;                       // ✅ อายุคีย์เริ่มต้น 48 ชม.
+  const BASE_HOURS   = 48;                       // อายุคีย์เริ่มต้น 48 ชม.
   const EXTEND_HOURS = 5;                        // ต่อครั้งละ 5 ชม.
   const LOCK_KEY     = "ufo_start_locked_until";
   const USER_ID_KEY  = "ufo_user_id";
@@ -166,9 +166,10 @@
 
   let raf = null, lockTimer=null, keyTimer=null;
   let isCompleted = false;
+  let btnAdd5Ref = null;
   const LEAD = 8;
 
-  /* ===== helpers ===== */
+  /* ===== utils ===== */
   const now = ()=>Date.now();
   const hms = (ms)=>{ if(ms<0)ms=0; const s=Math.floor(ms/1000);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; };
 
@@ -199,18 +200,19 @@
       isCompleted = true;
       startBtn.classList.add('ok');
       startBtn.disabled = true;
-      startBtn.textContent = '✅';
+      startBtn.textContent = '✅'; // อิโมจิอย่างเดียว
       // ยานค้างไว้
       enableOnlyGetKey();
-      // เมื่อกลับมาสำเร็จ ให้เครดิตต่อเวลา 1 ครั้ง
-      try{ if(sessionStorage.getItem(VISIT_FLAG)==='1'){ localStorage.setItem(EXTEND_CRED,'1'); sessionStorage.removeItem(VISIT_FLAG);} }catch(e){}
-      // ทำให้ปุ่ม +5H แสดงพร้อมใช้ถ้ามีเครดิต
-      refreshExtendButtonState();
+      // ถ้ากลับมาพร้อม EXTEND_PENDING ให้ต่อเวลาอัตโนมัติ 5 ชม.
+      if (localStorage.getItem(EXTEND_PENDING)==='1'){
+        localStorage.removeItem(EXTEND_PENDING);
+        autoExtend5h();
+      }
     }
   }
   function runProgress(pTarget=100, duration=UFO_MS){
     cancelAnimationFrame(raf);
-    barUfo.classList.add('on');
+    barUfo.classList.add('on'); // บังคับโชว์ตอนวิ่ง
     const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
     function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
     raf=requestAnimationFrame(tick);
@@ -220,7 +222,7 @@
   function isValidReturn(){
     try{
       const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
-      return ts && (now()-ts)>=MIN_VISIT && sessionStorage.getItem(VISIT_FLAG)==='1';
+      return ts && (now()-ts)>=MIN_VISIT;
     }catch(e){ return false; }
   }
   function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY); }catch(e){} }
@@ -242,7 +244,6 @@
   }
 
   /* ===== Key UI ===== */
-  let btnAdd5Ref = null;
   function renderKeyRow(data){
     keyRows.innerHTML='';
     const tr=document.createElement('tr');
@@ -269,39 +270,42 @@
         clearMyKey();
         getKeyBtn.disabled=false; getKeyBtn.textContent='+ GET A NEW KEY';
         applyLockUI(0);
-        refreshExtendButtonState();
       }
     }
     tickLeft();
     if(keyTimer) clearInterval(keyTimer);
     keyTimer=setInterval(tickLeft,1000);
 
+    // Copy
     btnCopy.addEventListener('click', async ()=>{
       try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
     });
 
+    // +5H → ออกลิงก์ก่อน แล้วต่อเวลาอัตโนมัติเมื่อกลับมา
     btnAdd5.addEventListener('click', ()=>{
-      // ต้องมีเครดิต (จากการไปลิงก์จริง)
-      if(localStorage.getItem(EXTEND_CRED)==='1' && now()<data.until){
-        data.until += EXTEND_HOURS*60*60*1000;
-        setMyKey(data);
-        localStorage.setItem(LOCK_KEY,String(data.until));
-        startLockCountdown(data.until);
-        localStorage.removeItem(EXTEND_CRED); // ใช้แล้วหาย
-        refreshExtendButtonState();
-        tickLeft();
-      }else{
-        // ไม่มีเครดิต → ไม่เพิ่ม
-        btnAdd5.classList.remove('btn-green');
-        btnAdd5.classList.add('btn-ghost');
-        btnAdd5.textContent = '↩ ไปลิงก์ก่อน';
-        setTimeout(()=>{ refreshExtendButtonState(); },1200);
-      }
+      const mine=getMyKey();
+      if(!mine || now()>=mine.until) return; // หมดเวลา/ไม่มีคีย์
+      try{
+        localStorage.setItem(RETURN_KEY, String(now())); // เริ่มนับ
+        localStorage.setItem(EXTEND_PENDING,'1');        // ขอเพิ่มเวลา
+      }catch(e){}
+      window.location.href = START_URL; // พาออกไปจริง
     });
 
     tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
     keyRows.prepend(tr);
-    refreshExtendButtonState();
+  }
+
+  // ต่อเวลา +5H (ใช้ตอนกลับมาจากลิงก์หลังตั้ง EXTEND_PENDING)
+  function autoExtend5h(){
+    const mine=getMyKey();
+    if(!mine || now()>=mine.until) return;
+    mine.until += EXTEND_HOURS*60*60*1000;
+    setMyKey(mine);
+    localStorage.setItem(LOCK_KEY,String(mine.until));
+    startLockCountdown(mine.until);
+    // วาดใหม่เพื่ออัปเดตเวลาทันที
+    renderKeyRow(mine);
   }
 
   function enableOnlyGetKey(){
@@ -309,20 +313,11 @@
     getKeyBtn.disabled=false;
   }
 
-  function refreshExtendButtonState(){
-    if(!btnAdd5Ref) return;
-    const credit = localStorage.getItem(EXTEND_CRED)==='1';
-    if(credit){ btnAdd5Ref.disabled=false; btnAdd5Ref.className='btn btn-green'; btnAdd5Ref.innerHTML='⏩ +5H'; }
-    else { btnAdd5Ref.disabled=false; btnAdd5Ref.className='btn btn-ghost'; btnAdd5Ref.innerHTML='⏩ +5H'; }
-  }
-
-  /* ===== คีย์จาก config.json + บังคับรูปแบบ UFO-...-48H ===== */
+  /* ===== คีย์จาก config.json + เติมรูปแบบ UFO-...-48H ===== */
   function normalizeKey(k){
     let s = String(k||'').trim();
     if(!s) return '';
-    // เติม prefix UFO- ถ้ายังไม่มี
     if(!/^UFO[-]/i.test(s)) s = 'UFO-' + s.replace(/^\-+/,'');
-    // เติม suffix -48H ถ้ายังไม่มี
     if(!/[-]48H$/i.test(s)) s = s.replace(/-48H$/i,'') + '-48H';
     return s.toUpperCase();
   }
@@ -344,15 +339,11 @@
   /* ===== Events ===== */
   startBtn.addEventListener('click', ()=>{
     if(startBtn.disabled) return;
-    try{
-      localStorage.setItem(RETURN_KEY,String(now()));
-      sessionStorage.setItem(VISIT_FLAG,'1');        // เริ่มเที่ยวนี้
-    }catch(e){}
+    try{ localStorage.setItem(RETURN_KEY,String(now())); }catch(e){}
     window.location.href = START_URL;
   });
 
   getKeyBtn.addEventListener('click', async ()=>{
-    // 1 คน 1 key จนกว่าจะหมด
     const existing = getMyKey();
     if(existing && now()<existing.until){ getKeyBtn.disabled=true; getKeyBtn.textContent='🔒 WAIT'; return; }
 
@@ -361,9 +352,8 @@
     bar.style.width='0%'; percentEl.textContent='0%'; pText.textContent='Progress: 0/1';
     barUfo.classList.remove('on');
     startBtn.classList.remove('ok','lock'); startBtn.disabled=false; startBtn.textContent='🟢 START';
-    localStorage.removeItem(EXTEND_CRED); // เริ่มรอบใหม่ยังไม่มีเครดิต
 
-    // เอาคีย์จาก config + อายุ 48 ชั่วโมง
+    // ดึงคีย์จาก config + อายุ 48 ชั่วโมง
     const key = normalizeKey(await fetchKeyFromConfig());
     const until = now() + BASE_HOURS*60*60*1000;
 
@@ -378,7 +368,7 @@
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
     setProgress(0);
-    autoCompleteIfReturned();   // กลับจากลิงก์ครบ 5 วิ → จะได้เครดิตและวิ่ง 100%
+    autoCompleteIfReturned();   // กลับจากลิงก์ครบ 5 วิ → วิ่ง 100% และถ้ามี EXTEND_PENDING จะต่อเวลาให้อัตโนมัติ
     const mine=getMyKey();
     if(mine){
       renderKeyRow(mine);
