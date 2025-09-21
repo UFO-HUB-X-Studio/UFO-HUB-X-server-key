@@ -64,10 +64,8 @@
     box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset;
     transition:filter .2s ease, opacity .2s ease, background .2s ease, color .2s ease;
   }
-  .start-btn.ok { background:#22c55e; color:#062512; }             /* ✅ ครบ 100% */
-  .start-btn.lock {
-    background:#ff4d4d; color:#2b0505; cursor:not-allowed; opacity:.9; /* ⛔ ล็อก 1 ชม. */
-  }
+  .start-btn.ok   { background:#22c55e; color:#062512; }        /* ✅ ครบ 100% */
+  .start-btn.lock { background:#ff4d4d; color:#2b0505; cursor:not-allowed; opacity:.9; } /* ⛔ ล็อก */
 
   /* ✅ กรอบดาวน์โหลด “โชว์ตลอดเวลา” */
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
@@ -171,6 +169,7 @@
 
   let raf = null;
   let lockTimer = null;
+  let isCompleted = false;
   const LEAD = 8;
 
   /* ===== Helpers: Progress & UFO ===== */
@@ -186,11 +185,14 @@
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
 
-    // ✅ ครบ 100% แล้วเปลี่ยนปุ่ม START เป็น "ถูกต้อง" และไม่ซ่อน UFO
-    if (p >= 100) {
+    // ✅ ครบ 100%: ปิดทุกปุ่ม ยกเว้น + GET A NEW KEY, ปุ่ม START เป็นอิโมจิ ✅
+    if (p >= 100 && !isCompleted) {
+      isCompleted = true;
       startBtn.classList.add('ok');
-      startBtn.textContent = '✅ ถูกต้อง';
-      // ไม่ลบ barUfo.classList ('on') เพื่อให้ยานไม่หาย
+      startBtn.disabled = true;
+      startBtn.textContent = '✅';           // ← เอาแค่อิโมจิ
+      keepOnlyGetKeyEnabled();
+      // ไม่ถอด 'on' เพื่อให้ UFO ค้างอยู่
     }
   }
 
@@ -206,8 +208,7 @@
       if(t < 1){
         raf = requestAnimationFrame(tick);
       }else{
-        // ❌ ไม่ถอด 'on' — ให้ยานค้างอยู่หลังครบ 100%
-        // setTimeout(()=>barUfo.classList.remove('on'), 300);
+        // ❌ ไม่ลบ 'on' — ให้ยานค้างอยู่หลังครบ 100%
       }
     }
     raf = requestAnimationFrame(tick);
@@ -232,7 +233,7 @@
   }
 
   /* ===== START lock (1 ชั่วโมง) ===== */
-  function formatLeft(ms){
+  function msToHMS(ms){
     if (ms < 0) ms = 0;
     const s = Math.floor(ms/1000);
     const h = Math.floor(s/3600);
@@ -247,12 +248,13 @@
       startBtn.disabled = true;
       startBtn.classList.remove('ok');
       startBtn.classList.add('lock');
-      startBtn.textContent = `⛔ START (รอ ${formatLeft(left)})`;
+      startBtn.textContent = `⛔ ${msToHMS(left)}`;   // ← ไม่มีคำว่า START
     }else{
-      startBtn.disabled = false;
       startBtn.classList.remove('lock');
-      // ถ้าเคยครบ 100 มาก่อน จะยังขึ้น "✅ ถูกต้อง" อยู่; ถ้าอยากกลับเป็น START ให้คอมเมนต์บรรทัดถัด
-      if (!startBtn.classList.contains('ok')) startBtn.textContent = '🟢 START';
+      if (!isCompleted){            // ถ้าจบ 100 ไปแล้วให้คง ✅
+        startBtn.disabled = false;
+        startBtn.textContent = '🟢 START';
+      }
     }
   }
 
@@ -287,6 +289,18 @@
     }
   }
 
+  /* ===== จำกัดให้กดได้เฉพาะ + GET A NEW KEY เมื่อครบ 100% ===== */
+  function keepOnlyGetKeyEnabled(){
+    // ปิดทุกปุ่มก่อน
+    document.querySelectorAll('button').forEach(btn=>{
+      if (btn !== getKeyBtn){
+        btn.disabled = true;
+      }
+    });
+    // เปิดเฉพาะ + GET A NEW KEY
+    getKeyBtn.disabled = false;
+  }
+
   /* ===== Key table helper (UI เท่านั้น) ===== */
   function randomKey(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -308,7 +322,7 @@
 
     function renderLeft(){
       const left = until - Date.now();
-      tdLeft.textContent = left>0 ? formatLeft(left) : '00:00:00';
+      tdLeft.textContent = left>0 ? msToHMS(left) : '00:00:00';
     }
     renderLeft();
     const iv = setInterval(()=>{
@@ -321,21 +335,23 @@
   }
 
   /* ===== Events ===== */
-  // ปุ่ม START (เดิม): เซ็ต timestamp แล้วออกไปยังลิงก์
+  // ปุ่ม START: ออกลิงก์ (ถ้าไม่ถูกล็อก/ไม่ครบ 100%)
   startBtn.addEventListener('click', ()=>{
     if (startBtn.disabled) return;
     try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
     window.location.href = START_URL;
   });
 
-  // ปุ่ม GET A NEW KEY:
+  // ปุ่ม + GET A NEW KEY:
   getKeyBtn.addEventListener('click', ()=>{
-    // ✅ รีเซ็ตหลอด
+    // ✅ รีเซ็ตหลอด/สถานะ
+    isCompleted = false;
     bar.style.width = '0%';
     percentEl.textContent = '0%';
     pText.textContent = 'Progress: 0/1';
     barUfo.classList.remove('on');
-    startBtn.classList.remove('ok');
+    startBtn.classList.remove('ok','lock');
+    startBtn.disabled = false;
     startBtn.textContent = '🟢 START';
 
     // ✅ ล็อก START 1 ชั่วโมง
@@ -343,7 +359,7 @@
     try{ localStorage.setItem(LOCK_KEY, String(until)); }catch(e){}
     startLockCountdown(until);
 
-    // ✅ สร้างแถวคีย์ (UI)
+    // ✅ เพิ่มคีย์ใหม่ (UI)
     const key = randomKey();
     addKeyRow(key, until);
   });
@@ -351,12 +367,12 @@
   // โหลดหน้า
   document.addEventListener('DOMContentLoaded', ()=>{
     setProgress(0);            // กรอบโชว์อยู่แล้ว
-    autoCompleteIfReturned();  // ถ้ากลับมาจริงให้วิ่ง 4 วิ
-    restoreLockIfAny();        // ถ้าถูกล็อกไว้ให้แสดงเวลา
+    autoCompleteIfReturned();  // ถ้ากลับมาให้วิ่ง 4 วิ
+    restoreLockIfAny();        // ถ้าล็อกไว้ให้โชว์เวลา
   });
 
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(); });
-  
+
   /* ===== Preload รูป (กันแฟลช) ===== */
   new Image().src = 'https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png'; // bg
   new Image().src = 'https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';                          // profile
