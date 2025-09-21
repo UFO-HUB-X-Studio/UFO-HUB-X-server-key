@@ -53,7 +53,6 @@
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  /* ✅ หัวเรื่องหลัก: UFO เขียว / HUB X ขาว */
   .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
   .head-title .ufo{color:var(--ufo)}
   .head-title .hubx{color:#fff}
@@ -67,7 +66,7 @@
   .start-btn.ok   { background:#22c55e; color:#062512; }
   .start-btn.lock { background:#ff4d4d; color:#2b0505; cursor:not-allowed; opacity:.9; }
 
-  /* Progress (โชว์ตลอด) */
+  /* Progress */
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
   .bar-wrap{
     position:relative;width:100%;height:18px;border-radius:10px;
@@ -96,7 +95,7 @@
     .bar-ufo{width:46px;height:46px}
   }
 
-  /* ============ Splash (โปรไฟล์ + ชื่อ 2 บรรทัด + มิเตอร์ + ตัวเลขกลาง) ============ */
+  /* Splash */
   .splash{
     position:fixed; inset:0; background:rgba(0,0,0,.78);
     display:none; align-items:center; justify-content:center;
@@ -306,14 +305,14 @@
     const action = localStorage.getItem(LAST_ACTION)||'';
     if (action === 'extend'){
       localStorage.removeItem(LAST_ACTION);
-      autoExtend5h();      // เงียบ ๆ (ไม่โชว์ splash)
+      autoExtend5h();      // เงียบ ๆ
       return true;
     }
     if (action === 'start'){
-      localStorage.setItem(MUST_START,'1');          // ✅ เคย START แล้ว
+      localStorage.setItem(MUST_START,'1'); // ✅ เคย START แล้ว
       localStorage.removeItem(LAST_ACTION);
-      updateGetKeyButtonState();                    // ให้ปุ่มเป็น + GET A NEW KEY
-      runProgress(100, UFO_MS);                     // วิ่งหลอดครั้งแรกเท่านั้น
+      updateGetKeyButtonState();
+      runProgress(100, UFO_MS);
       return true;
     }
     runProgress(100, UFO_MS);
@@ -369,13 +368,13 @@
       try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
     });
 
-    // +5H → ต้องออกลิงก์ก่อน (และไม่ให้ Splash โผล่เมื่อกลับ)
+    // +5H → ต้องออกลิงก์ก่อน
     btnAdd5.addEventListener('click', ()=>{
       const mine=getMyKey();
       if(!mine || now()>=mine.until) return;
       try{
         sessionStorage.setItem(SPLASH_SKIP,'1');
-        localStorage.setItem(SPLASH_SKIP_LS,'1');      // กันไว้เผื่อ session ไม่มา
+        localStorage.setItem(SPLASH_SKIP_LS,'1');
         localStorage.setItem(RETURN_KEY, String(now()));
         localStorage.setItem(EXTEND_PENDING,'1');
         localStorage.setItem(LAST_ACTION,'extend');
@@ -387,7 +386,6 @@
     keyRows.prepend(tr);
   }
 
-  // ต่อเวลา +5H (เงียบ)
   function autoExtend5h(){
     const mine=getMyKey();
     if(!mine || now()>=mine.until) return;
@@ -403,7 +401,7 @@
     getKeyBtn.disabled=false;
   }
 
-  /* ===== ดึงคีย์จาก config.json ===== */
+  /* ===== ดึงคีย์จาก config.json (คงไว้เป็น fallback) ===== */
   function normalizeKey(k){
     let s = String(k||'').trim();
     if(!s) return '';
@@ -422,6 +420,35 @@
     const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let s='UFO-'; for(let i=0;i<8;i++) s+=chars[Math.floor(Math.random()*chars.length)];
     return s+'-48H';
+  }
+
+  /* ===== เพิ่ม: ดึงคีย์จากเซิร์ฟเวอร์จริง (/getkey) ===== */
+  async function fetchKeyFromServer(uidParam, placeParam){
+    try{
+      // ★★ แก้ base ตรงนี้ให้เป็นโดเมนเซิร์ฟเวอร์ของคุณ ★★
+      const base = "https://ufo-hub-x-server-key-777.onrender.com";
+      const qs = `/getkey?uid=${encodeURIComponent(uidParam)}&place=${encodeURIComponent(placeParam)}`;
+      const url = base + qs;
+
+      const res = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+      if(!res.ok) throw new Error('http_error:'+res.status);
+
+      const data = await res.json();
+      // ต้องมี ok:true และ key จากเซิร์ฟเวอร์
+      if(data && data.ok && data.key){
+        // expires_at (unix seconds) → ms
+        let until = Date.now() + BASE_HOURS*60*60*1000;
+        if(typeof data.expires_at !== 'undefined'){
+          const expSec = Number(data.expires_at)||0;
+          if(expSec>1000000000) until = expSec*1000;
+        }
+        return { ok:true, key:String(data.key), until, raw:data };
+      }
+      return { ok:false, reason: (data && data.reason) ? data.reason : 'invalid_response' };
+    }catch(err){
+      console.warn('fetchKeyFromServer error', err);
+      return { ok:false, reason: err.message || 'network_error' };
+    }
   }
 
   /* ===== Splash logic ===== */
@@ -452,7 +479,7 @@
     sessionStorage.setItem(SPLASH_FLAG,'1');
   }
 
-  /* ===== Gating: ต้องเคย START ก่อนถึงจะสร้างคีย์ได้ ===== */
+  /* ===== Gating ===== */
   function updateGetKeyButtonState(){
     const haveStartedOnce = localStorage.getItem(MUST_START)==='1';
     const mine = getMyKey();
@@ -467,11 +494,10 @@
   }
 
   /* ===== Events ===== */
-  // START → ออกลิงก์ และเมื่อกลับมาให้ปลดล็อก GET KEY
   startBtn.addEventListener('click', ()=>{
     if (startBtn.disabled) return;
     try {
-      sessionStorage.setItem(SPLASH_SKIP,'1');    // กลับมาไม่ต้องโชว์ splash
+      sessionStorage.setItem(SPLASH_SKIP,'1');
       localStorage.setItem(SPLASH_SKIP_LS,'1');
       localStorage.setItem(RETURN_KEY, String(now()));
       localStorage.setItem(LAST_ACTION,'start');
@@ -479,9 +505,7 @@
     window.location.href = START_URL;
   });
 
-  // + GET A NEW KEY
   getKeyBtn.addEventListener('click', async ()=>{
-    // ต้องเคยกด START อย่างน้อย 1 ครั้งก่อน
     if (localStorage.getItem(MUST_START) !== '1') {
       getKeyBtn.disabled = true;
       getKeyBtn.textContent = '🔒 START first';
@@ -495,32 +519,23 @@
       return;
     }
 
-    // รีเซ็ต progress/UI
-    isCompleted = false;
-    bar.style.width = '0%';
-    percentEl.textContent = '0%';
-    pText.textContent = 'Progress: 0/1';
-    barUfo.classList.remove('on');
-    startBtn.classList.remove('ok','lock');
-    startBtn.disabled = false;
-    startBtn.textContent = '🟢 START';
-
-    // ดึงคีย์ใหม่ + อายุ 48 ชม.
-    const key = normalizeKey(await fetchKeyFromConfig());
-    const until = now() + BASE_HOURS*60*60*1000;
-
-    setMyKey({ key, until, createdAt: now() });
-    localStorage.setItem(LOCK_KEY, String(until));
-    startLockCountdown(until);
-
-    getKeyBtn.disabled = true;
-    getKeyBtn.textContent = '🔒 WAIT';
-    renderKeyRow({ key, until });
+    // เรียกเซิร์ฟเวอร์จริง
+    const result = await fetchKeyFromServer(uid(), "PLACE-ID-HERE");
+    if(result.ok){
+      const until = result.until;
+      setMyKey({ key: result.key, until, createdAt: now() });
+      localStorage.setItem(LOCK_KEY, String(until));
+      startLockCountdown(until);
+      renderKeyRow({ key: result.key, until });
+      getKeyBtn.disabled = true;
+      getKeyBtn.textContent = '🔒 WAIT';
+    }else{
+      alert("❌ ไม่สามารถดึงคีย์จากเซิร์ฟเวอร์ได้ ("+result.reason+")");
+    }
   });
 
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Splash เฉพาะครั้งแรกของ session
     if (shouldShowSplash()) showSplash();
 
     setProgress(0);
