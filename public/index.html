@@ -256,5 +256,91 @@
 
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(true); });
 </script>
+
+<!-- ========== ADD-ONLY PATCH: เร่ง overlay ให้จบใน 2 วิ + อุดภาพไม่ขึ้น (profile/bg/UFO) ========== -->
+<script>
+(function(){
+  /* ---- 1) เร่งดาวน์โหลดในกล่อง overlay: 0→100 ภายใน 2 วิ ---- */
+  const FAST_OVERLAY_MS = 2000; // 2 วินาที
+  const _showDownloadOverlay = window.showDownloadOverlay;
+  if (typeof _showDownloadOverlay === 'function') {
+    window.showDownloadOverlay = function(){
+      if(location.hostname !== "ufo-hub-x-key-umoq.onrender.com") return;
+      const dlOverlay = document.getElementById('dlOverlay');
+      const dlSecondsEl = document.getElementById('dlSeconds');
+      document.body.classList.add('locked');
+      dlOverlay.classList.remove('hidden');
+      const start = Date.now();
+      const timer = setInterval(()=>{
+        const elapsed = Date.now() - start;
+        const percent = Math.min(100, Math.floor((elapsed / FAST_OVERLAY_MS) * 100));
+        if (dlSecondsEl) dlSecondsEl.textContent = String(percent);
+        if (elapsed >= FAST_OVERLAY_MS){
+          clearInterval(timer);
+          dlOverlay.classList.add('hidden');
+          document.body.classList.remove('locked');
+        }
+      }, 50);
+    };
+  }
+
+  /* ---- 2) อุดรูปภาพไม่ขึ้น: ลอง /img ก่อน แล้ว fallback ไป Discord (มี cache-buster) ---- */
+  const CDN_UFO = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png";
+  const CDN_PROFILE = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png";
+  const CDN_BG      = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png";
+
+  function tryImg(el, urls){
+    if(!el || !urls || !urls.length) return;
+    let i = 0;
+    function setNext(){
+      if(i >= urls.length) return;
+      const url = urls[i++] + (urls[i-1].includes('?') ? '&' : '?') + 'cb=' + Date.now();
+      const test = new Image();
+      test.onload = ()=>{ el.src ? el.src = url : (el.style.backgroundImage = `url("${url}")`); };
+      test.onerror = setNext;
+      test.src = url;
+    }
+    setNext();
+  }
+
+  // รูปหน้าปก (แท็ก <img>)
+  const heroImg = document.querySelector('.hero-img');
+  if (heroImg) {
+    tryImg(heroImg, [ '/img/profile', CDN_PROFILE ]);
+  }
+
+  // รูปพื้นหลัง (CSS background-image ของ body)
+  (function fixBg(){
+    const body = document.body;
+    const urls = [ '/img/bg', CDN_BG ];
+    let i = 0;
+    function trySet(){
+      if(i >= urls.length) return;
+      const url = urls[i++] + (urls[i-1].includes('?') ? '&' : '?') + 'cb=' + Date.now();
+      const test = new Image();
+      test.onload = ()=>{ body.style.backgroundImage = `url("${url}")`; };
+      test.onerror = trySet;
+      test.src = url;
+    }
+    trySet();
+  })();
+
+  // รูป UFO (background-image ของ .bar-ufo)
+  (function fixUfo(){
+    const u = document.getElementById('barUfo');
+    if(!u) return;
+    const candidates = [
+      'var(--ufo-ship)',
+      CDN_UFO
+    ];
+    // set: CDN เน้น ๆ เพื่อกันเคสอ่าน var ไม่ได้
+    const url = CDN_UFO + '?cb=' + Date.now();
+    u.style.backgroundImage = `url("${url}")`;
+    // พรีโหลดกันกะพริบ
+    const pre = new Image(); pre.src = url;
+  })();
+})();
+</script>
+<!-- ========== /ADD-ONLY PATCH ========== -->
 </body>
 </html>
