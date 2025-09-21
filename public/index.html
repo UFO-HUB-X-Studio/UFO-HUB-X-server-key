@@ -8,10 +8,10 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
-<!-- เปลี่ยน preload ให้ชี้ Google Drive -->
+<!-- โหลดภาพล่วงหน้า -->
 <link rel="preload" as="image" href="https://drive.google.com/uc?export=view&id=1PVjaFNlkm6CabMcOL2CfK7WIJh9GBVEN">
 <link rel="preload" as="image" href="https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4">
-<link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
+<link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png">
 
 <style>
   :root{
@@ -19,12 +19,13 @@
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
 
-    /* ใช้ภาพจาก Google Drive */
+    /* ใช้หน้าปกจาก Google Drive */
     --hero-img:url("https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4");
 
-    /* UFO ship คงของเดิม */
-    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
-    --ufo-lead: 8px; /* ยานนำปลายแท่งสีเขียว */
+    /* ใช้ยาน UFO เดิม */
+    --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png");
+
+    --ufo-lead: 8px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -33,13 +34,12 @@
     font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
     color:var(--text);
 
-    /* เปลี่ยนพื้นหลังทั้งหน้าเป็น Google Drive */
+    /* ใช้พื้นหลังจาก Google Drive */
     background:url("https://drive.google.com/uc?export=view&id=1PVjaFNlkm6CabMcOL2CfK7WIJh9GBVEN") center/cover fixed no-repeat;
   }
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
-  /* HERO */
   .hero{display:flex; justify-content:center; margin:8px 0 20px;}
   .hero-box{
     display:inline-block; max-width:320px; width:90vw;
@@ -49,13 +49,12 @@
   }
   .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
 
-  /* CARD */
   .card{
     background:linear-gradient(180deg,var(--panel1),var(--panel2));
     border-radius:18px;
     box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
     padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
-    overflow:visible; /* ให้ UFO โผล่พ้นได้ */
+    overflow:visible;
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -64,42 +63,11 @@
   .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
 
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2; transition:opacity .35s ease;}
-  .bar-wrap{
-    position:relative;width:100%;height:18px;border-radius:10px;
-    overflow:visible;
-    background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
-    box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
-    transition:opacity .35s ease;
-  }
-  /* ซ่อนตอนแรกเพื่อดีเลย์ 5 วิ */
+  .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);transition:opacity .35s ease;}
   .is-hidden{opacity:0; pointer-events:none;}
-
-  .bar{
-    position:absolute;left:0;top:0;bottom:0;width:0%;
-    background:linear-gradient(90deg,#00ffa3,#3bffbf);
-    box-shadow:0 0 18px rgba(34,255,200,.35);
-    z-index:1;
-  }
-  .bar-ufo{
-    position:absolute; top:50%; transform:translate(-50%,-50%);
-    width:50px;height:50px; opacity:0; transition:opacity .2s ease;
-    background:var(--ufo-ship) center/contain no-repeat;
-    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));
-    z-index:8; pointer-events:none;
-  }
+  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
+  .bar-ufo{position:absolute; top:50%; transform:translate(-50%,-50%);width:50px;height:50px; opacity:0; transition:opacity .2s ease;background:var(--ufo-ship) center/contain no-repeat;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7));z-index:8; pointer-events:none;}
   .bar-ufo.on{opacity:1;}
-
-  .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
-  .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
-  .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
-  table{width:100%;border-collapse:collapse;color:var(--text);font-size:14px}
-  th,td{padding:10px 8px;text-align:center}
-  th{color:#77ffc8;font-weight:600}
-
-  @media (max-width:560px){
-    .head-title{font-size:34px}
-    .bar-ufo{width:46px;height:46px}
-  }
 </style>
 </head>
 <body>
@@ -108,7 +76,6 @@
     <!-- HERO -->
     <div class="hero">
       <div class="hero-box">
-        <!-- เปลี่ยน src ไปยัง Google Drive (คง element เดิม) -->
         <img class="hero-img" src="https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4" alt="UFO HUB X">
       </div>
     </div>
@@ -117,18 +84,14 @@
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-
-        <!-- ปุ่ม START ไปยังลิงก์ที่ให้ -->
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- จะถูกซ่อน 5 วิแรก -->
       <div class="progress-meta is-hidden" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
 
-      <!-- จะถูกซ่อน 5 วิแรก -->
       <div class="bar-wrap is-hidden" id="barWrap">
         <div class="bar" id="bar"></div>
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
@@ -148,127 +111,5 @@
     </section>
 
   </div>
-
-<script>
-  /* ===== CONFIG ===== */
-  const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com"; // โดเมนปลายทางที่บอกไว้
-  const RETURN_KEY  = "ufo_return_ts";  // timestamp ตอนกด START
-  const ARM_DELAY   = 5000;             // ดีเลย์โชว์หลอด 5 วิ
-  const MIN_VISIT   = 5000;             // ต้องหายไปอย่างน้อย 5 วิ ถึงจะถือว่า “ไปทำลิงก์จริง”
-
-  /* ===== Elements ===== */
-  const bar         = document.getElementById('bar');
-  const barWrap     = document.getElementById('barWrap');
-  const barUfo      = document.getElementById('barUfo');
-  const pText       = document.getElementById('progressText');
-  const percentEl   = document.getElementById('percentText');
-  const startBtn    = document.getElementById('startBtn');
-  const progressMeta= document.getElementById('progressMeta');
-
-  let raf = null;
-  const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
-
-  /* ===== Helpers ===== */
-  function setProgress(p){
-    if (p < 0) p = 0; if (p > 100) p = 100;
-    bar.style.width = p + '%';
-
-    // ปลายแท่งเขียวจริง (px) ภายใน barWrap
-    const barRect  = bar.getBoundingClientRect();
-    const wrapRect = barWrap.getBoundingClientRect();
-    const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-
-    // ยานนำปลายแท่ง + LEAD (ไม่ clamp เพื่อให้ทะลุกรอบได้)
-    barUfo.style.left = (tipInside + LEAD) + 'px';
-
-    percentEl.textContent = p.toFixed(0) + '%';
-    pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
-  }
-
-  function runProgress(pTarget=100, duration=1200){
-    cancelAnimationFrame(raf);
-    barUfo.classList.add('on');
-    const pStart = parseFloat(bar.style.width) || 0;
-    const t0 = performance.now();
-    function tick(ts){
-      const t = Math.min(1, (ts - t0)/duration);
-      const p = pStart + (pTarget - pStart) * t;
-      setProgress(p);
-      if(t < 1){
-        raf = requestAnimationFrame(tick);
-      }else{
-        if (pTarget === 100) setTimeout(()=>barUfo.classList.remove('on'), 300);
-      }
-    }
-    raf = requestAnimationFrame(tick);
-  }
-
-  function showBarAfterDelay(){
-    setTimeout(()=>{
-      progressMeta.classList.remove('is-hidden');
-      barWrap.classList.remove('is-hidden');
-      // ถ้ากลับมาจากลิงก์จริง และผ่านเวลาอย่างน้อย MIN_VISIT: ค่อยวิ่งให้เต็ม
-      autoCompleteIfReturned(true);
-    }, ARM_DELAY);
-  }
-
-  // เงื่อนไข “กลับมาจริง” = มี timestamp ใน localStorage และเวลาที่หายไป >= MIN_VISIT
-  function isValidReturn(){
-    try{
-      const ts = parseInt(localStorage.getItem(RETURN_KEY) || "0", 10);
-      if(!ts) return false;
-      const elapsed = Date.now() - ts;
-      return elapsed >= MIN_VISIT;
-    }catch(e){ return false; }
-  }
-
-  function clearReturnMark(){
-    try{ localStorage.removeItem(RETURN_KEY); }catch(e){}
-  }
-
-  function autoCompleteIfReturned(onlyIfBarVisible=false){
-    // ตรวจโดเมนที่กำหนด
-    const onOurDomain = location.hostname === DOMAIN_OK;
-    if(!onOurDomain) return;
-
-    // ถ้าต้องเช็กว่า UI โชว์แล้ว
-    if(onlyIfBarVisible){
-      const hidden = progressMeta.classList.contains('is-hidden') || barWrap.classList.contains('is-hidden');
-      if(hidden) return;
-    }
-
-    if(isValidReturn()){
-      clearReturnMark();
-      runProgress(100, 1000);
-    }
-  }
-
-  /* ===== Events ===== */
-  // ปุ่ม START: เซ็ต timestamp แล้วออกไปยังลิงก์ (แท็บเดียว เพื่อตัดปัญหา popup)
-  startBtn.addEventListener('click', ()=>{
-    try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
-    window.location.href = START_URL;
-  });
-
-  // โชว์หลอดช้า 5 วิ ทุกครั้งที่เข้าหน้าเว็บ
-  document.addEventListener('DOMContentLoaded', ()=>{
-    // ซ่อนตอนแรก (สำรอง เผื่อ HTML ถูกแก้ไขก่อนหน้านี้)
-    progressMeta.classList.add('is-hidden');
-    barWrap.classList.add('is-hidden');
-    showBarAfterDelay();
-  });
-
-  // กรณีใช้ปุ่ม Back/Forward (BFCache) ให้ตรวจซ้ำเมื่อหน้า active
-  window.addEventListener('pageshow', ()=>{
-    // ถ้า UI โผล่แล้ว ค่อยเช็คว่ากลับมาจริงหรือไม่
-    autoCompleteIfReturned(true);
-  });
-
-  /* ===== Preload รูป (กันแฟลช) — เปลี่ยนเป็น Google Drive ===== */
-  new Image().src = 'https://drive.google.com/uc?export=view&id=1PVjaFNlkm6CabMcOL2CfK7WIJh9GBVEN'; // bg
-  new Image().src = 'https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4'; // profile
-  new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&"; // UFO ship
-</script>
 </body>
 </html>
