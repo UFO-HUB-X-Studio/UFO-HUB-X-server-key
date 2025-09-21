@@ -57,7 +57,17 @@
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
   .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
-  .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
+
+  .start-btn{
+    appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;
+    font-weight:800;background:var(--ufo);color:#072017;
+    box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset;
+    transition:filter .2s ease, opacity .2s ease, background .2s ease, color .2s ease;
+  }
+  .start-btn.ok { background:#22c55e; color:#062512; }             /* ✅ ครบ 100% */
+  .start-btn.lock {
+    background:#ff4d4d; color:#2b0505; cursor:not-allowed; opacity:.9; /* ⛔ ล็อก 1 ชม. */
+  }
 
   /* ✅ กรอบดาวน์โหลด “โชว์ตลอดเวลา” */
   .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
@@ -73,7 +83,6 @@
     background:linear-gradient(90deg,#00ffa3,#3bffbf);
     box-shadow:0 0 18px rgba(34,255,200,.35);
     z-index:1;
-    opacity:1; /* กรอบโชว์ตลอด แต่แท่งจะวิ่งเฉพาะตอนกลับมา */
   }
   .bar-ufo{
     position:absolute; top:50%; transform:translate(-50%,-50%);
@@ -145,8 +154,10 @@
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY  = "ufo_return_ts";
-  const MIN_VISIT   = 5000;   // ต้องออกไปอย่างน้อย 5 วิ
-  const UFO_MS      = 4000;   // ✅ หลอดสีเขียววิ่ง 4 วิ (ตามที่ขอ)
+  const MIN_VISIT   = 5000;     // ต้องออกไปอย่างน้อย 5 วิ
+  const UFO_MS      = 4000;     // ✅ หลอดสีเขียววิ่ง 4 วิ
+  const LOCK_HOURS  = 1;        // ✅ ล็อก START 1 ชั่วโมง
+  const LOCK_KEY    = "ufo_start_locked_until";
 
   /* ===== Elements ===== */
   const bar         = document.getElementById('bar');
@@ -155,11 +166,14 @@
   const pText       = document.getElementById('progressText');
   const percentEl   = document.getElementById('percentText');
   const startBtn    = document.getElementById('startBtn');
+  const getKeyBtn   = document.getElementById('getKey');
+  const keyRows     = document.getElementById('keyRows');
 
   let raf = null;
+  let lockTimer = null;
   const LEAD = 8;
 
-  /* ===== Helpers ===== */
+  /* ===== Helpers: Progress & UFO ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
@@ -171,11 +185,18 @@
 
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
+
+    // ✅ ครบ 100% แล้วเปลี่ยนปุ่ม START เป็น "ถูกต้อง" และไม่ซ่อน UFO
+    if (p >= 100) {
+      startBtn.classList.add('ok');
+      startBtn.textContent = '✅ ถูกต้อง';
+      // ไม่ลบ barUfo.classList ('on') เพื่อให้ยานไม่หาย
+    }
   }
 
   function runProgress(pTarget=100, duration=UFO_MS){
     cancelAnimationFrame(raf);
-    barUfo.classList.add('on');
+    barUfo.classList.add('on'); // โชว์ UFO ตอนเริ่มวิ่ง
     const pStart = parseFloat(bar.style.width) || 0;
     const t0 = performance.now();
     function tick(ts){
@@ -185,13 +206,14 @@
       if(t < 1){
         raf = requestAnimationFrame(tick);
       }else{
-        setTimeout(()=>barUfo.classList.remove('on'), 300);
+        // ❌ ไม่ถอด 'on' — ให้ยานค้างอยู่หลังครบ 100%
+        // setTimeout(()=>barUfo.classList.remove('on'), 300);
       }
     }
     raf = requestAnimationFrame(tick);
   }
 
-  /* ===== Return check ===== */
+  /* ===== Return check (เดิม) ===== */
   function isValidReturn(){
     try{
       const ts = parseInt(localStorage.getItem(RETURN_KEY) || "0", 10);
@@ -209,21 +231,132 @@
     }
   }
 
+  /* ===== START lock (1 ชั่วโมง) ===== */
+  function formatLeft(ms){
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms/1000);
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const ss= s%60;
+    return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+  }
+
+  function applyLockUI(until){
+    const left = until - Date.now();
+    if (left > 0){
+      startBtn.disabled = true;
+      startBtn.classList.remove('ok');
+      startBtn.classList.add('lock');
+      startBtn.textContent = `⛔ START (รอ ${formatLeft(left)})`;
+    }else{
+      startBtn.disabled = false;
+      startBtn.classList.remove('lock');
+      // ถ้าเคยครบ 100 มาก่อน จะยังขึ้น "✅ ถูกต้อง" อยู่; ถ้าอยากกลับเป็น START ให้คอมเมนต์บรรทัดถัด
+      if (!startBtn.classList.contains('ok')) startBtn.textContent = '🟢 START';
+    }
+  }
+
+  function startLockCountdown(until){
+    if (lockTimer) clearInterval(lockTimer);
+    applyLockUI(until);
+    lockTimer = setInterval(()=>{
+      applyLockUI(until);
+      if (Date.now() >= until){
+        clearInterval(lockTimer);
+        try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+      }
+    }, 1000);
+  }
+
+  function lockStartForOneHour(){
+    const until = Date.now() + LOCK_HOURS*60*60*1000;
+    try{ localStorage.setItem(LOCK_KEY, String(until)); }catch(e){}
+    startLockCountdown(until);
+  }
+
+  function restoreLockIfAny(){
+    try{
+      const until = parseInt(localStorage.getItem(LOCK_KEY)||"0",10);
+      if (until && until > Date.now()){
+        startLockCountdown(until);
+      }else{
+        applyLockUI(0);
+      }
+    }catch(e){
+      applyLockUI(0);
+    }
+  }
+
+  /* ===== Key table helper (UI เท่านั้น) ===== */
+  function randomKey(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s='UFO-';
+    for(let i=0;i<12;i++) s += chars[Math.floor(Math.random()*chars.length)];
+    return s;
+  }
+
+  function addKeyRow(key, until){
+    const tr = document.createElement('tr');
+    const tdKey  = document.createElement('td');
+    const tdLeft = document.createElement('td');
+    const tdStat = document.createElement('td');
+    const tdAct  = document.createElement('td');
+
+    tdKey.textContent  = key;
+    tdStat.textContent = 'ACTIVE';
+    tdAct.textContent  = '-';
+
+    function renderLeft(){
+      const left = until - Date.now();
+      tdLeft.textContent = left>0 ? formatLeft(left) : '00:00:00';
+    }
+    renderLeft();
+    const iv = setInterval(()=>{
+      renderLeft();
+      if (Date.now() >= until) clearInterval(iv);
+    },1000);
+
+    tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
+    keyRows.prepend(tr);
+  }
+
   /* ===== Events ===== */
+  // ปุ่ม START (เดิม): เซ็ต timestamp แล้วออกไปยังลิงก์
   startBtn.addEventListener('click', ()=>{
+    if (startBtn.disabled) return;
     try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
     window.location.href = START_URL;
   });
 
-  // กรอบดาวน์โหลดโชว์ตั้งแต่โหลดหน้า ⇒ เช็คการกลับมาทันที
+  // ปุ่ม GET A NEW KEY:
+  getKeyBtn.addEventListener('click', ()=>{
+    // ✅ รีเซ็ตหลอด
+    bar.style.width = '0%';
+    percentEl.textContent = '0%';
+    pText.textContent = 'Progress: 0/1';
+    barUfo.classList.remove('on');
+    startBtn.classList.remove('ok');
+    startBtn.textContent = '🟢 START';
+
+    // ✅ ล็อก START 1 ชั่วโมง
+    const until = Date.now() + LOCK_HOURS*60*60*1000;
+    try{ localStorage.setItem(LOCK_KEY, String(until)); }catch(e){}
+    startLockCountdown(until);
+
+    // ✅ สร้างแถวคีย์ (UI)
+    const key = randomKey();
+    addKeyRow(key, until);
+  });
+
+  // โหลดหน้า
   document.addEventListener('DOMContentLoaded', ()=>{
-    // กรอบขึ้นอยู่แล้ว ไม่ต้องซ่อน/หน่วงเวลา
-    setProgress(0);
-    autoCompleteIfReturned();
+    setProgress(0);            // กรอบโชว์อยู่แล้ว
+    autoCompleteIfReturned();  // ถ้ากลับมาจริงให้วิ่ง 4 วิ
+    restoreLockIfAny();        // ถ้าถูกล็อกไว้ให้แสดงเวลา
   });
 
   window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(); });
-
+  
   /* ===== Preload รูป (กันแฟลช) ===== */
   new Image().src = 'https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png'; // bg
   new Image().src = 'https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';                          // profile
