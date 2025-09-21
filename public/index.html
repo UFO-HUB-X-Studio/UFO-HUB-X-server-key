@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>UFO HUB X</title>
 
-<!-- Google AdSense -->
+<!-- Google AdSense (Auto ads ก็พอ) -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1984718318642769" crossorigin="anonymous"></script>
 
 <meta name="theme-color" content="#0a1411"/>
@@ -170,49 +170,55 @@
         <tbody id="keyRows"></tbody>
       </table>
       <div class="note">
-        ระบบนี้จะ <b>ไม่ออกคีย์ใหม่ทับ</b> ถ้าของคุณยังไม่หมดอายุ — หน้าเว็บจะเช็ก <code>/status</code> ก่อนเสมอ แล้วดึงคีย์เดิมจากเซิร์ฟเวอร์มาแสดง
+        หน้าเว็บจะเช็ก <code>/status</code> ก่อนเสมอ — ถ้ามีคีย์เดิมอยู่แล้ว จะไม่ออกใหม่ทับ
       </div>
     </section>
 
   </div>
 
 <script>
-  /* ===== CONFIG ===== */
-  const START_URL     = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const MIN_VISIT     = 5000;    // ms
-  const UFO_MS        = 4000;    // progress duration
+/* ========= CONFIG ========= */
+const START_URL       = "https://direct-link.net/1398143/IGoZdaaTcIHW"; // ลิงก์หาเงิน
+const MIN_VISIT       = 5000;   // ต้องอยู่หน้าโฆษณาอย่างน้อย 5 วิ
+const UFO_MS          = 4000;   // ความยาวแอนิเมชัน progress
+const RETURN_MARK     = "ufo_return_ts";
+const PENDING_ACTION  = "ufo_pending_action"; // 'start' | 'extend'
 
-  /* ===== Elements ===== */
-  const bar       = document.getElementById('bar');
-  const barWrap   = document.getElementById('barWrap');
-  const barUfo    = document.getElementById('barUfo');
-  const pText     = document.getElementById('progressText');
-  const percentEl = document.getElementById('percentText');
-  const startBtn  = document.getElementById('startBtn');
-  const getKeyBtn = document.getElementById('getKey');
-  const keyRows   = document.getElementById('keyRows');
-  const hintLine  = document.getElementById('hintLine');
+/* ========= Elements ========= */
+const bar       = document.getElementById('bar');
+const barWrap   = document.getElementById('barWrap');
+const barUfo    = document.getElementById('barUfo');
+const pText     = document.getElementById('progressText');
+const percentEl = document.getElementById('percentText');
+const startBtn  = document.getElementById('startBtn');
+const getKeyBtn = document.getElementById('getKey');
+const keyRows   = document.getElementById('keyRows');
+const hintLine  = document.getElementById('hintLine');
 
-  /* Splash */
-  const splash       = document.getElementById('splash');
-  const splashCircle = document.getElementById('splashCircle');
-  const splashNum    = document.getElementById('splashNum');
-  const SPLASH_MS    = 10000;
-  const SPLASH_FLAG  = "ufo_splash_shown";
-  const SPLASH_SKIP  = "ufo_skip_splash_once";
-  const SPLASH_SKIP_LS = "ufo_skip_splash_once_ls";
+/* Splash */
+const splash       = document.getElementById('splash');
+const splashCircle = document.getElementById('splashCircle');
+const splashNum    = document.getElementById('splashNum');
+const SPLASH_MS    = 10000;
+const SPLASH_FLAG  = "ufo_splash_shown";
+const SPLASH_SKIP  = "ufo_skip_splash_once";
+const SPLASH_SKIP_LS = "ufo_skip_splash_once_ls";
 
-  let isCompleted = false;
-  let raf = null;
+let isCompleted = false;
+let raf = null;
+let leftTimer = null;
 
-  /* ===== URL / ORIGIN ===== */
-  const url   = new URL(location.href);
-  const uid   = url.searchParams.get('uid')   || '';
-  const place = url.searchParams.get('place') || '';
-  const ORIGIN = location.origin.replace(/\/+$/,'');
+/* ========= URL / ORIGIN ========= */
+const url   = new URL(location.href);
+const uid   = url.searchParams.get('uid')   || '';
+const place = url.searchParams.get('place') || '';
+const ORIGIN = location.origin.replace(/\/+$/,'');
 
-  /* ===== utils ===== */
-  const now = ()=>Date.now();
+/* ========= utils ========= */
+function runProgress(pTarget=100, duration=UFO_MS){
+  cancelAnimationFrame(raf);
+  barUfo.classList.add('on');
+  const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
   function setProgress(p){
     if (p<0)p=0; if(p>100)p=100;
     bar.style.width = p+'%';
@@ -228,186 +234,246 @@
       startBtn.textContent = '✅';
     }
   }
-  function runProgress(pTarget=100, duration=UFO_MS){
-    cancelAnimationFrame(raf);
-    barUfo.classList.add('on');
-    const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
-    function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
-    raf=requestAnimationFrame(tick);
+  function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
+  raf=requestAnimationFrame(tick);
+}
+function hmsFromUnix(exp){
+  const ms = Math.max(0, exp*1000 - Date.now());
+  const s = Math.floor(ms/1000);
+  const h = Math.floor(s/3600);
+  const m = Math.floor((s%3600)/60);
+  const ss = s%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+function shouldShowSplash(){
+  if (sessionStorage.getItem(SPLASH_SKIP) === '1'){ sessionStorage.removeItem(SPLASH_SKIP); return false; }
+  if (localStorage.getItem(SPLASH_SKIP_LS) === '1'){ localStorage.removeItem(SPLASH_SKIP_LS); return false; }
+  if (sessionStorage.getItem(SPLASH_FLAG) === '1') return false;
+  return true;
+}
+function showSplash(){
+  splash.classList.add('show');
+  const R = 65, C = 2*Math.PI*R;
+  splashCircle.setAttribute('stroke-dasharray', `0 ${C}`);
+  splashNum.textContent = '0%';
+  const t0 = performance.now();
+  function tick(ts){
+    const t = Math.min(1, (ts - t0)/SPLASH_MS);
+    const pct = Math.round(t*100);
+    splashNum.textContent = pct + '%';
+    const dash = C * t;
+    splashCircle.setAttribute('stroke-dasharray', `${dash} ${C}`);
+    if (t < 1) requestAnimationFrame(tick); else hideSplash();
   }
-  function hmsFromUnix(exp){
-    const ms = Math.max(0, exp*1000 - Date.now());
-    const s = Math.floor(ms/1000);
-    const h = Math.floor(s/3600);
-    const m = Math.floor((s%3600)/60);
-    const ss = s%60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-  }
+  requestAnimationFrame(tick);
+}
+function hideSplash(){
+  splash.classList.remove('show');
+  sessionStorage.setItem(SPLASH_FLAG,'1');
+}
 
-  /* ===== API helpers ===== */
-  async function apiStatus(){
-    const res = await fetch(`${ORIGIN}/status?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`, {cache:'no-store'});
-    return res.json().catch(()=>({ok:false}));
-  }
-  async function apiGetKey(){
-    const res = await fetch(`${ORIGIN}/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`, {cache:'no-store'});
-    return res.json().catch(()=>({ok:false}));
-  }
+/* ========= API helpers ========= */
+async function api(path){
+  const res = await fetch(`${ORIGIN}${path}`, {cache:'no-store'});
+  return res.json().catch(()=>({ok:false}));
+}
+const apiStatus = () => api(`/status?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+const apiGetKey = () => api(`/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
+const apiExtend = () => api(`/extend?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`);
 
-  /* ===== Key UI ===== */
-  function renderKeyRow(data){
-    keyRows.innerHTML='';
-    if(!data || !data.key){
-      const tr=document.createElement('tr');
-      const td=document.createElement('td');
-      td.colSpan=4; td.textContent='(ยังไม่มีคีย์ — ให้กด START ก่อน แล้วจึงกด + GET A NEW KEY)';
-      tr.appendChild(td);
-      keyRows.appendChild(tr);
-      return;
-    }
-    const tr=document.createElement('tr');
-    const tdKey=document.createElement('td');
-    const tdLeft=document.createElement('td');
-    const tdStat=document.createElement('td');
-    const tdAct=document.createElement('td');
+/* ========= UI: render key ========= */
+function clearTimer(){ if(leftTimer) { clearInterval(leftTimer); leftTimer=null; } }
 
-    tdKey.style.fontWeight='900'; tdKey.style.letterSpacing='1px';
-    tdKey.textContent=data.key;
-    tdStat.innerHTML='<span class="pill">ACTIVE</span>';
-    tdLeft.textContent = data.expires_at ? hmsFromUnix(data.expires_at) : '-';
+function renderKeyNone(msg){
+  clearTimer();
+  keyRows.innerHTML='';
+  const tr=document.createElement('tr');
+  const td=document.createElement('td');
+  td.colSpan=4; td.textContent = msg || '(ยังไม่มีคีย์ — ให้กด START แล้วกลับมากด + GET A NEW KEY)';
+  tr.appendChild(td);
+  keyRows.appendChild(tr);
+  getKeyBtn.disabled = false;
+  getKeyBtn.textContent = '+ GET A NEW KEY';
+}
 
-    const actions=document.createElement('div'); actions.className='actions';
-    const btnCopy=document.createElement('button'); btnCopy.className='btn btn-ghost'; btnCopy.innerHTML='📋 Copy';
-    btnCopy.addEventListener('click', async ()=>{
-      try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
-    });
-    actions.appendChild(btnCopy);
-    tdAct.appendChild(actions);
+function renderKeyRow(data){
+  clearTimer();
+  keyRows.innerHTML='';
 
-    tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
-    keyRows.appendChild(tr);
-  }
-
-  function lockGetKeyUI(active){
-    if(active){ getKeyBtn.disabled = true; getKeyBtn.textContent = '🔒 WAIT'; }
-    else { getKeyBtn.disabled = false; getKeyBtn.textContent = '+ GET A NEW KEY'; }
-  }
-
-  /* ===== Splash control ===== */
-  function shouldShowSplash(){
-    if (sessionStorage.getItem(SPLASH_SKIP) === '1'){ sessionStorage.removeItem(SPLASH_SKIP); return false; }
-    if (localStorage.getItem(SPLASH_SKIP_LS) === '1'){ localStorage.removeItem(SPLASH_SKIP_LS); return false; }
-    if (sessionStorage.getItem(SPLASH_FLAG) === '1') return false;
-    return true;
-  }
-  function showSplash(){
-    splash.classList.add('show');
-    const R = 65, C = 2*Math.PI*R;
-    splashCircle.setAttribute('stroke-dasharray', `0 ${C}`);
-    splashNum.textContent = '0%';
-    const t0 = performance.now();
-    function tick(ts){
-      const t = Math.min(1, (ts - t0)/SPLASH_MS);
-      const pct = Math.round(t*100);
-      splashNum.textContent = pct + '%';
-      const dash = C * t;
-      splashCircle.setAttribute('stroke-dasharray', `${dash} ${C}`);
-      if (t < 1) requestAnimationFrame(tick); else hideSplash();
-    }
-    requestAnimationFrame(tick);
-  }
-  function hideSplash(){
-    splash.classList.remove('show');
-    sessionStorage.setItem(SPLASH_FLAG,'1');
+  if(!data || !data.key){
+    renderKeyNone();
+    return;
   }
 
-  /* ===== Init ===== */
-  async function init(){
-    // ต้องมี uid/place เสมอ
-    if(!uid || !place){
-      renderKeyRow(null);
-      lockGetKeyUI(true);
-      startBtn.disabled = true;
-      startBtn.classList.add('lock');
-      startBtn.textContent = '⛔ NO UID/PLACE';
-      hintLine.textContent = '⚠️ URL นี้ไม่มี uid/place — ให้กลับไปกดปุ่ม Get Key ใน Roblox อีกครั้ง';
-      return;
-    }
+  const tr=document.createElement('tr');
+  const tdKey=document.createElement('td');
+  const tdLeft=document.createElement('td');
+  const tdStat=document.createElement('td');
+  const tdAct=document.createElement('td');
 
-    // Splash ครั้งแรก
-    if (shouldShowSplash()) showSplash();
+  tdKey.style.fontWeight='900'; tdKey.style.letterSpacing='1px';
+  tdKey.textContent=data.key;
 
-    // แถบวิ่งสวย ๆ
-    runProgress();
+  const expired = data.expires_at ? (Date.now()/1000 >= data.expires_at) : false;
+  tdStat.innerHTML = expired ? '<span class="pill" style="border-color:#ff9d9d;color:#ffcaca;background:rgba(255,0,0,.12)">EXPIRED</span>' : '<span class="pill">ACTIVE</span>';
+  tdLeft.textContent = data.expires_at ? hmsFromUnix(data.expires_at) : '-';
 
-    // เช็คสถานะคีย์ก่อนเสมอ
-    let st;
-    try{ st = await apiStatus(); }catch(e){ st = {ok:false}; }
+  const acts=document.createElement('div'); acts.className='actions';
+  const btnCopy=document.createElement('button'); btnCopy.className='btn btn-ghost'; btnCopy.innerHTML='📋 Copy';
+  btnCopy.addEventListener('click', async ()=>{
+    try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
+  });
+  acts.appendChild(btnCopy);
 
-    if(st && st.ok && st.expires_at && !st.expired){
-      renderKeyRow(st);
-      lockGetKeyUI(true);
-      hintLine.textContent = '✅ พบคีย์ที่จองไว้แล้วจากเซิร์ฟเวอร์';
-    }else{
-      renderKeyRow(null);
-      lockGetKeyUI(false);
-      hintLine.textContent = 'ℹ️ กด START แล้วรอกลับมา ≥ 5 วิ จากนั้นกด + GET A NEW KEY';
-    }
-  }
-
-  /* ===== Events ===== */
-  // START → ไปยังลิงก์หาเงิน แล้วให้กลับมา
-  startBtn.addEventListener('click', ()=>{
-    if(startBtn.disabled) return;
-    try {
-      sessionStorage.setItem('ufo_return_mark', String(Date.now()));
+  const btnPlus=document.createElement('button'); btnPlus.className='btn btn-green'; btnPlus.innerHTML='⏩ +5H';
+  btnPlus.disabled = expired; // หมดอายุแล้วห้ามต่อ
+  btnPlus.addEventListener('click', ()=>{
+    // ต้องไปหน้าโฆษณาก่อน แล้วกลับมาเรียก /extend
+    try{
+      sessionStorage.setItem(RETURN_MARK, String(Date.now()));
+      sessionStorage.setItem(PENDING_ACTION, 'extend');
       sessionStorage.setItem(SPLASH_SKIP,'1');
       localStorage.setItem(SPLASH_SKIP_LS,'1');
     }catch(e){}
-    window.location.href = START_URL;
+    location.href = START_URL;
   });
+  acts.appendChild(btnPlus);
 
-  // GET A NEW KEY → ไม่ออกใหม่ถ้ามีอยู่แล้ว
-  getKeyBtn.addEventListener('click', async ()=>{
-    if(getKeyBtn.disabled) return;
+  tdAct.appendChild(acts);
+  tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
+  keyRows.appendChild(tr);
 
-    // เช็ค /status อีกรอบ เผื่อมีคีย์อยู่แล้ว
-    let st;
-    try{ st = await apiStatus(); }catch(e){ st = {ok:false}; }
-    if(st && st.ok && st.expires_at && !st.expired){
-      renderKeyRow(st);
-      lockGetKeyUI(true);
-      hintLine.textContent = '✅ ใช้คีย์เดิมที่ยังไม่หมดอายุ';
-      return;
+  // countdown
+  if(data.expires_at && !expired){
+    leftTimer = setInterval(()=>{
+      const exp = data.expires_at;
+      const nowS = Math.floor(Date.now()/1000);
+      if(nowS >= exp){
+        clearTimer();
+        tdLeft.textContent = '00:00:00';
+        tdStat.innerHTML = '<span class="pill" style="border-color:#ff9d9d;color:#ffcaca;background:rgba(255,0,0,.12)">EXPIRED</span>';
+        getKeyBtn.disabled = false;
+        getKeyBtn.textContent = '+ GET A NEW KEY';
+      }else{
+        tdLeft.textContent = hmsFromUnix(exp);
+      }
+    }, 1000);
+  }
+
+  // มีคีย์แล้ว → ล็อกปุ่ม GET
+  if(!expired){
+    getKeyBtn.disabled = true;
+    getKeyBtn.textContent = '🔒 WAIT';
+  }else{
+    getKeyBtn.disabled = false;
+    getKeyBtn.textContent = '+ GET A NEW KEY';
+  }
+}
+
+/* ========= Return handling ========= */
+function validReturn(){
+  const t = Number(sessionStorage.getItem(RETURN_MARK)||'0');
+  return t && (Date.now() - t) >= MIN_VISIT;
+}
+
+async function handleReturnFlow(){
+  const act = sessionStorage.getItem(PENDING_ACTION)||'';
+  if(!act) return;
+
+  if(!validReturn()){
+    // กลับมาเร็วเกินไป
+    sessionStorage.removeItem(PENDING_ACTION);
+    return;
+  }
+  sessionStorage.removeItem(RETURN_MARK);
+
+  if(act === 'extend'){
+    // ต่อเวลาจริงกับเซิร์ฟเวอร์
+    let ex = await apiExtend();
+    if(!(ex && ex.ok)){
+      alert('ต่อเวลาไม่สำเร็จ ลองใหม่ได้จากปุ่ม ⏩ +5H');
     }
+  }
+  sessionStorage.removeItem(PENDING_ACTION);
+}
 
-    // ยังไม่มีคีย์ → ตรวจว่าเพิ่งกลับจาก START และอยู่หน้านานพอหรือยัง
-    const mark = Number(sessionStorage.getItem('ufo_return_mark')||'0');
-    if(!mark || (Date.now()-mark)<MIN_VISIT){
-      alert('กรุณากด START แล้วอยู่ในหน้านั้นอย่างน้อย 5 วินาที ก่อนกลับมากด + GET A NEW KEY');
-      return;
-    }
+/* ========= INIT ========= */
+async function init(){
+  // ต้องมี uid และ place ใน URL เท่านั้น
+  if(!uid || !place){
+    renderKeyNone('⚠️ URL นี้ไม่มี uid/place — ให้กลับไปกดปุ่ม Get Key ใน Roblox อีกครั้ง');
+    startBtn.disabled = true; startBtn.classList.add('lock'); startBtn.textContent = '⛔ NO UID/PLACE';
+    hintLine.textContent = 'เปิดลิงก์จากเกมใหม่ เพื่อให้มี uid และ place';
+    return;
+  }
 
-    // ขอคีย์ใหม่
-    getKeyBtn.disabled = true; getKeyBtn.textContent = '⏳ Requesting...';
-    let gk = await apiGetKey();
-    if(!(gk && gk.ok)){
-      getKeyBtn.disabled=false; getKeyBtn.textContent='+ GET A NEW KEY';
-      alert('เซิร์ฟเวอร์ไม่ตอบหรือผิดพลาด ลองใหม่อีกครั้ง');
-      return;
-    }
+  // Splash ครั้งแรก
+  if (shouldShowSplash()) showSplash();
+  runProgress();
 
-    // ย้ำด้วย /status แล้วแสดงผล
-    try{ st = await apiStatus(); }catch(e){ st = null; }
-    const show = (st && st.ok) ? st : gk;
+  // ถ้าเพิ่งกลับมาจากโฆษณา และรอนานพอ → ทำ action ที่ค้างไว้ (เช่น extend)
+  await handleReturnFlow();
 
-    renderKeyRow(show);
-    lockGetKeyUI(true);
-    hintLine.textContent = (gk.reused ? '✅ ใช้คีย์เดิม' : '✅ ออกคีย์ใหม่สำเร็จ');
-  });
+  // เช็กสถานะคีย์เสมอ
+  let st = await apiStatus().catch(()=>({ok:false}));
+  if(st && st.ok && st.expires_at && !st.expired && (st.remaining===undefined || st.remaining>0)){
+    renderKeyRow(st);
+    hintLine.textContent = '✅ ใช้คีย์ที่มีอยู่แล้วจากเซิร์ฟเวอร์';
+  }else{
+    renderKeyNone();
+    hintLine.textContent = 'ℹ️ กด START แล้วอยู่หน้าโฆษณาอย่างน้อย 5 วิ จากนั้นกลับมาแล้วกด + GET A NEW KEY';
+  }
+}
 
-  // เริ่ม
-  init();
+/* ========= Events ========= */
+// START: ไปหน้าโฆษณา แล้วกลับมา
+startBtn.addEventListener('click', ()=>{
+  if(startBtn.disabled) return;
+  try{
+    sessionStorage.setItem(RETURN_MARK, String(Date.now()));
+    sessionStorage.setItem(PENDING_ACTION, 'start');
+    sessionStorage.setItem(SPLASH_SKIP,'1');
+    localStorage.setItem(SPLASH_SKIP_LS,'1');
+  }catch(e){}
+  location.href = START_URL;
+});
+
+// GET KEY: ออกคีย์ใหม่ “เฉพาะกรณีไม่มีคีย์อยู่แล้ว”
+getKeyBtn.addEventListener('click', async ()=>{
+  if(getKeyBtn.disabled) return;
+
+  // เผื่อมีคีย์แล้ว (อีกครั้ง)
+  let st = await apiStatus().catch(()=>({ok:false}));
+  if(st && st.ok && st.expires_at && !st.expired && (st.remaining===undefined || st.remaining>0)){
+    renderKeyRow(st);
+    hintLine.textContent = '✅ พบคีย์เดิม ใช้งานต่อได้เลย';
+    return;
+  }
+
+  // ตรวจว่ากลับมาจาก START แล้วอยู่หน้าโฆษณาครบยัง
+  if(!validReturn()){
+    alert('กรุณากด START แล้วอยู่หน้าโฆษณาอย่างน้อย 5 วินาที ก่อนกลับมากด + GET A NEW KEY');
+    return;
+  }
+
+  // ขอคีย์ใหม่จากเซิร์ฟเวอร์
+  getKeyBtn.disabled = true; getKeyBtn.textContent = '⏳ Requesting...';
+  let gk = await apiGetKey().catch(()=>({ok:false}));
+  if(!(gk && gk.ok)){
+    getKeyBtn.disabled=false; getKeyBtn.textContent='+ GET A NEW KEY';
+    alert('เซิร์ฟเวอร์ไม่ตอบหรือผิดพลาด ลองใหม่อีกครั้ง');
+    return;
+  }
+
+  // ย้ำด้วย /status แล้วแสดงคีย์ “ตัวจริง” จากฝั่งเซิร์ฟเวอร์
+  st = await apiStatus().catch(()=>null);
+  const show = (st && st.ok) ? st : gk;
+  renderKeyRow(show);
+  hintLine.textContent = gk.reused ? '✅ ใช้คีย์เดิม' : '✅ ออกคีย์ใหม่สำเร็จ';
+});
+
+// เริ่มทำงาน
+init();
 </script>
 </body>
 </html>
