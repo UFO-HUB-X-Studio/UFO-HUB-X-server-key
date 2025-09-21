@@ -8,8 +8,9 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
-<link rel="preload" as="image" href="/img/bg">
-<link rel="preload" as="image" href="/img/profile">
+<!-- เปลี่ยน preload ให้ชี้ Google Drive -->
+<link rel="preload" as="image" href="https://drive.google.com/uc?export=view&id=1PVjaFNlkm6CabMcOL2CfK7WIJh9GBVEN">
+<link rel="preload" as="image" href="https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4">
 <link rel="preload" as="image" href="https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&">
 
 <style>
@@ -17,7 +18,11 @@
     --ufo:#00ff99; --text:#d9fff5;
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
-    --hero-img:url("/img/profile");
+
+    /* ใช้ภาพจาก Google Drive */
+    --hero-img:url("https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4");
+
+    /* UFO ship คงของเดิม */
     --ufo-ship:url("https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&");
     --ufo-lead: 8px; /* ยานนำปลายแท่งสีเขียว */
   }
@@ -27,7 +32,9 @@
     margin:0; min-height:100svh;
     font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
     color:var(--text);
-    background:url("/img/bg") center/cover fixed no-repeat;
+
+    /* เปลี่ยนพื้นหลังทั้งหน้าเป็น Google Drive */
+    background:url("https://drive.google.com/uc?export=view&id=1PVjaFNlkm6CabMcOL2CfK7WIJh9GBVEN") center/cover fixed no-repeat;
   }
 
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
@@ -101,7 +108,8 @@
     <!-- HERO -->
     <div class="hero">
       <div class="hero-box">
-        <img class="hero-img" src="/img/profile" alt="UFO HUB X">
+        <!-- เปลี่ยน src ไปยัง Google Drive (คง element เดิม) -->
+        <img class="hero-img" src="https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4" alt="UFO HUB X">
       </div>
     </div>
 
@@ -257,10 +265,10 @@
     autoCompleteIfReturned(true);
   });
 
-  /* ===== Preload รูป (กันแฟลช) ===== */
-  new Image().src = '/img/bg';
-  new Image().src = '/img/profile';
-  new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&";
+  /* ===== Preload รูป (กันแฟลช) — เปลี่ยนเป็น Google Drive ===== */
+  new Image().src = 'https://drive.google.com/uc?export=view&id=1PVjaFNlkm6CabMcOL2CfK7WIJh9GBVEN'; // bg
+  new Image().src = 'https://drive.google.com/uc?export=view&id=1bxZCjWN9WgBkA6oqs9ndcmidyPeRtIl4'; // profile
+  new Image().src = "https://cdn.discordapp.com/attachments/1417098355388973154/1418950206808133672/BackgroundEraser_20250916_190732755.png?ex=68cffbdc&is=68ceaa5c&hm=67ec141db70602a4afe4f884154e87c8055698d901966c7100a6b501c21b5125&"; // UFO ship
 </script>
 </body>
 </html>
