@@ -1,16 +1,16 @@
-// UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Extended Version
+// UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Extended Version (unique keys)
 // Endpoints:
-//   GET /                     -> หน้าเว็บ (index.html)
-//   GET /getkey?uid=&place=   -> สุ่ม/คืนคีย์จาก uid:place
+//   GET /                               -> index.html
+//   GET /getkey?uid=&place=[&force_new=1][&extend=SECONDS]
 //   GET /verify?key=&uid=&place=
-//   GET /extend?uid=&place=   -> ต่อเวลา +5h
-//   GET /status?uid=&place=   -> ดูเวลาที่เหลือ
-//   GET /img/profile, /img/bg -> proxy Discord images
+//   GET /extend?uid=&place=[&sec=SECONDS] (default +5h)
+//   GET /status?uid=&place=
+//   GET /img/profile, /img/bg           -> proxy Discord images
 
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
+const fs      = require("fs");
+const path    = require("path");
+const https   = require("https");
 const { URL } = require("url");
 
 const app  = express();
@@ -30,7 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
-/* ---------- Discord image URLs ---------- */
+/* ---------- Discord image URLs (ใส่ของจริงของคุณเองได้) ---------- */
 const DISCORD_PROFILE = "https://cdn.discordapp.com/.../20250916_152130.png";
 const DISCORD_BG      = "https://cdn.discordapp.com/.../file_00000000385861fab9ee0612cc0dca89.png";
 
@@ -65,7 +65,11 @@ const CONFIG_PATH = path.join(__dirname, "config.json");
 const ISSUED_PATH = path.join(__dirname, "issued.json");
 
 function loadConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+  try {
+    return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+  } catch {
+    return { keys: [], expires_default: 172800 };
+  }
 }
 function loadIssued() {
   if (!fs.existsSync(ISSUED_PATH)) return {};
@@ -74,6 +78,48 @@ function loadIssued() {
 }
 function saveIssued(obj) {
   fs.writeFileSync(ISSUED_PATH, JSON.stringify(obj, null, 2), "utf8");
+}
+
+/* ---------- Utils: sweep + pick unique key ---------- */
+function sweepExpired(issued, now) {
+  let changed = false;
+  for (const k of Object.keys(issued)) {
+    const t = issued[k];
+    if (!t || !t.expires_at || now > Number(t.expires_at)) {
+      delete issued[k];
+      changed = true;
+    }
+  }
+  if (changed) saveIssued(issued);
+}
+
+function activeKeyOwners(issued, now) {
+  const map = new Map(); // key -> id(uid:place)
+  for (const id of Object.keys(issued)) {
+    const t = issued[id];
+    if (t && t.key && t.expires_at && now < Number(t.expires_at)) {
+      map.set(String(t.key), id);
+    }
+  }
+  return map;
+}
+
+function chooseFreeKey(configKeys, issuedMap, now, selfId, preferCurrentKey) {
+  // อนุญาตให้ใช้ “คีย์เดิมของตัวเอง” ก่อน (ถ้ายังไม่หมด)
+  if (preferCurrentKey) {
+    const ownerId = issuedMap.get(preferCurrentKey);
+    if (!ownerId || ownerId === selfId) return preferCurrentKey;
+  }
+  // เลือกคีย์ที่ “ยังไม่มีเจ้าของ” (หรือเจ้าของคือเราเอง)
+  const pool = (configKeys || []).filter(k => k && k.key);
+  const free = pool
+    .map(o => o.key)
+    .filter(k => {
+      const ownerId = issuedMap.get(k);
+      return !ownerId || ownerId === selfId;
+    });
+  if (!free.length) return null;
+  return free[Math.floor(Math.random() * free.length)];
 }
 
 /* ---------- Web ---------- */
@@ -85,6 +131,8 @@ app.get("/", (req, res) => {
 app.get("/getkey", (req, res) => {
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
+  const forceNew   = String(req.query.force_new || "") === "1";
+  const extendSecQ = Number(req.query.extend || 0) || 0; // ต่อเวลาพิเศษ (ตอนออกคีย์)
   if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
 
   try {
@@ -93,24 +141,55 @@ app.get("/getkey", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const id     = `${uid}:${place}`;
 
-    // ถ้ามี key แล้ว และยังไม่หมด → ใช้ key เดิม
-    const ticket = issued[id];
-    if (ticket && now < ticket.expires_at) {
-      return res.json({ ok:true, reused:true, ...ticket });
+    // ปัดกวาดของหมดอายุ
+    sweepExpired(issued, now);
+
+    const current = issued[id];
+
+    // ถ้า “มีอยู่และยังไม่หมด” และ “ไม่บังคับออกใหม่” → reuse + (ถ้ามี extend ก็ขยายเวลา)
+    if (current && now < Number(current.expires_at) && !forceNew) {
+      if (extendSecQ > 0) {
+        current.expires_at = Number(current.expires_at) + Math.max(0, extendSecQ);
+        saveIssued(issued);
+      }
+      return res.json({
+        ok:true, reused:true, key:current.key, uid, place,
+        issued_at: current.issued_at, expires_at: current.expires_at,
+        extended_by: extendSecQ > 0 ? Math.max(0, extendSecQ) : 0
+      });
     }
 
-    // เลือก key จาก config
-    const pool = (config.keys || []).filter(k => k && k.key);
-    if (!pool.length) return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
-    const ttl = Number(chosen.ttl || config.expires_default || 172800);
-    const exp = now + ttl;
+    // ต้องออกใหม่ (หรือหมดอายุแล้ว)
+    const keys  = (config.keys || []).filter(k => k && k.key);
+    if (!keys.length) return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
 
-    // bind key ให้ uid:place (ไม่สำคัญว่า key จะซ้ำกับคนอื่น)
-    issued[id] = { key:chosen.key, uid, place, issued_at:now, expires_at:exp };
+    const issuedMap = activeKeyOwners(issued, now);
+    const preferKey = current && current.key; // ถ้าเป็นของเดิมเราและไม่มีใครใช้ ให้เลือกก่อน
+    const pickedKey = chooseFreeKey(keys, issuedMap, now, id, preferKey);
+
+    if (!pickedKey) {
+      return res.status(503).json({ ok:false, reason:"no_free_key" }); // คีย์ว่างหมด
+    }
+
+    // หา meta เพื่อคำนวณ TTL
+    const meta = keys.find(k => k.key === pickedKey) || {};
+    const ttl  = Number(meta.ttl || config.expires_default || 172800);
+    let exp    = now + ttl + Math.max(0, extendSecQ);
+
+    issued[id] = {
+      key: pickedKey,
+      uid, place,
+      issued_at: now,
+      expires_at: exp,
+      reusable: !!meta.reusable
+    };
     saveIssued(issued);
 
-    return res.json({ ok:true, reused:false, ...issued[id] });
+    return res.json({
+      ok:true, reused:false, rotated: !!(current && now < Number(current?.expires_at)),
+      key: pickedKey, uid, place, issued_at: now, expires_at: exp,
+      extended_by: Math.max(0, extendSecQ)
+    });
   } catch (e) {
     console.error("getkey error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
@@ -131,10 +210,10 @@ app.get("/verify", (req, res) => {
     const ticket = issued[id];
 
     if (ticket && ticket.key === key) {
-      if (now > ticket.expires_at) {
-        return res.json({ ok:true, valid:false, expired:true, expired_at:ticket.expires_at });
+      if (now > Number(ticket.expires_at)) {
+        return res.json({ ok:true, valid:false, reason:"expired", expired_at:ticket.expires_at });
       }
-      return res.json({ ok:true, valid:true, expires_at:ticket.expires_at });
+      return res.json({ ok:true, valid:true, key:ticket.key, expires_at:ticket.expires_at, reusable:ticket.reusable });
     }
     return res.json({ ok:true, valid:false, reason:"invalid_or_mismatch" });
   } catch (e) {
@@ -143,10 +222,13 @@ app.get("/verify", (req, res) => {
   }
 });
 
-/* ---------- API: EXTEND (ต่อเวลา +5h) ---------- */
+/* ---------- API: EXTEND (ต่อเวลา) ---------- */
+// /extend?uid=&place=[&sec=SECONDS]  (default = 5h)
 app.get("/extend", (req, res) => {
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
+  const secQ  = Number(req.query.sec || 0) || 0;
+  const add   = secQ > 0 ? secQ : (5*60*60);
   if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
 
   try {
@@ -155,11 +237,11 @@ app.get("/extend", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const ticket = issued[id];
     if (!ticket) return res.status(404).json({ ok:false, reason:"no_ticket" });
-    if (now > ticket.expires_at) return res.json({ ok:false, reason:"already_expired" });
+    if (now > Number(ticket.expires_at)) return res.json({ ok:false, reason:"already_expired", expired_at:ticket.expires_at });
 
-    ticket.expires_at += 5*60*60; // +5 ชั่วโมง
+    ticket.expires_at = Number(ticket.expires_at) + add;
     saveIssued(issued);
-    return res.json({ ok:true, new_expires_at:ticket.expires_at });
+    return res.json({ ok:true, key:ticket.key, new_expires_at:ticket.expires_at, added:add });
   } catch (e) {
     console.error("extend error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
@@ -178,8 +260,8 @@ app.get("/status", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const ticket = issued[id];
     if (!ticket) return res.json({ ok:false, reason:"no_ticket" });
-    const left = Math.max(0, ticket.expires_at - now);
-    return res.json({ ok:true, key:ticket.key, expires_at:ticket.expires_at, remaining:left });
+    const left = Math.max(0, Number(ticket.expires_at) - now);
+    return res.json({ ok:true, key:ticket.key, issued_at:ticket.issued_at, expires_at:ticket.expires_at, remaining:left });
   } catch (e) {
     console.error("status error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
