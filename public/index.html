@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
 
-<!-- ✅ เปลี่ยนเป็นลิงก์รูปจาก Postimages (direct) -->
+<!-- ✅ preload รูปจาก Postimages -->
 <link rel="preload" as="image" href="https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png">  <!-- BG -->
 <link rel="preload" as="image" href="https://i.postimg.cc/KcdBP7Fn/20250916-152130.png">                         <!-- Profile -->
 <link rel="preload" as="image" href="https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png">   <!-- UFO -->
@@ -19,12 +19,10 @@
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
 
-    /* ✅ ใช้ภาพโปรไฟล์จาก Postimages */
+    /* ✅ ภาพโปรไฟล์/พื้นหลัง/UFO */
     --hero-img:url("https://i.postimg.cc/KcdBP7Fn/20250916-152130.png");
-
-    /* ✅ UFO ship ใช้ลิงก์ Postimages */
     --ufo-ship:url("https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png");
-    --ufo-lead: 8px; /* ยานนำปลายแท่งสีเขียว */
+    --ufo-lead: 8px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -32,8 +30,6 @@
     margin:0; min-height:100svh;
     font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
     color:var(--text);
-
-    /* ✅ เปลี่ยนพื้นหลังทั้งหน้าเป็นภาพจาก Postimages */
     background:url("https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png") center/cover fixed no-repeat;
   }
 
@@ -55,7 +51,7 @@
     border-radius:18px;
     box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
     padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
-    overflow:visible; /* ให้ UFO โผล่พ้นได้ */
+    overflow:visible;
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -63,22 +59,21 @@
   .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
   .start-btn{appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;font-weight:800;background:var(--ufo);color:#072017;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
 
-  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2; transition:opacity .35s ease;}
+  /* ✅ กรอบดาวน์โหลด “โชว์ตลอดเวลา” */
+  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
   .bar-wrap{
     position:relative;width:100%;height:18px;border-radius:10px;
     overflow:visible;
     background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
     box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
-    transition:opacity .35s ease;
   }
-  /* ซ่อนตอนแรกเพื่อดีเลย์ 5 วิ */
-  .is-hidden{opacity:0; pointer-events:none;}
 
   .bar{
     position:absolute;left:0;top:0;bottom:0;width:0%;
     background:linear-gradient(90deg,#00ffa3,#3bffbf);
     box-shadow:0 0 18px rgba(34,255,200,.35);
     z-index:1;
+    opacity:1; /* กรอบโชว์ตลอด แต่แท่งจะวิ่งเฉพาะตอนกลับมา */
   }
   .bar-ufo{
     position:absolute; top:50%; transform:translate(-50%,-50%);
@@ -108,7 +103,6 @@
     <!-- HERO -->
     <div class="hero">
       <div class="hero-box">
-        <!-- ✅ เปลี่ยน src ไปยัง Postimages (คง element เดิม) -->
         <img class="hero-img" src="https://i.postimg.cc/KcdBP7Fn/20250916-152130.png" alt="UFO HUB X">
       </div>
     </div>
@@ -117,19 +111,16 @@
     <section class="card">
       <div class="head">
         <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
-
-        <!-- ปุ่ม START ไปยังลิงก์ที่ให้ -->
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <!-- จะถูกซ่อน 5 วิแรก -->
-      <div class="progress-meta is-hidden" id="progressMeta">
+      <!-- ✅ กรอบดาวน์โหลด “ขึ้นตลอด” -->
+      <div class="progress-meta" id="progressMeta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
 
-      <!-- จะถูกซ่อน 5 วิแรก -->
-      <div class="bar-wrap is-hidden" id="barWrap">
+      <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
         <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
@@ -152,10 +143,10 @@
 <script>
   /* ===== CONFIG ===== */
   const START_URL   = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com"; // โดเมนปลายทางที่บอกไว้
-  const RETURN_KEY  = "ufo_return_ts";  // timestamp ตอนกด START
-  const ARM_DELAY   = 5000;             // ดีเลย์โชว์หลอด 5 วิ
-  const MIN_VISIT   = 5000;             // ต้องหายไปอย่างน้อย 5 วิ ถึงจะถือว่า “ไปทำลิงก์จริง”
+  const DOMAIN_OK   = "ufo-hub-x-key-umoq.onrender.com";
+  const RETURN_KEY  = "ufo_return_ts";
+  const MIN_VISIT   = 5000;   // ต้องออกไปอย่างน้อย 5 วิ
+  const UFO_MS      = 4000;   // ✅ หลอดสีเขียววิ่ง 4 วิ (ตามที่ขอ)
 
   /* ===== Elements ===== */
   const bar         = document.getElementById('bar');
@@ -164,29 +155,25 @@
   const pText       = document.getElementById('progressText');
   const percentEl   = document.getElementById('percentText');
   const startBtn    = document.getElementById('startBtn');
-  const progressMeta= document.getElementById('progressMeta');
 
   let raf = null;
-  const LEAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ufo-lead')) || 0;
+  const LEAD = 8;
 
   /* ===== Helpers ===== */
   function setProgress(p){
     if (p < 0) p = 0; if (p > 100) p = 100;
     bar.style.width = p + '%';
 
-    // ปลายแท่งเขียวจริง (px) ภายใน barWrap
     const barRect  = bar.getBoundingClientRect();
     const wrapRect = barWrap.getBoundingClientRect();
     const tipInside = (barRect.left + barRect.width) - wrapRect.left;
-
-    // ยานนำปลายแท่ง + LEAD (ไม่ clamp เพื่อให้ทะลุกรอบได้)
     barUfo.style.left = (tipInside + LEAD) + 'px';
 
     percentEl.textContent = p.toFixed(0) + '%';
     pText.textContent = 'Progress: ' + (p >= 100 ? '1/1' : '0/1');
   }
 
-  function runProgress(pTarget=100, duration=1200){
+  function runProgress(pTarget=100, duration=UFO_MS){
     cancelAnimationFrame(raf);
     barUfo.classList.add('on');
     const pStart = parseFloat(bar.style.width) || 0;
@@ -198,74 +185,46 @@
       if(t < 1){
         raf = requestAnimationFrame(tick);
       }else{
-        if (pTarget === 100) setTimeout(()=>barUfo.classList.remove('on'), 300);
+        setTimeout(()=>barUfo.classList.remove('on'), 300);
       }
     }
     raf = requestAnimationFrame(tick);
   }
 
-  function showBarAfterDelay(){
-    setTimeout(()=>{
-      progressMeta.classList.remove('is-hidden');
-      barWrap.classList.remove('is-hidden');
-      // ถ้ากลับมาจากลิงก์จริง และผ่านเวลาอย่างน้อย MIN_VISIT: ค่อยวิ่งให้เต็ม
-      autoCompleteIfReturned(true);
-    }, ARM_DELAY);
-  }
-
-  // เงื่อนไข “กลับมาจริง” = มี timestamp ใน localStorage และเวลาที่หายไป >= MIN_VISIT
+  /* ===== Return check ===== */
   function isValidReturn(){
     try{
       const ts = parseInt(localStorage.getItem(RETURN_KEY) || "0", 10);
       if(!ts) return false;
-      const elapsed = Date.now() - ts;
-      return elapsed >= MIN_VISIT;
+      return (Date.now() - ts) >= MIN_VISIT;
     }catch(e){ return false; }
   }
+  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY); }catch(e){} }
 
-  function clearReturnMark(){
-    try{ localStorage.removeItem(RETURN_KEY); }catch(e){}
-  }
-
-  function autoCompleteIfReturned(onlyIfBarVisible=false){
-    // ตรวจโดเมนที่กำหนด
-    const onOurDomain = location.hostname === DOMAIN_OK;
-    if(!onOurDomain) return;
-
-    // ถ้าต้องเช็กว่า UI โชว์แล้ว
-    if(onlyIfBarVisible){
-      const hidden = progressMeta.classList.contains('is-hidden') || barWrap.classList.contains('is-hidden');
-      if(hidden) return;
-    }
-
+  function autoCompleteIfReturned(){
+    if(location.hostname !== DOMAIN_OK) return;
     if(isValidReturn()){
       clearReturnMark();
-      runProgress(100, 1000);
+      runProgress(100, UFO_MS); // ✅ 4 วิ
     }
   }
 
   /* ===== Events ===== */
-  // ปุ่ม START: เซ็ต timestamp แล้วออกไปยังลิงก์ (แท็บเดียว เพื่อตัดปัญหา popup)
   startBtn.addEventListener('click', ()=>{
     try{ localStorage.setItem(RETURN_KEY, String(Date.now())); }catch(e){}
     window.location.href = START_URL;
   });
 
-  // โชว์หลอดช้า 5 วิ ทุกครั้งที่เข้าหน้าเว็บ
+  // กรอบดาวน์โหลดโชว์ตั้งแต่โหลดหน้า ⇒ เช็คการกลับมาทันที
   document.addEventListener('DOMContentLoaded', ()=>{
-    // ซ่อนตอนแรก (สำรอง เผื่อ HTML ถูกแก้ไขก่อนหน้านี้)
-    progressMeta.classList.add('is-hidden');
-    barWrap.classList.add('is-hidden');
-    showBarAfterDelay();
+    // กรอบขึ้นอยู่แล้ว ไม่ต้องซ่อน/หน่วงเวลา
+    setProgress(0);
+    autoCompleteIfReturned();
   });
 
-  // กรณีใช้ปุ่ม Back/Forward (BFCache) ให้ตรวจซ้ำเมื่อหน้า active
-  window.addEventListener('pageshow', ()=>{
-    // ถ้า UI โผล่แล้ว ค่อยเช็คว่ากลับมาจริงหรือไม่
-    autoCompleteIfReturned(true);
-  });
+  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(); });
 
-  /* ===== Preload รูป (กันแฟลช) — ✅ เปลี่ยนเป็น Postimages ===== */
+  /* ===== Preload รูป (กันแฟลช) ===== */
   new Image().src = 'https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png'; // bg
   new Image().src = 'https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';                          // profile
   new Image().src = 'https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';    // UFO ship
