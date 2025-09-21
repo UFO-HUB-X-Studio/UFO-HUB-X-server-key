@@ -21,6 +21,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 /* ---------- Global headers ---------- */
 app.use((req, res, next) => {
+  // ถ้าจะล็อกโดเมนเว็บเพื่อรายได้ ให้เปลี่ยน "*" เป็นโดเมนของคุณได้
   res.setHeader("Access-Control-Allow-Origin", "*");
   next();
 });
@@ -68,7 +69,7 @@ function loadConfig() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
   } catch {
-    return { keys: [], expires_default: 172800 };
+    return { keys: [], expires_default: 172800 }; // 48h
   }
 }
 function loadIssued() {
@@ -80,7 +81,16 @@ function saveIssued(obj) {
   fs.writeFileSync(ISSUED_PATH, JSON.stringify(obj, null, 2), "utf8");
 }
 
-/* ---------- Utils: sweep + pick unique key ---------- */
+/* ---------- Utils ---------- */
+// ทำให้คีย์อยู่ในรูปแบบมาตรฐาน: UFO-XXXXXXXX-48H (ตัวพิมพ์ใหญ่เสมอ)
+function normalizeKey(s) {
+  let v = String(s || "").trim().toUpperCase();
+  if (!v) return "";
+  if (!/^UFO-/.test(v)) v = "UFO-" + v.replace(/^-+/, "");
+  if (!/-48H$/.test(v)) v = v.replace(/-48H$/, "") + "-48H";
+  return v;
+}
+
 function sweepExpired(issued, now) {
   let changed = false;
   for (const k of Object.keys(issued)) {
@@ -94,7 +104,7 @@ function sweepExpired(issued, now) {
 }
 
 function activeKeyOwners(issued, now) {
-  const map = new Map(); // key -> id(uid:place)
+  const map = new Map(); // keyString -> id(uid:place)
   for (const id of Object.keys(issued)) {
     const t = issued[id];
     if (t && t.key && t.expires_at && now < Number(t.expires_at)) {
@@ -105,12 +115,12 @@ function activeKeyOwners(issued, now) {
 }
 
 function chooseFreeKey(configKeys, issuedMap, now, selfId, preferCurrentKey) {
-  // อนุญาตให้ใช้ “คีย์เดิมของตัวเอง” ก่อน (ถ้ายังไม่หมด)
+  // อนุญาตให้ใช้ “คีย์เดิมของตัวเอง” (ถ้ายังไม่หมดและไม่ติดเจ้าของอื่น)
   if (preferCurrentKey) {
     const ownerId = issuedMap.get(preferCurrentKey);
     if (!ownerId || ownerId === selfId) return preferCurrentKey;
   }
-  // เลือกคีย์ที่ “ยังไม่มีเจ้าของ” (หรือเจ้าของคือเราเอง)
+  // เลือกคีย์ที่ยังไม่มีเจ้าของ หรือเจ้าของคือเราเอง
   const pool = (configKeys || []).filter(k => k && k.key);
   const free = pool
     .map(o => o.key)
@@ -141,12 +151,12 @@ app.get("/getkey", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const id     = `${uid}:${place}`;
 
-    // ปัดกวาดของหมดอายุ
+    // ปัดกวาดหมดอายุ
     sweepExpired(issued, now);
 
     const current = issued[id];
 
-    // ถ้า “มีอยู่และยังไม่หมด” และ “ไม่บังคับออกใหม่” → reuse + (ถ้ามี extend ก็ขยายเวลา)
+    // ถ้ายังมีคีย์เดิมและไม่บังคับออกใหม่ → คืนเดิม
     if (current && now < Number(current.expires_at) && !forceNew) {
       if (extendSecQ > 0) {
         current.expires_at = Number(current.expires_at) + Math.max(0, extendSecQ);
@@ -159,21 +169,21 @@ app.get("/getkey", (req, res) => {
       });
     }
 
-    // ต้องออกใหม่ (หรือหมดอายุแล้ว)
+    // ต้องออกใหม่ หรือของเดิมหมดอายุ
     const keys  = (config.keys || []).filter(k => k && k.key);
     if (!keys.length) return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
 
     const issuedMap = activeKeyOwners(issued, now);
-    const preferKey = current && current.key; // ถ้าเป็นของเดิมเราและไม่มีใครใช้ ให้เลือกก่อน
+    const preferKey = current && current.key; // ถ้าเดิมยังว่าง ให้สิทธิก่อน
     const pickedKey = chooseFreeKey(keys, issuedMap, now, id, preferKey);
 
     if (!pickedKey) {
-      return res.status(503).json({ ok:false, reason:"no_free_key" }); // คีย์ว่างหมด
+      return res.status(503).json({ ok:false, reason:"no_free_key" });
     }
 
-    // หา meta เพื่อคำนวณ TTL
+    // meta/ttl
     const meta = keys.find(k => k.key === pickedKey) || {};
-    const ttl  = Number(meta.ttl || config.expires_default || 172800);
+    const ttl  = Number(meta.ttl || config.expires_default || 172800); // 48h
     let exp    = now + ttl + Math.max(0, extendSecQ);
 
     issued[id] = {
@@ -200,8 +210,8 @@ app.get("/getkey", (req, res) => {
 app.get("/verify", (req, res) => {
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
-  const key   = String(req.query.key   || "").trim();
-  if (!uid || !place || !key) return res.status(400).json({ ok:false, reason:"missing_uid_place_or_key" });
+  const keyIn = String(req.query.key   || "").trim();
+  if (!uid || !place || !keyIn) return res.status(400).json({ ok:false, valid:false, reason:"missing_uid_place_or_key" });
 
   try {
     const now    = Math.floor(Date.now()/1000);
@@ -209,16 +219,29 @@ app.get("/verify", (req, res) => {
     const id     = `${uid}:${place}`;
     const ticket = issued[id];
 
-    if (ticket && ticket.key === key) {
+    // ป้องกันกรณีผู้ใช้กรอกคีย์เล็ก/ใหญ่ หรือขาด suffix/prefix
+    const key = normalizeKey(keyIn);
+
+    if (ticket && normalizeKey(ticket.key) === key) {
       if (now > Number(ticket.expires_at)) {
-        return res.json({ ok:true, valid:false, reason:"expired", expired_at:ticket.expires_at });
+        return res.json({
+          ok:true, valid:false, reason:"expired",
+          uid, place, key: ticket.key, expired_at: ticket.expires_at
+        });
       }
-      return res.json({ ok:true, valid:true, key:ticket.key, expires_at:ticket.expires_at, reusable:ticket.reusable });
+      return res.json({
+        ok:true, valid:true,
+        uid, place,
+        key: ticket.key,
+        issued_at: ticket.issued_at,
+        expires_at: ticket.expires_at,
+        reusable: !!ticket.reusable
+      });
     }
-    return res.json({ ok:true, valid:false, reason:"invalid_or_mismatch" });
+    return res.json({ ok:true, valid:false, reason:"invalid_or_mismatch", uid, place });
   } catch (e) {
     console.error("verify error:", e);
-    res.status(500).json({ ok:false, error:"server_error" });
+    res.status(500).json({ ok:false, valid:false, reason:"server_error" });
   }
 });
 
@@ -237,11 +260,21 @@ app.get("/extend", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const ticket = issued[id];
     if (!ticket) return res.status(404).json({ ok:false, reason:"no_ticket" });
-    if (now > Number(ticket.expires_at)) return res.json({ ok:false, reason:"already_expired", expired_at:ticket.expires_at });
+    if (now > Number(ticket.expires_at)) {
+      return res.json({ ok:false, reason:"already_expired", expired_at:ticket.expires_at, uid, place });
+    }
 
     ticket.expires_at = Number(ticket.expires_at) + add;
+    ticket.extended_by = (ticket.extended_by || 0) + add;
     saveIssued(issued);
-    return res.json({ ok:true, key:ticket.key, new_expires_at:ticket.expires_at, added:add });
+
+    return res.json({
+      ok:true, uid, place,
+      key:ticket.key,
+      new_expires_at:ticket.expires_at,
+      added:add,
+      extended_by: ticket.extended_by
+    });
   } catch (e) {
     console.error("extend error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
@@ -259,9 +292,17 @@ app.get("/status", (req, res) => {
     const id     = `${uid}:${place}`;
     const now    = Math.floor(Date.now()/1000);
     const ticket = issued[id];
-    if (!ticket) return res.json({ ok:false, reason:"no_ticket" });
+    if (!ticket) return res.json({ ok:false, reason:"no_ticket", uid, place });
+
     const left = Math.max(0, Number(ticket.expires_at) - now);
-    return res.json({ ok:true, key:ticket.key, issued_at:ticket.issued_at, expires_at:ticket.expires_at, remaining:left });
+    return res.json({
+      ok:true, uid, place,
+      key:ticket.key,
+      issued_at:ticket.issued_at,
+      expires_at:ticket.expires_at,
+      remaining:left,
+      reusable: !!ticket.reusable
+    });
   } catch (e) {
     console.error("status error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
