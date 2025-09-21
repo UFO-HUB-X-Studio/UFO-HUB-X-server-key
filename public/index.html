@@ -20,7 +20,6 @@
     --glow:rgba(34,255,200,.10);
     --hero-img:url("https://i.postimg.cc/KcdBP7Fn/20250916-152130.png");
     --ufo-ship:url("https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png");
-    --ufo-lead: 8px;
   }
 
   html,body{height:100%; background:#0a1411;}
@@ -53,7 +52,7 @@
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  /* ✅ ชื่อหลัก: UFO เขียว / HUB X ขาว */
+  /* ✅ หัวเรื่องหลัก: UFO เขียว / HUB X ขาว */
   .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
   .head-title .ufo{color:var(--ufo)}
   .head-title .hubx{color:#fff}
@@ -96,7 +95,7 @@
     .bar-ufo{width:46px;height:46px}
   }
 
-  /* ============ Splash (โปรไฟล์ + 2 บรรทัด + วงกลมเล็ก + เลขกึ่งกลาง) ============ */
+  /* ============ Splash (โปรไฟล์ + ชื่อ 2 บรรทัด + มิเตอร์ + ตัวเลขกลาง) ============ */
   .splash{
     position:fixed; inset:0; background:rgba(0,0,0,.78);
     display:none; align-items:center; justify-content:center;
@@ -118,16 +117,15 @@
     display:flex; flex-direction:column; align-items:center; line-height:1.15; font-weight:900;
     text-shadow:0 0 12px rgba(0,255,170,.25);
   }
-  /* ✅ เหลือ 2 บรรทัด และขนาดเท่ากัน */
-  .splash-title .ufo{  color:var(--ufo); font-size:20px; letter-spacing:.6px;}
-  .splash-title .hubx{ color:#fff;      font-size:20px; letter-spacing:.8px;}
+  .splash-title .main{ font-size:22px; font-weight:900; letter-spacing:.8px; }
+  .splash-title .ufo{ color:var(--ufo); }
+  .splash-title .hubx{ color:#fff; }
+  .splash-title .download{ font-size:16px; font-weight:700; color:#d9fff5; margin-top:4px; letter-spacing:.6px; }
 
-  /* กล่องห่อมิเตอร์ เพื่อจัดซ้อน SVG + ตัวเลข */
   .splash-meter{ position:relative; width:150px; height:150px; }
   .splash-svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
   .splash-circle-bg{stroke:rgba(255,255,255,.12); stroke-width:10; fill:none;}
   .splash-circle{stroke:var(--ufo); stroke-width:10; fill:none; filter:drop-shadow(0 0 10px rgba(0,255,170,.6)); stroke-linecap:round;}
-  /* ✅ ตัวเลขกึ่งกลางจริง ๆ */
   .splash-num{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text); pointer-events:none;
@@ -140,11 +138,10 @@
     <div class="splash-card">
       <div class="splash-avatar" aria-hidden="true"></div>
       <div class="splash-title">
-        <div class="ufo">UFO</div>
-        <div class="hubx">HUB X Download</div>
+        <div class="main"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
+        <div class="download">Download</div>
       </div>
 
-      <!-- มิเตอร์โหลด (SVG + เลขอยู่กลาง) -->
       <div class="splash-meter">
         <svg class="splash-svg" viewBox="0 0 200 200" aria-hidden="true">
           <circle class="splash-circle-bg" cx="100" cy="100" r="65"></circle>
@@ -155,6 +152,7 @@
     </div>
   </div>
 
+  <!-- ตัวเว็บหลัก -->
   <div class="container">
 
     <!-- HERO -->
@@ -171,7 +169,7 @@
         <button class="start-btn" id="startBtn">🟢 START</button>
       </div>
 
-      <div class="progress-meta" id="progressMeta">
+      <div class="progress-meta">
         <div id="progressText">Progress: 0/1</div>
         <div id="percentText">0%</div>
       </div>
@@ -201,13 +199,13 @@
 <script>
   /* ===== CONFIG ===== */
   const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK    = location.hostname;
+  const DOMAIN_OK    = location.hostname; // ใช้โดเมนปัจจุบัน
   const RETURN_KEY   = "ufo_return_ts";
   const LAST_ACTION  = "ufo_last_action";        // 'start' | 'extend'
   const EXTEND_PENDING = "ufo_extend_pending";
 
-  const MIN_VISIT    = 5000;
-  const UFO_MS       = 4000;
+  const MIN_VISIT    = 5000;   // ต้องอยู่อย่างน้อย 5 วิ
+  const UFO_MS       = 4000;   // หลอดเขียววิ่ง 4 วิ
   const BASE_HOURS   = 48;
   const EXTEND_HOURS = 5;
 
@@ -218,10 +216,10 @@
 
   /* Splash */
   const SPLASH_MS    = 10000;
-  const SPLASH_FLAG  = "ufo_splash_shown";
-  const SPLASH_SKIP  = "ufo_skip_splash_once";
-  const SPLASH_SKIP_LS = "ufo_skip_splash_once_ls";
-  const MUST_START   = "ufo_must_start_once";
+  const SPLASH_FLAG  = "ufo_splash_shown";     // ครั้งแรกของ session
+  const SPLASH_SKIP  = "ufo_skip_splash_once"; // ข้ามเมื่อกลับจากลิงก์
+  const SPLASH_SKIP_LS = "ufo_skip_splash_once_ls"; // กัน sessionStorage ไม่กลับมา
+  const MUST_START   = "ufo_must_start_once";  // ต้องเคย START ก่อนสร้างคีย์
 
   /* ===== Elements ===== */
   const bar       = document.getElementById('bar');
@@ -376,7 +374,7 @@
       if(!mine || now()>=mine.until) return;
       try{
         sessionStorage.setItem(SPLASH_SKIP,'1');
-        localStorage.setItem(SPLASH_SKIP_LS,'1');
+        localStorage.setItem(SPLASH_SKIP_LS,'1');      // กันไว้เผื่อ session ไม่มา
         localStorage.setItem(RETURN_KEY, String(now()));
         localStorage.setItem(EXTEND_PENDING,'1');
         localStorage.setItem(LAST_ACTION,'extend');
@@ -472,7 +470,7 @@
   startBtn.addEventListener('click', ()=>{
     if (startBtn.disabled) return;
     try {
-      sessionStorage.setItem(SPLASH_SKIP,'1');
+      sessionStorage.setItem(SPLASH_SKIP,'1');    // กลับมาไม่ต้องโชว์ splash
       localStorage.setItem(SPLASH_SKIP_LS,'1');
       localStorage.setItem(RETURN_KEY, String(now()));
       localStorage.setItem(LAST_ACTION,'start');
@@ -482,6 +480,7 @@
 
   // + GET A NEW KEY
   getKeyBtn.addEventListener('click', async ()=>{
+    // ต้องเคยกด START อย่างน้อย 1 ครั้งก่อน
     if (localStorage.getItem(MUST_START) !== '1') {
       getKeyBtn.disabled = true;
       getKeyBtn.textContent = '🔒 START first';
@@ -501,46 +500,51 @@
     percentEl.textContent = '0%';
     pText.textContent = 'Progress: 0/1';
     barUfo.classList.remove('on');
-    startBtn.classList.remove('ok', 'lock');
+    startBtn.classList.remove('ok','lock');
     startBtn.disabled = false;
     startBtn.textContent = '🟢 START';
 
-    // สร้างคีย์ใหม่ อายุ 48 ชั่วโมง
-    const key   = normalizeKey(await fetchKeyFromConfig());
-    const until = now() + BASE_HOURS * 60 * 60 * 1000;
+    // ดึงคีย์ใหม่ + อายุ 48 ชม.
+    const key = normalizeKey(await fetchKeyFromConfig());
+    const until = now() + BASE_HOURS*60*60*1000;
 
     setMyKey({ key, until, createdAt: now() });
     localStorage.setItem(LOCK_KEY, String(until));
     startLockCountdown(until);
 
+    getKeyBtn.disabled = true;
+    getKeyBtn.textContent = '🔒 WAIT';
     renderKeyRow({ key, until });
-    updateGetKeyButtonState();
   });
 
   /* ===== Boot ===== */
-  document.addEventListener('DOMContentLoaded', () => {
-    // Splash ครั้งแรกเท่านั้น
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // Splash เฉพาะครั้งแรกของ session
     if (shouldShowSplash()) showSplash();
 
     setProgress(0);
-    onReturnedFromLink();   // กลับจาก START → ปลดล็อก; กลับจาก +5H → ต่อเวลาเงียบ ๆ
+    onReturnedFromLink();
 
     const mine = getMyKey();
     if (mine) {
       renderKeyRow(mine);
+      const left = mine.until - now();
+      getKeyBtn.disabled = left > 0;
+      getKeyBtn.textContent = left > 0 ? '🔒 WAIT' : '+ GET A NEW KEY';
       localStorage.setItem(LOCK_KEY, String(mine.until));
       startLockCountdown(mine.until);
+    } else {
+      updateGetKeyButtonState();
+      applyLockUI(0);
     }
-    updateGetKeyButtonState();
   });
 
-  // เผื่อบางเบราว์เซอร์กลับมาจากลิงก์แบบ bfcache
-  window.addEventListener('pageshow', () => { onReturnedFromLink(); });
+  window.addEventListener('pageshow', ()=>{ onReturnedFromLink(); });
 
   /* ===== Preload รูป ===== */
-  new Image().src = 'https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
-  new Image().src = 'https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';
-  new Image().src = 'https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';
+  new Image().src='https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
+  new Image().src='https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';
+  new Image().src='https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';
 </script>
 </body>
 </html>
