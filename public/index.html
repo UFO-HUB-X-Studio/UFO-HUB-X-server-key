@@ -5,32 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>UFO HUB X</title>
 
-<!-- (ถ้าใช้ AdSense คงสคริปต์นี้ไว้ได้) -->
+<!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1984718318642769" crossorigin="anonymous"></script>
 
 <meta name="theme-color" content="#0a1411"/>
 <meta name="color-scheme" content="dark"/>
+
+<!-- preload รูป -->
+<link rel="preload" as="image" href="https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png">
+<link rel="preload" as="image" href="https://i.postimg.cc/KcdBP7Fn/20250916-152130.png">
+<link rel="preload" as="image" href="https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png">
 
 <style>
   :root{
     --ufo:#00ff99; --text:#d9fff5;
     --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
     --glow:rgba(34,255,200,.10);
+    --hero-img:url("https://i.postimg.cc/KcdBP7Fn/20250916-152130.png");
+    --ufo-ship:url("https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png");
   }
+
   html,body{height:100%; background:#0a1411;}
   body{
     margin:0; min-height:100svh;
-    font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
+    font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
     color:var(--text);
-    background:#07110e url("https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png") center/cover fixed no-repeat;
+    background:url("https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png") center/cover fixed no-repeat;
   }
+
   .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
 
+  /* HERO */
+  .hero{display:flex; justify-content:center; margin:8px 0 20px;}
+  .hero-box{
+    display:inline-block; max-width:320px; width:90vw;
+    border-radius:18px; overflow:hidden; position:relative;
+    background:radial-gradient(1200px 400px at 50% -200px, rgba(0,255,160,.12), transparent 70%), #0b1a15;
+    box-shadow:0 0 28px rgba(0,255,160,.18), 0 16px 44px rgba(0,0,0,.55);
+  }
+  .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
+
+  /* CARD */
   .card{
     background:linear-gradient(180deg,var(--panel1),var(--panel2));
     border-radius:18px;
     box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
     padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
+    overflow:visible;
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -42,13 +63,17 @@
     appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;
     font-weight:800;background:var(--ufo);color:#072017;
     box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset;
-    transition:.2s;
+    transition:filter .2s ease, opacity .2s ease, background .2s ease, color .2s ease;
   }
+  .start-btn.ok   { background:#22c55e; color:#062512; }
   .start-btn.lock { background:#ff4d4d; color:#2b0505; cursor:not-allowed; opacity:.9; }
 
-  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75)}
-  .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10)}
-  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35)}
+  /* Progress */
+  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
+  .bar-wrap{position:relative;width:100%;height:18px;border-radius:10px;overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));box-shadow:inset 0 0 0 1px rgba(34,255,200,.10)}
+  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
+  .bar-ufo{position:absolute; top:50%; transform:translate(-50%,-50%); width:50px;height:50px; opacity:0; transition:opacity .2s ease; background:var(--ufo-ship) center/contain no-repeat; filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7)); z-index:8; pointer-events:none;}
+  .bar-ufo.on{opacity:1;}
 
   .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
   .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
@@ -62,10 +87,57 @@
   .btn-ghost{background:rgba(255,255,255,.06);color:#e7fff7;border:1px solid rgba(255,255,255,.18)}
   .btn-green{background:var(--ufo);color:#05261a}
   .actions{display:flex;gap:10px;justify-content:center}
+
+  @media (max-width:560px){
+    .head-title{font-size:34px}
+    .bar-ufo{width:46px;height:46px}
+  }
+
+  /* Splash */
+  .splash{position:fixed; inset:0; background:rgba(0,0,0,.78); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(2px);}
+  .splash.show{display:flex;}
+  .splash-card{width:240px; border-radius:22px; padding:16px 16px 22px; background:linear-gradient(180deg, rgba(8,13,19,.96), rgba(9,16,23,.96)); box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 12px 40px rgba(0,0,0,.6), 0 0 34px var(--glow); display:flex; flex-direction:column; align-items:center; gap:12px; position:relative;}
+  .splash-avatar{width:68px; height:68px; border-radius:50%; background:url('https://i.postimg.cc/KcdBP7Fn/20250916-152130.png') center/cover no-repeat; box-shadow:0 0 0 2px rgba(255,255,255,.1), 0 0 18px rgba(0,255,160,.3);}
+  .splash-title{display:flex; flex-direction:column; align-items:center; line-height:1.15; font-weight:900; text-shadow:0 0 12px rgba(0,255,170,.25);}
+  .splash-title .main{ font-size:22px; font-weight:900; letter-spacing:.8px; }
+  .splash-title .ufo{ color:var(--ufo); }
+  .splash-title .hubx{ color:#fff; }
+  .splash-title .download{ font-size:16px; font-weight:700; color:#d9fff5; margin-top:4px; letter-spacing:.6px; }
+  .splash-meter{ position:relative; width:150px; height:150px; }
+  .splash-svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .splash-circle-bg{stroke:rgba(255,255,255,.12); stroke-width:10; fill:none;}
+  .splash-circle{stroke:var(--ufo); stroke-width:10; fill:none; filter:drop-shadow(0 0 10px rgba(0,255,170,.6)); stroke-linecap:round;}
+  .splash-num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text); pointer-events:none;}
 </style>
 </head>
 <body>
+  <!-- Splash -->
+  <div class="splash" id="splash">
+    <div class="splash-card">
+      <div class="splash-avatar" aria-hidden="true"></div>
+      <div class="splash-title">
+        <div class="main"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></div>
+        <div class="download">Download</div>
+      </div>
+      <div class="splash-meter">
+        <svg class="splash-svg" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="splash-circle-bg" cx="100" cy="100" r="65"></circle>
+          <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="65" stroke-dasharray="0 999"></circle>
+        </svg>
+        <div class="splash-num" id="splashNum">0%</div>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-box">
+        <img class="hero-img" src="https://i.postimg.cc/KcdBP7Fn/20250916-152130.png" alt="UFO HUB X">
+      </div>
+    </div>
+
     <!-- Title + Button + Progress -->
     <section class="card">
       <div class="head">
@@ -80,7 +152,9 @@
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar" id="bar"></div>
+        <div class="bar-ufo" id="barUfo" style="left:0px"></div>
       </div>
+      <div class="note" id="hintLine" style="margin-top:8px;color:#cfeee6;font-size:13px;"></div>
     </section>
 
     <!-- Your Key -->
@@ -95,191 +169,245 @@
         </thead>
         <tbody id="keyRows"></tbody>
       </table>
+      <div class="note">
+        ระบบนี้จะ <b>ไม่ออกคีย์ใหม่ทับ</b> ถ้าของคุณยังไม่หมดอายุ — หน้าเว็บจะเช็ก <code>/status</code> ก่อนเสมอ แล้วดึงคีย์เดิมจากเซิร์ฟเวอร์มาแสดง
+      </div>
     </section>
+
   </div>
 
 <script>
-/* ===================== CONFIG ===================== */
-const API_BASE     = location.origin;         // สมมติ web กับ API อยู่โดเมนเดียวกัน
-const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW"; // ถ้าอยาก monetize ตอน START
-const BASE_HOURS   = 48;
-const EXTEND_HOURS = 5;
-const UFO_MS       = 4000; // progress 4s
+  /* ===== CONFIG ===== */
+  const START_URL     = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+  const MIN_VISIT     = 5000;    // ms
+  const UFO_MS        = 4000;    // progress duration
 
-/* ===================== Elements ===================== */
-const bar       = document.getElementById('bar');
-const pText     = document.getElementById('progressText');
-const percentEl = document.getElementById('percentText');
-const startBtn  = document.getElementById('startBtn');
-const getKeyBtn = document.getElementById('getKey');
-const keyRows   = document.getElementById('keyRows');
+  /* ===== Elements ===== */
+  const bar       = document.getElementById('bar');
+  const barWrap   = document.getElementById('barWrap');
+  const barUfo    = document.getElementById('barUfo');
+  const pText     = document.getElementById('progressText');
+  const percentEl = document.getElementById('percentText');
+  const startBtn  = document.getElementById('startBtn');
+  const getKeyBtn = document.getElementById('getKey');
+  const keyRows   = document.getElementById('keyRows');
+  const hintLine  = document.getElementById('hintLine');
 
-/* ===================== Utils ===================== */
-const now = ()=>Date.now();
-const hms = (ms)=>{ if(ms<0)ms=0; const s=Math.floor(ms/1000);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; };
-const qs = new URLSearchParams(location.search);
-const QUID   = qs.get("uid")   || "";
-const QPLACE = qs.get("place") || "";
+  /* Splash */
+  const splash       = document.getElementById('splash');
+  const splashCircle = document.getElementById('splashCircle');
+  const splashNum    = document.getElementById('splashNum');
+  const SPLASH_MS    = 10000;
+  const SPLASH_FLAG  = "ufo_splash_shown";
+  const SPLASH_SKIP  = "ufo_skip_splash_once";
+  const SPLASH_SKIP_LS = "ufo_skip_splash_once_ls";
 
-/* localStorage store (เก็บฝั่ง client เพื่อแสดงย้อนหลัง) */
-const KEY_STORE = "ufo_key_store_v1";
-function getStore(){ try{ return JSON.parse(localStorage.getItem(KEY_STORE)||'{}'); }catch(e){ return {}; } }
-function setStore(o){ try{ localStorage.setItem(KEY_STORE, JSON.stringify(o)); }catch(e){} }
-function idPair(){ return QUID + "::" + QPLACE; }
-function getMyKey(){ return getStore()[idPair()] || null; }
-function setMyKey(d){ const s=getStore(); s[idPair()]=d; setStore(s); }
-function clearMyKey(){ const s=getStore(); delete s[idPair()]; setStore(s); }
+  let isCompleted = false;
+  let raf = null;
 
-async function jget(path){
-  const res = await fetch(API_BASE + path, {cache:"no-store"});
-  if(!res.ok) throw new Error("http");
-  return await res.json();
-}
+  /* ===== URL / ORIGIN ===== */
+  const url   = new URL(location.href);
+  const uid   = url.searchParams.get('uid')   || '';
+  const place = url.searchParams.get('place') || '';
+  const ORIGIN = location.origin.replace(/\/+$/,'');
 
-/* ===================== Progress Bar ===================== */
-let raf=null, isCompleted=false;
-function setProgress(p){
-  if (p<0)p=0; if(p>100)p=100;
-  bar.style.width = p+'%';
-  percentEl.textContent = p.toFixed(0)+'%';
-  pText.textContent = 'Progress: ' + (p>=100 ? '1/1':'0/1');
-  if (p>=100 && !isCompleted){
-    isCompleted = true;
-    startBtn.disabled = true;
-    startBtn.textContent = '✅';
-    updateGetKeyButtonState();
-  }
-}
-function runProgress(duration=UFO_MS){
-  cancelAnimationFrame(raf);
-  const t0=performance.now();
-  function tick(ts){
-    const t=Math.min(1,(ts-t0)/duration);
-    setProgress(100*t);
-    if(t<1) raf=requestAnimationFrame(tick);
-  }
-  raf=requestAnimationFrame(tick);
-}
-
-/* ===================== Key UI ===================== */
-let keyTimer=null;
-function renderKeyRow(data){
-  keyRows.innerHTML='';
-  const tr=document.createElement('tr');
-  const tdKey=document.createElement('td');
-  const tdLeft=document.createElement('td');
-  const tdStat=document.createElement('td');
-  const tdAct=document.createElement('td');
-
-  tdKey.style.fontWeight='900'; tdKey.style.letterSpacing='1px';
-  tdKey.textContent = data.key || '(no key)';
-  tdStat.innerHTML  = '<span class="pill">ACTIVE</span>';
-
-  const actions=document.createElement('div'); actions.className='actions';
-  const btnCopy=document.createElement('button'); btnCopy.className='btn btn-ghost'; btnCopy.innerHTML='📋 Copy';
-  const btnAdd5=document.createElement('button'); btnAdd5.className='btn btn-green'; btnAdd5.innerHTML='⏩ +5H';
-  actions.appendChild(btnCopy); actions.appendChild(btnAdd5); tdAct.appendChild(actions);
-
-  function tickLeft(){
-    const left=data.until - now();
-    tdLeft.textContent = left>0 ? hms(left) : '00:00:00';
-    if(left<=0){
-      clearInterval(keyTimer);
-      clearMyKey();
-      updateGetKeyButtonState();
+  /* ===== utils ===== */
+  const now = ()=>Date.now();
+  function setProgress(p){
+    if (p<0)p=0; if(p>100)p=100;
+    bar.style.width = p+'%';
+    const barRect=bar.getBoundingClientRect(), wrapRect=barWrap.getBoundingClientRect();
+    const tipInside = (barRect.left+barRect.width)-wrapRect.left;
+    barUfo.style.left = (tipInside + 8) + 'px';
+    percentEl.textContent = p.toFixed(0)+'%';
+    pText.textContent = 'Progress: ' + (p>=100 ? '1/1':'0/1');
+    if (p>=100 && !isCompleted){
+      isCompleted = true;
+      startBtn.classList.add('ok');
+      startBtn.disabled = true;
+      startBtn.textContent = '✅';
     }
   }
-  tickLeft();
-  if(keyTimer) clearInterval(keyTimer);
-  keyTimer=setInterval(tickLeft,1000);
-
-  btnCopy.addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText(String(data.key||"")); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
-  });
-
-  // ต่อเวลาผ่าน API /extend (ไม่ต้องสุ่มใหม่)
-  btnAdd5.addEventListener('click', async ()=>{
-    try{
-      btnAdd5.disabled = true;
-      await jget(`/extend?uid=${encodeURIComponent(QUID)}&place=${encodeURIComponent(QPLACE)}`);
-      await refreshFromStatus(); // ดึงเวลาที่เหลือจริงจาก server
-    }catch(e){
-      alert('Extend failed');
-    }finally{
-      btnAdd5.disabled = false;
-    }
-  });
-
-  tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
-  keyRows.prepend(tr);
-}
-
-/* ดึง/แสดงจาก /status */
-async function refreshFromStatus(){
-  if(!QUID || !QPLACE) return;
-  const data = await jget(`/status?uid=${encodeURIComponent(QUID)}&place=${encodeURIComponent(QPLACE)}`);
-  if(data && data.ok && data.expires_at){
-    const untilMs = Number(data.expires_at)*1000;
-    const payload = { key: String(data.key||""), until: untilMs };
-    setMyKey(payload);
-    renderKeyRow(payload);
-    updateGetKeyButtonState();
+  function runProgress(pTarget=100, duration=UFO_MS){
+    cancelAnimationFrame(raf);
+    barUfo.classList.add('on');
+    const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
+    function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
+    raf=requestAnimationFrame(tick);
   }
-}
+  function hmsFromUnix(exp){
+    const ms = Math.max(0, exp*1000 - Date.now());
+    const s = Math.floor(ms/1000);
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const ss = s%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
 
-/* ปุ่ม GET KEY: ขอจาก /getkey เท่านั้น (ตัดการสุ่มจาก config) */
-function wireGetKeyButton(){
-  if(!getKeyBtn) return;
-  getKeyBtn.disabled = (!QUID || !QPLACE);
-  getKeyBtn.textContent = getKeyBtn.disabled ? '🔒 START first' : '+ GET A NEW KEY';
+  /* ===== API helpers ===== */
+  async function apiStatus(){
+    const res = await fetch(`${ORIGIN}/status?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`, {cache:'no-store'});
+    return res.json().catch(()=>({ok:false}));
+  }
+  async function apiGetKey(){
+    const res = await fetch(`${ORIGIN}/getkey?uid=${encodeURIComponent(uid)}&place=${encodeURIComponent(place)}`, {cache:'no-store'});
+    return res.json().catch(()=>({ok:false}));
+  }
 
+  /* ===== Key UI ===== */
+  function renderKeyRow(data){
+    keyRows.innerHTML='';
+    if(!data || !data.key){
+      const tr=document.createElement('tr');
+      const td=document.createElement('td');
+      td.colSpan=4; td.textContent='(ยังไม่มีคีย์ — ให้กด START ก่อน แล้วจึงกด + GET A NEW KEY)';
+      tr.appendChild(td);
+      keyRows.appendChild(tr);
+      return;
+    }
+    const tr=document.createElement('tr');
+    const tdKey=document.createElement('td');
+    const tdLeft=document.createElement('td');
+    const tdStat=document.createElement('td');
+    const tdAct=document.createElement('td');
+
+    tdKey.style.fontWeight='900'; tdKey.style.letterSpacing='1px';
+    tdKey.textContent=data.key;
+    tdStat.innerHTML='<span class="pill">ACTIVE</span>';
+    tdLeft.textContent = data.expires_at ? hmsFromUnix(data.expires_at) : '-';
+
+    const actions=document.createElement('div'); actions.className='actions';
+    const btnCopy=document.createElement('button'); btnCopy.className='btn btn-ghost'; btnCopy.innerHTML='📋 Copy';
+    btnCopy.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
+    });
+    actions.appendChild(btnCopy);
+    tdAct.appendChild(actions);
+
+    tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
+    keyRows.appendChild(tr);
+  }
+
+  function lockGetKeyUI(active){
+    if(active){ getKeyBtn.disabled = true; getKeyBtn.textContent = '🔒 WAIT'; }
+    else { getKeyBtn.disabled = false; getKeyBtn.textContent = '+ GET A NEW KEY'; }
+  }
+
+  /* ===== Splash control ===== */
+  function shouldShowSplash(){
+    if (sessionStorage.getItem(SPLASH_SKIP) === '1'){ sessionStorage.removeItem(SPLASH_SKIP); return false; }
+    if (localStorage.getItem(SPLASH_SKIP_LS) === '1'){ localStorage.removeItem(SPLASH_SKIP_LS); return false; }
+    if (sessionStorage.getItem(SPLASH_FLAG) === '1') return false;
+    return true;
+  }
+  function showSplash(){
+    splash.classList.add('show');
+    const R = 65, C = 2*Math.PI*R;
+    splashCircle.setAttribute('stroke-dasharray', `0 ${C}`);
+    splashNum.textContent = '0%';
+    const t0 = performance.now();
+    function tick(ts){
+      const t = Math.min(1, (ts - t0)/SPLASH_MS);
+      const pct = Math.round(t*100);
+      splashNum.textContent = pct + '%';
+      const dash = C * t;
+      splashCircle.setAttribute('stroke-dasharray', `${dash} ${C}`);
+      if (t < 1) requestAnimationFrame(tick); else hideSplash();
+    }
+    requestAnimationFrame(tick);
+  }
+  function hideSplash(){
+    splash.classList.remove('show');
+    sessionStorage.setItem(SPLASH_FLAG,'1');
+  }
+
+  /* ===== Init ===== */
+  async function init(){
+    // ต้องมี uid/place เสมอ
+    if(!uid || !place){
+      renderKeyRow(null);
+      lockGetKeyUI(true);
+      startBtn.disabled = true;
+      startBtn.classList.add('lock');
+      startBtn.textContent = '⛔ NO UID/PLACE';
+      hintLine.textContent = '⚠️ URL นี้ไม่มี uid/place — ให้กลับไปกดปุ่ม Get Key ใน Roblox อีกครั้ง';
+      return;
+    }
+
+    // Splash ครั้งแรก
+    if (shouldShowSplash()) showSplash();
+
+    // แถบวิ่งสวย ๆ
+    runProgress();
+
+    // เช็คสถานะคีย์ก่อนเสมอ
+    let st;
+    try{ st = await apiStatus(); }catch(e){ st = {ok:false}; }
+
+    if(st && st.ok && st.expires_at && !st.expired){
+      renderKeyRow(st);
+      lockGetKeyUI(true);
+      hintLine.textContent = '✅ พบคีย์ที่จองไว้แล้วจากเซิร์ฟเวอร์';
+    }else{
+      renderKeyRow(null);
+      lockGetKeyUI(false);
+      hintLine.textContent = 'ℹ️ กด START แล้วรอกลับมา ≥ 5 วิ จากนั้นกด + GET A NEW KEY';
+    }
+  }
+
+  /* ===== Events ===== */
+  // START → ไปยังลิงก์หาเงิน แล้วให้กลับมา
+  startBtn.addEventListener('click', ()=>{
+    if(startBtn.disabled) return;
+    try {
+      sessionStorage.setItem('ufo_return_mark', String(Date.now()));
+      sessionStorage.setItem(SPLASH_SKIP,'1');
+      localStorage.setItem(SPLASH_SKIP_LS,'1');
+    }catch(e){}
+    window.location.href = START_URL;
+  });
+
+  // GET A NEW KEY → ไม่ออกใหม่ถ้ามีอยู่แล้ว
   getKeyBtn.addEventListener('click', async ()=>{
     if(getKeyBtn.disabled) return;
-    try{
-      getKeyBtn.disabled = true;
-      getKeyBtn.textContent = '⏳ WAIT...';
-      await jget(`/getkey?uid=${encodeURIComponent(QUID)}&place=${encodeURIComponent(QPLACE)}`);
-      await refreshFromStatus();
-    }catch(e){
-      alert('ขอคีย์จากเซิร์ฟเวอร์ไม่สำเร็จ');
-    }finally{
-      updateGetKeyButtonState();
+
+    // เช็ค /status อีกรอบ เผื่อมีคีย์อยู่แล้ว
+    let st;
+    try{ st = await apiStatus(); }catch(e){ st = {ok:false}; }
+    if(st && st.ok && st.expires_at && !st.expired){
+      renderKeyRow(st);
+      lockGetKeyUI(true);
+      hintLine.textContent = '✅ ใช้คีย์เดิมที่ยังไม่หมดอายุ';
+      return;
     }
+
+    // ยังไม่มีคีย์ → ตรวจว่าเพิ่งกลับจาก START และอยู่หน้านานพอหรือยัง
+    const mark = Number(sessionStorage.getItem('ufo_return_mark')||'0');
+    if(!mark || (Date.now()-mark)<MIN_VISIT){
+      alert('กรุณากด START แล้วอยู่ในหน้านั้นอย่างน้อย 5 วินาที ก่อนกลับมากด + GET A NEW KEY');
+      return;
+    }
+
+    // ขอคีย์ใหม่
+    getKeyBtn.disabled = true; getKeyBtn.textContent = '⏳ Requesting...';
+    let gk = await apiGetKey();
+    if(!(gk && gk.ok)){
+      getKeyBtn.disabled=false; getKeyBtn.textContent='+ GET A NEW KEY';
+      alert('เซิร์ฟเวอร์ไม่ตอบหรือผิดพลาด ลองใหม่อีกครั้ง');
+      return;
+    }
+
+    // ย้ำด้วย /status แล้วแสดงผล
+    try{ st = await apiStatus(); }catch(e){ st = null; }
+    const show = (st && st.ok) ? st : gk;
+
+    renderKeyRow(show);
+    lockGetKeyUI(true);
+    hintLine.textContent = (gk.reused ? '✅ ใช้คีย์เดิม' : '✅ ออกคีย์ใหม่สำเร็จ');
   });
-}
 
-function updateGetKeyButtonState(){
-  const mine = getMyKey();
-  const active = !!(mine && now()<mine.until);
-  if (!QUID || !QPLACE){
-    getKeyBtn.disabled = true;
-    getKeyBtn.textContent = '🔒 START first';
-  }else{
-    getKeyBtn.disabled = active;
-    getKeyBtn.textContent = active ? '🔒 WAIT' : '+ GET A NEW KEY';
-  }
-}
-
-/* START (เอาไว้ทำ progress/monetize เฉยๆ) */
-startBtn.addEventListener('click', ()=>{
-  if(startBtn.disabled) return;
-  runProgress(UFO_MS);
-  // ถ้าอยากพาคนออกลิงก์ก่อนรับคีย์ ให้ uncomment บรรทัดล่างนี้
-  // window.open(START_URL, "_blank");
-});
-
-/* ===================== Init ===================== */
-document.addEventListener("DOMContentLoaded", async ()=>{
-  try{
-    wireGetKeyButton();
-    if(QUID && QPLACE){
-      // ถ้ามีคีย์อยู่แล้วบน server จะถูกแสดงทันที
-      await refreshFromStatus();
-    }
-  }catch(e){
-    console.error(e);
-  }
-});
+  // เริ่ม
+  init();
 </script>
 </body>
 </html>
