@@ -425,7 +425,7 @@
   /* ===== เพิ่ม: ดึงคีย์จากเซิร์ฟเวอร์จริง (/getkey) ===== */
   async function fetchKeyFromServer(uidParam, placeParam){
     try{
-      // ★★ แก้ base ตรงนี้ให้เป็นโดเมนเซิร์ฟเวอร์ของคุณ ★★
+      // ★★ เปลี่ยนเป็นโดเมนเซิร์ฟเวอร์ของคุณได้ ★★
       const base = "https://ufo-hub-x-server-key-777.onrender.com";
       const qs = `/getkey?uid=${encodeURIComponent(uidParam)}&place=${encodeURIComponent(placeParam)}`;
       const url = base + qs;
@@ -434,15 +434,13 @@
       if(!res.ok) throw new Error('http_error:'+res.status);
 
       const data = await res.json();
-      // ต้องมี ok:true และ key จากเซิร์ฟเวอร์
       if(data && data.ok && data.key){
-        // expires_at (unix seconds) → ms
         let until = Date.now() + BASE_HOURS*60*60*1000;
         if(typeof data.expires_at !== 'undefined'){
           const expSec = Number(data.expires_at)||0;
           if(expSec>1000000000) until = expSec*1000;
         }
-        return { ok:true, key:String(data.key), until, raw:data };
+        return { ok:true, key:String(data.key), until, raw:data, base };
       }
       return { ok:false, reason: (data && data.reason) ? data.reason : 'invalid_response' };
     }catch(err){
@@ -561,6 +559,72 @@
   new Image().src='https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
   new Image().src='https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';
   new Image().src='https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';
+
+
+  /* =========================================================
+     🚀 PATCH เพิ่ม — บังคับใช้คีย์จากเซิร์ฟเวอร์เท่านั้น
+     (ไม่แตะ/ไม่ลบของเดิม แค่ “เพิ่ม” แล้ว takeover ปุ่ม)
+     ========================================================= */
+  (function enforceServerKeyOnly(){
+    const API_BASE = "https://ufo-hub-x-server-key-777.onrender.com";
+    const DEFAULT_PLACE = "6252985844"; // แก้ได้ตามเกมคุณ
+
+    function qs(k){ return new URLSearchParams(location.search).get(k) }
+    function getUid(){ return qs("uid") || uid(); }
+    function getPlace(){ return qs("place") || DEFAULT_PLACE; }
+
+    function buildUiUrl(u, p){ return `${API_BASE}/?uid=${encodeURIComponent(u)}&place=${encodeURIComponent(p)}` }
+
+    // clone ปุ่มเพื่อเคลียร์ listeners เดิม โดยไม่แก้ของเดิม
+    const oldBtn = document.getElementById('getKey');
+    if(!oldBtn) return;
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+    newBtn.addEventListener('click', async (ev)=>{
+      ev.preventDefault();
+
+      if (localStorage.getItem(MUST_START) !== '1') {
+        newBtn.disabled = true;
+        newBtn.textContent = '🔒 START first';
+        setTimeout(updateGetKeyButtonState, 1200);
+        return;
+      }
+
+      const existing = getMyKey();
+      if (existing && now() < existing.until) {
+        updateGetKeyButtonState();
+        return;
+      }
+
+      const U = getUid();
+      const P = getPlace();
+      const uiUrl = buildUiUrl(U,P);
+
+      // คัดลอกลิงก์หน้า UI เพื่อรายได้เว็บ
+      try{ await navigator.clipboard.writeText(uiUrl); }catch(_){}
+
+      newBtn.disabled = true;
+      newBtn.textContent = '⏳ FETCH...';
+
+      const result = await fetchKeyFromServer(U, P);
+      if(result.ok){
+        const until = result.until;
+        const key   = normalizeKey(result.key);
+        setMyKey({ key, until, createdAt: now() });
+        localStorage.setItem(LOCK_KEY, String(until));
+        startLockCountdown(until);
+        renderKeyRow({ key, until });
+        newBtn.textContent = '🔒 WAIT';
+      }else{
+        newBtn.disabled = false;
+        newBtn.textContent = '+ GET A NEW KEY';
+        alert("❌ ดึงคีย์จากเซิร์ฟเวอร์ไม่สำเร็จ: "+result.reason+"\nโปรดเปิดลิงก์ที่คัดลอกไว้ แล้วลองใหม่อีกครั้ง");
+      }
+    });
+
+    updateGetKeyButtonState();
+  })();
 </script>
 </body>
 </html>
