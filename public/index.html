@@ -143,8 +143,8 @@
   const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK    = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY   = "ufo_return_ts";
-  const VISIT_FLAG   = "ufo_visit_inflight";     // กันเคสกด Back ให้ไม่ได้นับ
-  const EXTEND_PENDING = "ufo_extend_pending";   // ตั้งค้างไว้ตอนกด +5H
+  const VISIT_FLAG   = "ufo_visit_inflight";     // (สำรอง) กัน back
+  const EXTEND_PENDING = "ufo_extend_pending";   // ตั้งไว้ตอนกด +5H
   const MIN_VISIT    = 5000;                     // ต้องอยู่อย่างน้อย 5 วิ
   const UFO_MS       = 4000;                     // หลอดเขียววิ่ง 4 วิ
   const BASE_HOURS   = 48;                       // อายุคีย์เริ่มต้น 48 ชม.
@@ -203,7 +203,7 @@
       startBtn.textContent = '✅'; // อิโมจิอย่างเดียว
       // ยานค้างไว้
       enableOnlyGetKey();
-      // ถ้ากลับมาพร้อม EXTEND_PENDING ให้ต่อเวลาอัตโนมัติ 5 ชม.
+      // (ยังคงไว้) ถ้ามี EXTEND_PENDING ระหว่างวิ่ง progress
       if (localStorage.getItem(EXTEND_PENDING)==='1'){
         localStorage.removeItem(EXTEND_PENDING);
         autoExtend5h();
@@ -212,7 +212,7 @@
   }
   function runProgress(pTarget=100, duration=UFO_MS){
     cancelAnimationFrame(raf);
-    barUfo.classList.add('on'); // บังคับโชว์ตอนวิ่ง
+    barUfo.classList.add('on'); // โชว์ตอนวิ่ง
     const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
     function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
     raf=requestAnimationFrame(tick);
@@ -226,9 +226,22 @@
     }catch(e){ return false; }
   }
   function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY); }catch(e){} }
+
+  // ✅ แก้: ถ้ากลับจากการกด +5H ให้ "ไม่" วิ่งหลอดเขียว แต่อัปเดตเวลาเงียบๆ
   function autoCompleteIfReturned(){
     if(location.hostname!==DOMAIN_OK) return;
-    if(isValidReturn()){ clearReturnMark(); runProgress(100, UFO_MS); }
+    if(!isValidReturn()) return;
+    clearReturnMark();
+
+    if (localStorage.getItem(EXTEND_PENDING)==='1'){
+      // ต่อเวลา 5 ชม. แบบไม่วิ่ง progress
+      localStorage.removeItem(EXTEND_PENDING);
+      autoExtend5h();
+      return; // จบ ไม่เรียก runProgress
+    }
+
+    // กรณีปกติค่อยวิ่งหลอด
+    runProgress(100, UFO_MS);
   }
 
   /* ===== START lock (ตามเวลา key) ===== */
@@ -281,22 +294,22 @@
       try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
     });
 
-    // +5H → ออกลิงก์ก่อน แล้วต่อเวลาอัตโนมัติเมื่อกลับมา
+    // +5H → พาออกลิงก์ แล้วกลับมาจะต่อเวลาให้อัตโนมัติ "แบบไม่วิ่งหลอด"
     btnAdd5.addEventListener('click', ()=>{
       const mine=getMyKey();
-      if(!mine || now()>=mine.until) return; // หมดเวลา/ไม่มีคีย์
+      if(!mine || now()>=mine.until) return;
       try{
-        localStorage.setItem(RETURN_KEY, String(now())); // เริ่มนับ
-        localStorage.setItem(EXTEND_PENDING,'1');        // ขอเพิ่มเวลา
+        localStorage.setItem(RETURN_KEY, String(now()));
+        localStorage.setItem(EXTEND_PENDING,'1');
       }catch(e){}
-      window.location.href = START_URL; // พาออกไปจริง
+      window.location.href = START_URL;
     });
 
     tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
     keyRows.prepend(tr);
   }
 
-  // ต่อเวลา +5H (ใช้ตอนกลับมาจากลิงก์หลังตั้ง EXTEND_PENDING)
+  // ต่อเวลา +5H
   function autoExtend5h(){
     const mine=getMyKey();
     if(!mine || now()>=mine.until) return;
@@ -304,8 +317,7 @@
     setMyKey(mine);
     localStorage.setItem(LOCK_KEY,String(mine.until));
     startLockCountdown(mine.until);
-    // วาดใหม่เพื่ออัปเดตเวลาทันที
-    renderKeyRow(mine);
+    renderKeyRow(mine); // อัปเดตตารางทันที
   }
 
   function enableOnlyGetKey(){
@@ -368,7 +380,7 @@
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
     setProgress(0);
-    autoCompleteIfReturned();   // กลับจากลิงก์ครบ 5 วิ → วิ่ง 100% และถ้ามี EXTEND_PENDING จะต่อเวลาให้อัตโนมัติ
+    autoCompleteIfReturned();   // ถ้ากลับจาก START → วิ่งหลอด | ถ้ากลับจาก +5H → ต่อเวลาเงียบๆ
     const mine=getMyKey();
     if(mine){
       renderKeyRow(mine);
