@@ -1,10 +1,11 @@
-// UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Original Version
+// UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Extended Version
 // Endpoints:
 //   GET /                     -> หน้าเว็บ (index.html)
-//   GET /getkey?uid=&place=   -> สุ่ม/คืนคีย์จากบัตร uid:place
+//   GET /getkey?uid=&place=   -> สุ่ม/คืนคีย์จาก uid:place
 //   GET /verify?key=&uid=&place=
-//   GET /img/profile          -> proxy Discord profile
-//   GET /img/bg               -> proxy Discord bg
+//   GET /extend?uid=&place=   -> ต่อเวลา +5h
+//   GET /status?uid=&place=   -> ดูเวลาที่เหลือ
+//   GET /img/profile, /img/bg -> proxy Discord images
 
 const express = require("express");
 const fs = require("fs");
@@ -24,14 +25,14 @@ app.use((req, res, next) => {
   next();
 });
 app.use((req, res, next) => {
-  const api = req.path.startsWith("/getkey") || req.path.startsWith("/verify");
+  const api = ["/getkey", "/verify", "/extend", "/status"].some(p => req.path.startsWith(p));
   if (api) res.type("application/json; charset=utf-8");
   next();
 });
 
 /* ---------- Discord image URLs ---------- */
-const DISCORD_PROFILE = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560447279960194/20250916_152130.png?ex=68cf8acb&is=68ce394b&hm=3c3e5b4819a3d0e07794caa3fc39bafbeee7a3bbc0b35796e16e0e21f663113b&";
-const DISCORD_BG      = "https://cdn.discordapp.com/attachments/1417098355388973154/1417560780110434446/file_00000000385861fab9ee0612cc0dca89.png?ex=68cf8b1a&is=68ce399a&hm=f73f6eefa017f23aee5effcad7154a69bafc0b052affd2b558cc5d37e5e3ff9d&";
+const DISCORD_PROFILE = "https://cdn.discordapp.com/.../20250916_152130.png";
+const DISCORD_BG      = "https://cdn.discordapp.com/.../file_00000000385861fab9ee0612cc0dca89.png";
 
 /* ---------- Proxy helper ---------- */
 function proxyImage(targetUrl, res) {
@@ -43,8 +44,7 @@ function proxyImage(targetUrl, res) {
       }
       if (r.statusCode !== 200) {
         res.status(502).type("text/plain").send("bad_gateway_image");
-        r.resume();
-        return;
+        r.resume(); return;
       }
       res.setHeader("Cache-Control", "no-store");
       res.setHeader("Content-Type", r.headers["content-type"] || "image/png");
@@ -93,22 +93,24 @@ app.get("/getkey", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const id     = `${uid}:${place}`;
 
+    // ถ้ามี key แล้ว และยังไม่หมด → ใช้ key เดิม
     const ticket = issued[id];
-    if (ticket && ticket.expires_at && now < ticket.expires_at) {
-      return res.json({ ok:true, uid, place, key:ticket.key, expires_at:ticket.expires_at, reused:true });
+    if (ticket && now < ticket.expires_at) {
+      return res.json({ ok:true, reused:true, ...ticket });
     }
 
+    // เลือก key จาก config
     const pool = (config.keys || []).filter(k => k && k.key);
     if (!pool.length) return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
-
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     const ttl = Number(chosen.ttl || config.expires_default || 172800);
     const exp = now + ttl;
 
-    issued[id] = { key:chosen.key, uid, place, issued_at:now, expires_at:exp, reusable:!!chosen.reusable };
+    // bind key ให้ uid:place (ไม่สำคัญว่า key จะซ้ำกับคนอื่น)
+    issued[id] = { key:chosen.key, uid, place, issued_at:now, expires_at:exp };
     saveIssued(issued);
 
-    return res.json({ ok:true, uid, place, key:chosen.key, expires_at:exp, reused:false });
+    return res.json({ ok:true, reused:false, ...issued[id] });
   } catch (e) {
     console.error("getkey error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
@@ -126,26 +128,60 @@ app.get("/verify", (req, res) => {
     const now    = Math.floor(Date.now()/1000);
     const issued = loadIssued();
     const id     = `${uid}:${place}`;
-
     const ticket = issued[id];
-    if (ticket) {
-      if (key !== ticket.key)        return res.json({ ok:true, valid:false, reason:"key_mismatch_for_uid_place" });
-      if (now > ticket.expires_at)   return res.json({ ok:true, valid:false, reason:"expired", expired_at:ticket.expires_at });
-      return res.json({ ok:true, valid:true, key:ticket.key, expires_at:ticket.expires_at, reusable:ticket.reusable });
-    }
 
-    const config = loadConfig();
-    const found  = (config.keys || []).find(k => k.key === key);
-    if (found) {
-      const ttl = Number(found.ttl || config.expires_default || 172800);
-      const exp = now + ttl;
-      issued[id] = { key, uid, place, issued_at:now, expires_at:exp, reusable:!!found.reusable };
-      saveIssued(issued);
-      return res.json({ ok:true, valid:true, key, expires_at:exp, reusable:!!found.reusable });
+    if (ticket && ticket.key === key) {
+      if (now > ticket.expires_at) {
+        return res.json({ ok:true, valid:false, expired:true, expired_at:ticket.expires_at });
+      }
+      return res.json({ ok:true, valid:true, expires_at:ticket.expires_at });
     }
-    return res.json({ ok:true, valid:false, reason:"invalid_key" });
+    return res.json({ ok:true, valid:false, reason:"invalid_or_mismatch" });
   } catch (e) {
     console.error("verify error:", e);
+    res.status(500).json({ ok:false, error:"server_error" });
+  }
+});
+
+/* ---------- API: EXTEND (ต่อเวลา +5h) ---------- */
+app.get("/extend", (req, res) => {
+  const uid   = String(req.query.uid   || "").trim();
+  const place = String(req.query.place || "").trim();
+  if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
+
+  try {
+    const issued = loadIssued();
+    const id     = `${uid}:${place}`;
+    const now    = Math.floor(Date.now()/1000);
+    const ticket = issued[id];
+    if (!ticket) return res.status(404).json({ ok:false, reason:"no_ticket" });
+    if (now > ticket.expires_at) return res.json({ ok:false, reason:"already_expired" });
+
+    ticket.expires_at += 5*60*60; // +5 ชั่วโมง
+    saveIssued(issued);
+    return res.json({ ok:true, new_expires_at:ticket.expires_at });
+  } catch (e) {
+    console.error("extend error:", e);
+    res.status(500).json({ ok:false, error:"server_error" });
+  }
+});
+
+/* ---------- API: STATUS (ดูเวลาจริง) ---------- */
+app.get("/status", (req, res) => {
+  const uid   = String(req.query.uid   || "").trim();
+  const place = String(req.query.place || "").trim();
+  if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
+
+  try {
+    const issued = loadIssued();
+    const id     = `${uid}:${place}`;
+    const now    = Math.floor(Date.now()/1000);
+    const ticket = issued[id];
+    if (!ticket) return res.json({ ok:false, reason:"no_ticket" });
+    const left = Math.max(0, ticket.expires_at - now);
+    return res.json({ ok:true, key:ticket.key, expires_at:ticket.expires_at, remaining:left });
+  } catch (e) {
+    console.error("status error:", e);
     res.status(500).json({ ok:false, error:"server_error" });
   }
 });
