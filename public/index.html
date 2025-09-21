@@ -53,8 +53,10 @@
   }
 
   .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  /* ✅ ชื่อหลัก: UFO เขียว / HUB X ขาว */
   .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
-  .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
+  .head-title .ufo{color:var(--ufo)}
+  .head-title .hubx{color:#fff}
 
   .start-btn{
     appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;
@@ -94,7 +96,7 @@
     .bar-ufo{width:46px;height:46px}
   }
 
-  /* ============ Splash (วงกลม + โปรไฟล์ + ข้อความ) ============ */
+  /* ============ Splash (โปรไฟล์ + ชื่อ + วงกลมเล็ก + ตัวเลขกลางวง) ============ */
   .splash{
     position:fixed; inset:0; background:rgba(0,0,0,.78);
     display:none; align-items:center; justify-content:center;
@@ -102,13 +104,13 @@
   }
   .splash.show{display:flex;}
   .splash-card{
-    width:240px; border-radius:22px; padding:18px 16px 22px;
+    width:220px; border-radius:22px; padding:16px 16px 22px;
     background:linear-gradient(180deg, rgba(8,13,19,.96), rgba(9,16,23,.96));
     box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 12px 40px rgba(0,0,0,.6), 0 0 34px var(--glow);
     display:flex; flex-direction:column; align-items:center; gap:12px; position:relative;
   }
   .splash-avatar{
-    width:74px; height:74px; border-radius:50%;
+    width:68px; height:68px; border-radius:50%;
     background:url('https://i.postimg.cc/KcdBP7Fn/20250916-152130.png') center/cover no-repeat;
     box-shadow:0 0 0 2px rgba(255,255,255,.1), 0 0 18px rgba(0,255,160,.3);
   }
@@ -116,13 +118,17 @@
     display:flex; flex-direction:column; align-items:center; line-height:1.15; font-weight:900;
     text-shadow:0 0 12px rgba(0,255,170,.25);
   }
-  .splash-title .ufo{color:#fff; font-size:18px; letter-spacing:.6px;}
-  .splash-title .hubx{color:var(--ufo); font-size:22px; letter-spacing:.8px;}
-  .splash-title .dl{color:var(--ufo); font-size:14px; opacity:.9; letter-spacing:.4px;}
-  .splash-svg{width:180px; height:180px; transform:rotate(-90deg);}
+  /* ✅ ชื่อบน Splash: UFO เขียว, HUB X Download ขาว */
+  .splash-title .ufo{color:var(--ufo); font-size:18px; letter-spacing:.6px;}
+  .splash-title .hubx{color:#fff; font-size:20px; letter-spacing:.8px;}
+  .splash-svg{width:150px; height:150px; transform:rotate(-90deg);}
   .splash-circle-bg{stroke:rgba(255,255,255,.12); stroke-width:10; fill:none;}
   .splash-circle{stroke:var(--ufo); stroke-width:10; fill:none; filter:drop-shadow(0 0 10px rgba(0,255,170,.6)); stroke-linecap:round;}
-  .splash-num{position:absolute; bottom:20px; font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text);}
+  .splash-num{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text);
+    pointer-events:none;
+  }
 </style>
 </head>
 <body>
@@ -133,11 +139,10 @@
       <div class="splash-title">
         <div class="ufo">UFO</div>
         <div class="hubx">HUB X Download</div>
-        <div class="dl">Download</div>
       </div>
-      <svg class="splash-svg" viewBox="0 0 200 200">
-        <circle class="splash-circle-bg" cx="100" cy="100" r="80"></circle>
-        <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="80" stroke-dasharray="0 999"></circle>
+      <svg class="splash-svg" viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="splash-circle-bg" cx="100" cy="100" r="65"></circle>
+        <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="65" stroke-dasharray="0 999"></circle>
       </svg>
       <div class="splash-num" id="splashNum">0%</div>
     </div>
@@ -189,15 +194,15 @@
 <script>
   /* ===== CONFIG ===== */
   const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK    = "ufo-hub-x-key-umoq.onrender.com";
+  const DOMAIN_OK    = location.hostname; // ใช้โดเมนปัจจุบัน
   const RETURN_KEY   = "ufo_return_ts";
   const LAST_ACTION  = "ufo_last_action";        // 'start' | 'extend'
   const EXTEND_PENDING = "ufo_extend_pending";
 
-  const MIN_VISIT    = 5000;                     // ต้องอยู่อย่างน้อย 5 วิ
-  const UFO_MS       = 4000;                     // หลอดเขียววิ่ง 4 วิ
-  const BASE_HOURS   = 48;                       // อายุคีย์เริ่มต้น 48 ชม.
-  const EXTEND_HOURS = 5;                        // ต่อครั้งละ 5 ชม.
+  const MIN_VISIT    = 5000;
+  const UFO_MS       = 4000;
+  const BASE_HOURS   = 48;
+  const EXTEND_HOURS = 5;
 
   const LOCK_KEY     = "ufo_start_locked_until";
   const USER_ID_KEY  = "ufo_user_id";
@@ -205,10 +210,11 @@
   const CONFIG_URL   = "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
 
   /* Splash */
-  const SPLASH_MS    = 10000;                    // ~10 วิ
-  const SPLASH_FLAG  = "ufo_splash_shown";       // ครั้งแรกของ session เท่านั้น
-  const SPLASH_SKIP  = "ufo_skip_splash_once";   // ข้ามเมื่อกลับจากลิงก์
-  const MUST_START   = "ufo_must_start_once";    // ต้องเคย START อย่างน้อย 1 ครั้งก่อนสร้างคีย์
+  const SPLASH_MS    = 10000;
+  const SPLASH_FLAG  = "ufo_splash_shown";
+  const SPLASH_SKIP  = "ufo_skip_splash_once";
+  const SPLASH_SKIP_LS = "ufo_skip_splash_once_ls";
+  const MUST_START   = "ufo_must_start_once";
 
   /* ===== Elements ===== */
   const bar       = document.getElementById('bar');
@@ -264,7 +270,6 @@
       startBtn.textContent = '✅';
       enableOnlyGetKey();
 
-      // ถ้ากลับจาก +5H → ต่อเวลาเงียบ ๆ
       if (localStorage.getItem(EXTEND_PENDING)==='1'){
         localStorage.removeItem(EXTEND_PENDING);
         autoExtend5h();
@@ -294,24 +299,22 @@
 
     const action = localStorage.getItem(LAST_ACTION)||'';
     if (action === 'extend'){
-      // ไม่วิ่ง progress
       localStorage.removeItem(LAST_ACTION);
-      autoExtend5h();
+      autoExtend5h();      // เงียบ ๆ (ไม่โชว์ splash อยู่แล้ว)
       return true;
     }
     if (action === 'start'){
-      // นับว่าเคย START แล้ว → ปลดล็อกปุ่ม GET KEY
-      localStorage.setItem(MUST_START,'1');
+      localStorage.setItem(MUST_START,'1');          // ✅ เคย START แล้ว
       localStorage.removeItem(LAST_ACTION);
-      runProgress(100, UFO_MS);
+      updateGetKeyButtonState();                    // ให้ปุ่มเป็น + GET A NEW KEY
+      runProgress(100, UFO_MS);                     // วิ่งหลอดครั้งแรกเท่านั้น
       return true;
     }
-    // กรณีเดิม ๆ
     runProgress(100, UFO_MS);
     return true;
   }
 
-  /* ===== START lock (ตามเวลา key) ===== */
+  /* ===== START lock ===== */
   function applyLockUI(until){
     const left = until - now();
     if(left>0){ startBtn.disabled=true; startBtn.classList.remove('ok'); startBtn.classList.add('lock'); startBtn.textContent=`⛔ ${hms(left)}`; }
@@ -348,7 +351,7 @@
       if(left<=0){
         clearInterval(keyTimer);
         clearMyKey();
-        updateGetKeyButtonState();  // อัปเดตสถานะตาม MUST_START
+        updateGetKeyButtonState();
         applyLockUI(0);
       }
     }
@@ -360,12 +363,13 @@
       try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
     });
 
-    // +5H → ต้องออกลิงก์ก่อน
+    // +5H → ต้องออกลิงก์ก่อน (และไม่ให้ Splash โผล่เมื่อกลับ)
     btnAdd5.addEventListener('click', ()=>{
       const mine=getMyKey();
       if(!mine || now()>=mine.until) return;
       try{
-        sessionStorage.setItem(SPLASH_SKIP,'1');           // กลับมาไม่ต้องขึ้น splash
+        sessionStorage.setItem(SPLASH_SKIP,'1');
+        localStorage.setItem(SPLASH_SKIP_LS,'1');      // กันไว้เผื่อ session ไม่มา
         localStorage.setItem(RETURN_KEY, String(now()));
         localStorage.setItem(EXTEND_PENDING,'1');
         localStorage.setItem(LAST_ACTION,'extend');
@@ -377,7 +381,7 @@
     keyRows.prepend(tr);
   }
 
-  // ต่อเวลา +5H (แบบเงียบ)
+  // ต่อเวลา +5H (เงียบ)
   function autoExtend5h(){
     const mine=getMyKey();
     if(!mine || now()>=mine.until) return;
@@ -393,7 +397,7 @@
     getKeyBtn.disabled=false;
   }
 
-  /* ===== คีย์จาก config.json + รูปแบบ UFO-...-48H ===== */
+  /* ===== ดึงคีย์จาก config.json ===== */
   function normalizeKey(k){
     let s = String(k||'').trim();
     if(!s) return '';
@@ -409,22 +413,21 @@
       list = list.map(normalizeKey).filter(x=>x.length>0);
       if(list.length){ return list[Math.floor(Math.random()*list.length)]; }
     }catch(e){}
-    // fallback
     const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let s='UFO-';
-    for(let i=0;i<8;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+    let s='UFO-'; for(let i=0;i<8;i++) s+=chars[Math.floor(Math.random()*chars.length)];
     return s+'-48H';
   }
 
-  /* ===== Splash logic (ครั้งแรก 10 วิ + โปรไฟล์ + ข้อความ) ===== */
+  /* ===== Splash logic ===== */
   function shouldShowSplash(){
     if (sessionStorage.getItem(SPLASH_SKIP) === '1'){ sessionStorage.removeItem(SPLASH_SKIP); return false; }
+    if (localStorage.getItem(SPLASH_SKIP_LS) === '1'){ localStorage.removeItem(SPLASH_SKIP_LS); return false; }
     if (sessionStorage.getItem(SPLASH_FLAG) === '1') return false;
     return true;
   }
   function showSplash(){
     splash.classList.add('show');
-    const R = 80, C = 2*Math.PI*R;
+    const R = 65, C = 2*Math.PI*R;
     splashCircle.setAttribute('stroke-dasharray', `0 ${C}`);
     splashNum.textContent = '0%';
     const t0 = performance.now();
@@ -443,7 +446,7 @@
     sessionStorage.setItem(SPLASH_FLAG,'1');
   }
 
-  /* ===== UI gating: ต้องเคย START ก่อนถึงจะสร้างคีย์ได้ ===== */
+  /* ===== Gating: ต้องเคย START ก่อนถึงจะสร้างคีย์ได้ ===== */
   function updateGetKeyButtonState(){
     const haveStartedOnce = localStorage.getItem(MUST_START)==='1';
     const mine = getMyKey();
@@ -452,25 +455,28 @@
       getKeyBtn.disabled = true;
       getKeyBtn.textContent = '🔒 START first';
     }else{
-      getKeyBtn.disabled = active ? true : false;
+      getKeyBtn.disabled = active;
       getKeyBtn.textContent = active ? '🔒 WAIT' : '+ GET A NEW KEY';
     }
   }
 
   /* ===== Events ===== */
+  // START → ออกลิงก์ และเมื่อกลับมาให้ปลดล็อก GET KEY
   startBtn.addEventListener('click', ()=>{
-    if(startBtn.disabled) return;
-    try{
-      sessionStorage.setItem(SPLASH_SKIP,'1');      // กลับมาจาก START → ไม่โชว์ splash
-      localStorage.setItem(RETURN_KEY,String(now()));
-      localStorage.setItem(LAST_ACTION,'start');
-    }catch(e){}
+    if (startBtn.disabled) return;
+    try {
+      sessionStorage.setItem(SPLASH_SKIP,'1');    // กลับมาครั้งนี้ไม่ต้องโชว์ splash
+      localStorage.setItem(SPLASH_SKIP_LS,'1');   // กันบางเครื่อง
+      localStorage.setItem(RETURN_KEY, String(now()));
+      localStorage.setItem(LAST_ACTION,'start');  // จำว่าไปจากปุ่ม START
+    } catch(e){}
     window.location.href = START_URL;
   });
 
+  // + GET A NEW KEY
   getKeyBtn.addEventListener('click', async ()=>{
-    // ต้องเคย START อย่างน้อยครั้งนึง
-    if(localStorage.getItem(MUST_START)!=='1'){
+    // ต้องเคยกด START อย่างน้อย 1 ครั้งก่อน
+    if (localStorage.getItem(MUST_START) !== '1') {
       getKeyBtn.disabled = true;
       getKeyBtn.textContent = '🔒 START first';
       setTimeout(updateGetKeyButtonState, 1200);
@@ -478,27 +484,28 @@
     }
 
     const existing = getMyKey();
-    if(existing && now()<existing.until){
+    // ถ้ามีคีย์และยังไม่หมดอายุ → ไม่สร้างซ้ำ
+    if (existing && now() < existing.until) {
       updateGetKeyButtonState();
       return;
     }
 
-    // รีเซ็ต progress/UI
-    isCompleted=false;
-    bar.style.width='0%';
-    percentEl.textContent='0%';
-    pText.textContent='Progress: 0/1';
+    // รีเซ็ต Progress bar
+    isCompleted = false;
+    bar.style.width = '0%';
+    percentEl.textContent = '0%';
+    pText.textContent = 'Progress: 0/1';
     barUfo.classList.remove('on');
     startBtn.classList.remove('ok','lock');
-    startBtn.disabled=false;
-    startBtn.textContent='🟢 START';
+    startBtn.disabled = false;
+    startBtn.textContent = '🟢 START';
 
-    // ดึงคีย์จาก config + อายุ 48 ชั่วโมง
+    // สร้างคีย์ใหม่ 48 ชั่วโมง
     const key = normalizeKey(await fetchKeyFromConfig());
     const until = now() + BASE_HOURS*60*60*1000;
 
     setMyKey({key, until, createdAt: now()});
-    localStorage.setItem(LOCK_KEY,String(until));
+    localStorage.setItem(LOCK_KEY, String(until));
     startLockCountdown(until);
 
     renderKeyRow({key, until});
@@ -507,24 +514,15 @@
 
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Splash ครั้งแรก
-    if (shouldShowSplash()) showSplash();
+    if (shouldShowSplash()) showSplash();     // Splash ครั้งแรก
+    onReturnedFromLink();                     // เช็คถ้ากลับมาจากลิงก์
 
-    setProgress(0);
-
-    // จัดการกรณีกลับมาจากลิงก์ (START / +5H)
-    onReturnedFromLink();
-
-    const mine = getMyKey();
-    if(mine){
+    const mine = getMyKey();                  // กู้คีย์เดิม
+    if (mine) {
       renderKeyRow(mine);
       localStorage.setItem(LOCK_KEY,String(mine.until));
       startLockCountdown(mine.until);
-    }else{
-      const until = parseInt(localStorage.getItem(LOCK_KEY)||"0",10);
-      if (until) startLockCountdown(until);
     }
-
     updateGetKeyButtonState();
   });
 
