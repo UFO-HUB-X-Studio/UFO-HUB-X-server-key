@@ -1,0 +1,425 @@
+-- ufo-hub-x.lua
+-- HTML content embedded as a Lua multiline string.
+-- Return the string so you can do:  local html = dofile('ufo-hub-x.lua')
+
+local html = [[
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UFO HUB X</title>
+
+<meta name="theme-color" content="#0a1411"/>
+<meta name="color-scheme" content="dark"/>
+
+<!-- preload รูป -->
+<link rel="preload" as="image" href="https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png">
+<link rel="preload" as="image" href="https://i.postimg.cc/KcdBP7Fn/20250916-152130.png">
+<link rel="preload" as="image" href="https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png">
+
+<style>
+  :root{
+    --ufo:#00ff99; --text:#d9fff5;
+    --panel1:rgba(9,16,23,.88); --panel2:rgba(8,13,19,.92);
+    --glow:rgba(34,255,200,.10);
+    --hero-img:url("https://i.postimg.cc/KcdBP7Fn/20250916-152130.png");
+    --ufo-ship:url("https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png");
+    --ufo-lead: 8px;
+  }
+
+  html,body{height:100%; background:#0a1411;}
+  body{
+    margin:0; min-height:100svh;
+    font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    color:var(--text);
+    background:url("https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png") center/cover fixed no-repeat;
+  }
+
+  .container{max-width:920px; margin:22px auto 92px; padding:0 18px;}
+
+  /* HERO */
+  .hero{display:flex; justify-content:center; margin:8px 0 20px;}
+  .hero-box{
+    display:inline-block; max-width:320px; width:90vw;
+    border-radius:18px; overflow:hidden; position:relative;
+    background:radial-gradient(1200px 400px at 50% -200px, rgba(0,255,160,.12), transparent 70%), #0b1a15;
+    box-shadow:0 0 28px rgba(0,255,160,.18), 0 16px 44px rgba(0,0,0,.55);
+  }
+  .hero-img{display:block; width:100%; height:auto; object-fit:contain; background:var(--hero-img) center/contain no-repeat;}
+
+  /* CARD */
+  .card{
+    background:linear-gradient(180deg,var(--panel1),var(--panel2));
+    border-radius:18px;
+    box-shadow:0 0 0 1px rgba(34,255,200,.06) inset, 0 10px 30px rgba(0,0,0,.55), 0 0 34px var(--glow);
+    padding:18px; margin-bottom:22px; backdrop-filter: blur(2px);
+    overflow:visible;
+  }
+
+  .head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .head-title{margin:0;font-size:40px;letter-spacing:.6px;text-shadow:0 0 12px rgba(0,255,170,.15)}
+  .head-title .ufo{color:#fff} .head-title .hubx{color:var(--ufo)}
+
+  .start-btn{
+    appearance:none;border:0;cursor:pointer;padding:10px 18px;border-radius:14px;
+    font-weight:800;background:var(--ufo);color:#072017;
+    box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset;
+    transition:filter .2s ease, opacity .2s ease, background .2s ease, color .2s ease;
+  }
+  .start-btn.ok   { background:#22c55e; color:#062512; }
+  .start-btn.lock { background:#ff4d4d; color:#2b0505; cursor:not-allowed; opacity:.9; }
+
+  /* Progress (โชว์ตลอด) */
+  .progress-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px;font-weight:800;font-size:14px;color:#cffff2;text-shadow:0 0 6px rgba(0,0,0,.75);position:relative;z-index:2;}
+  .bar-wrap{
+    position:relative;width:100%;height:18px;border-radius:10px;
+    overflow:visible;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35));
+    box-shadow:inset 0 0 0 1px rgba(34,255,200,.10);
+  }
+  .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#00ffa3,#3bffbf);box-shadow:0 0 18px rgba(34,255,200,.35);z-index:1;}
+  .bar-ufo{position:absolute; top:50%; transform:translate(-50%,-50%); width:50px;height:50px; opacity:0; transition:opacity .2s ease; background:var(--ufo-ship) center/contain no-repeat; filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px rgba(0,255,160,.9)) drop-shadow(0 0 24px rgba(0,255,160,.7)); z-index:8; pointer-events:none;}
+  .bar-ufo.on{opacity:1;}
+
+  .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+  .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
+  .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
+  table{width:100%;border-collapse:collapse;color:var(--text);font-size:14px}
+  th,td{padding:10px 8px;text-align:center}
+  th{color:#77ffc8;font-weight:600}
+  td .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(0,255,160,.12);border:1px solid rgba(0,255,160,.35);font-weight:800;color:#6bffc8}
+  .btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+  .btn-ghost{background:rgba(255,255,255,.06);color:#e7fff7;border:1px solid rgba(255,255,255,.18)}
+  .btn-green{background:var(--ufo);color:#05261a}
+  .actions{display:flex;gap:10px;justify-content:center}
+
+  @media (max-width:560px){
+    .head-title{font-size:34px}
+    .bar-ufo{width:46px;height:46px}
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-box">
+        <img class="hero-img" src="https://i.postimg.cc/KcdBP7Fn/20250916-152130.png" alt="UFO HUB X">
+      </div>
+    </div>
+
+    <!-- Title + Button + Progress -->
+    <section class="card">
+      <div class="head">
+        <h1 class="head-title"><span class="ufo">UFO</span> <span class="hubx">HUB X</span></h1>
+        <button class="start-btn" id="startBtn">🟢 START</button>
+      </div>
+
+      <div class="progress-meta" id="progressMeta">
+        <div id="progressText">Progress: 0/1</div>
+        <div id="percentText">0%</div>
+      </div>
+
+      <div class="bar-wrap" id="barWrap">
+        <div class="bar" id="bar"></div>
+        <div class="bar-ufo" id="barUfo" style="left:0px"></div>
+      </div>
+    </section>
+
+    <!-- Your Key -->
+    <section class="card">
+      <div class="key-head">
+        <div class="key-title">🔑 Your Key</div>
+        <button class="new-btn" id="getKey">+ GET A NEW KEY</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>KEY</th><th>TIME LEFT</th><th>STATUS</th><th>ACTIONS</th></tr>
+        </thead>
+        <tbody id="keyRows"></tbody>
+      </table>
+    </section>
+
+  </div>
+
+<script>
+  /* ===== CONFIG ===== */
+  const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
+  const DOMAIN_OK    = "ufo-hub-x-key-umoq.onrender.com";
+  const RETURN_KEY   = "ufo_return_ts";
+  const VISIT_FLAG   = "ufo_visit_inflight";     // (สำรอง) กัน back
+  const EXTEND_PENDING = "ufo_extend_pending";   // ตั้งไว้ตอนกด +5H
+  const MIN_VISIT    = 5000;                     // ต้องอยู่อย่างน้อย 5 วิ
+  const UFO_MS       = 4000;                     // หลอดเขียววิ่ง 4 วิ
+  const BASE_HOURS   = 48;                       // อายุคีย์เริ่มต้น 48 ชม.
+  const EXTEND_HOURS = 5;                        // ต่อครั้งละ 5 ชม.
+  const LOCK_KEY     = "ufo_start_locked_until";
+  const USER_ID_KEY  = "ufo_user_id";
+  const KEY_STORE    = "ufo_key_store_v1";
+  const CONFIG_URL   = "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
+
+  /* ===== Elements ===== */
+  const bar         = document.getElementById('bar');
+  const barWrap     = document.getElementById('barWrap');
+  const barUfo      = document.getElementById('barUfo');
+  const pText       = document.getElementById('progressText');
+  const percentEl   = document.getElementById('percentText');
+  const startBtn    = document.getElementById('startBtn');
+  const getKeyBtn   = document.getElementById('getKey');
+  const keyRows     = document.getElementById('keyRows');
+
+  let raf = null, lockTimer=null, keyTimer=null;
+  let isCompleted = false;
+  let btnAdd5Ref = null;
+  const LEAD = 8;
+
+  /* ===== utils ===== */
+  const now = ()=>Date.now();
+  const hms = (ms)=>{ if(ms<0)ms=0; const s=Math.floor(ms/1000);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; };
+
+  function uid(){
+    try{
+      let id = localStorage.getItem(USER_ID_KEY);
+      if(!id){ id = Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(USER_ID_KEY,id); }
+      return id;
+    }catch(e){ return 'anon'; }
+  }
+  function getStore(){ try{ return JSON.parse(localStorage.getItem(KEY_STORE)||'{}'); }catch(e){ return {}; } }
+  function setStore(o){ try{ localStorage.setItem(KEY_STORE, JSON.stringify(o)); }catch(e){} }
+  function getMyKey(){ return getStore()[uid()] || null; }
+  function setMyKey(d){ const s=getStore(); s[uid()]=d; setStore(s); }
+  function clearMyKey(){ const s=getStore(); delete s[uid()]; setStore(s); }
+
+  /* ===== Progress & UFO ===== */
+  function setProgress(p){
+    if (p<0)p=0; if(p>100)p=100;
+    bar.style.width = p+'%';
+    const barRect=bar.getBoundingClientRect(), wrapRect=barWrap.getBoundingClientRect();
+    const tipInside = (barRect.left+barRect.width)-wrapRect.left;
+    barUfo.style.left = (tipInside + LEAD) + 'px';
+    percentEl.textContent = p.toFixed(0)+'%';
+    pText.textContent = 'Progress: ' + (p>=100 ? '1/1':'0/1');
+
+    if (p>=100 && !isCompleted){
+      isCompleted = true;
+      startBtn.classList.add('ok');
+      startBtn.disabled = true;
+      startBtn.textContent = '✅'; // อิโมจิอย่างเดียว
+      // ยานค้างไว้
+      enableOnlyGetKey();
+      // (ยังคงไว้) ถ้ามี EXTEND_PENDING ระหว่างวิ่ง progress
+      if (localStorage.getItem(EXTEND_PENDING)==='1'){
+        localStorage.removeItem(EXTEND_PENDING);
+        autoExtend5h();
+      }
+    }
+  }
+  function runProgress(pTarget=100, duration=UFO_MS){
+    cancelAnimationFrame(raf);
+    barUfo.classList.add('on'); // โชว์ตอนวิ่ง
+    const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
+    function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
+    raf=requestAnimationFrame(tick);
+  }
+
+  /* ===== กลับมาจริงจากลิงก์ ===== */
+  function isValidReturn(){
+    try{
+      const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
+      return ts && (now()-ts)>=MIN_VISIT;
+    }catch(e){ return false; }
+  }
+  function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY); }catch(e){} }
+
+  // ✅ แก้: ถ้ากลับจากการกด +5H ให้ "ไม่" วิ่งหลอดเขียว แต่อัปเดตเวลาเงียบๆ
+  function autoCompleteIfReturned(){
+    if(location.hostname!==DOMAIN_OK) return;
+    if(!isValidReturn()) return;
+    clearReturnMark();
+
+    if (localStorage.getItem(EXTEND_PENDING)==='1'){
+      // ต่อเวลา 5 ชม. แบบไม่วิ่ง progress
+      localStorage.removeItem(EXTEND_PENDING);
+      autoExtend5h();
+      return; // จบ ไม่เรียก runProgress
+    }
+
+    // กรณีปกติค่อยวิ่งหลอด
+    runProgress(100, UFO_MS);
+  }
+
+  /* ===== START lock (ตามเวลา key) ===== */
+  function applyLockUI(until){
+    const left = until - now();
+    if(left>0){ startBtn.disabled=true; startBtn.classList.remove('ok'); startBtn.classList.add('lock'); startBtn.textContent=`⛔ ${hms(left)}`; }
+    else { startBtn.classList.remove('lock'); if(!isCompleted){ startBtn.disabled=false; startBtn.textContent='🟢 START'; } try{ localStorage.removeItem(LOCK_KEY);}catch(e){} }
+  }
+  function startLockCountdown(until){
+    if(lockTimer) clearInterval(lockTimer);
+    applyLockUI(until);
+    lockTimer=setInterval(()=>{ applyLockUI(until); if(now()>=until){ clearInterval(lockTimer);} },1000);
+  }
+
+  /* ===== Key UI ===== */
+  function renderKeyRow(data){
+    keyRows.innerHTML='';
+    const tr=document.createElement('tr');
+    const tdKey=document.createElement('td');
+    const tdLeft=document.createElement('td');
+    const tdStat=document.createElement('td');
+    const tdAct=document.createElement('td');
+    tdKey.style.fontWeight='900'; tdKey.style.letterSpacing='1px';
+
+    tdKey.textContent=data.key;
+    tdStat.innerHTML='<span class="pill">ACTIVE</span>';
+
+    const actions=document.createElement('div'); actions.className='actions';
+    const btnCopy=document.createElement('button'); btnCopy.className='btn btn-ghost'; btnCopy.innerHTML='📋 Copy';
+    const btnAdd5=document.createElement('button'); btnAdd5.className='btn btn-green'; btnAdd5.innerHTML='⏩ +5H';
+    btnAdd5Ref = btnAdd5;
+    actions.appendChild(btnCopy); actions.appendChild(btnAdd5); tdAct.appendChild(actions);
+
+    function tickLeft(){
+      const left=data.until - now();
+      tdLeft.textContent = left>0 ? hms(left) : '00:00:00';
+      if(left<=0){
+        clearInterval(keyTimer);
+        clearMyKey();
+        getKeyBtn.disabled=false; getKeyBtn.textContent='+ GET A NEW KEY';
+        applyLockUI(0);
+      }
+    }
+    tickLeft();
+    if(keyTimer) clearInterval(keyTimer);
+    keyTimer=setInterval(tickLeft,1000);
+
+    // Copy
+    btnCopy.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
+    });
+
+    // +5H → พาออกลิงก์ แล้วกลับมาจะต่อเวลาให้อัตโนมัติ "แบบไม่วิ่งหลอด"
+    btnAdd5.addEventListener('click', ()=>{
+      const mine=getMyKey();
+      if(!mine || now()>=mine.until) return;
+      try{
+        localStorage.setItem(RETURN_KEY, String(now()));
+        localStorage.setItem(EXTEND_PENDING,'1');
+      }catch(e){}
+      window.location.href = START_URL;
+    });
+
+    tr.appendChild(tdKey); tr.appendChild(tdLeft); tr.appendChild(tdStat); tr.appendChild(tdAct);
+    keyRows.prepend(tr);
+  }
+
+  // ต่อเวลา +5H
+  function autoExtend5h(){
+    const mine=getMyKey();
+    if(!mine || now()>=mine.until) return;
+    mine.until += EXTEND_HOURS*60*60*1000;
+    setMyKey(mine);
+    localStorage.setItem(LOCK_KEY,String(mine.until));
+    startLockCountdown(mine.until);
+    renderKeyRow(mine); // อัปเดตตารางทันที
+  }
+
+  function enableOnlyGetKey(){
+    document.querySelectorAll('button').forEach(b=>{ if(b!==getKeyBtn) b.disabled=true; });
+    getKeyBtn.disabled=false;
+  }
+
+  /* ===== คีย์จาก config.json + เติมรูปแบบ UFO-...-48H ===== */
+  function normalizeKey(k){
+    let s = String(k||'').trim();
+    if(!s) return '';
+    if(!/^UFO[-]/i.test(s)) s = 'UFO-' + s.replace(/^\-+/,'');
+    if(!/[-]48H$/i.test(s)) s = s.replace(/-48H$/i,'') + '-48H';
+    return s.toUpperCase();
+  }
+  async function fetchKeyFromConfig(){
+    try{
+      const res = await fetch(CONFIG_URL,{cache:'no-store'});
+      const json = await res.json();
+      let list = Array.isArray(json)?json:(Array.isArray(json.keys)?json.keys:[]);
+      list = list.map(normalizeKey).filter(x=>x.length>0);
+      if(list.length){ return list[Math.floor(Math.random()*list.length)]; }
+    }catch(e){}
+    // fallback
+    const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s='UFO-';
+    for(let i=0;i<8;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+    return s+'-48H';
+  }
+
+  /* ===== Events ===== */
+  startBtn.addEventListener('click', ()=>{
+    if(startBtn.disabled) return;
+    try{ localStorage.setItem(RETURN_KEY,String(now())); }catch(e){}
+    window.location.href = START_URL;
+  });
+
+  getKeyBtn.addEventListener('click', async ()=>{
+    const existing = getMyKey();
+    if(existing && now()<existing.until){ getKeyBtn.disabled=true; getKeyBtn.textContent='🔒 WAIT'; return; }
+
+    // รีเซ็ต progress/UI
+    isCompleted=false;
+    bar.style.width='0%'; percentEl.textContent='0%'; pText.textContent='Progress: 0/1';
+    barUfo.classList.remove('on');
+    startBtn.classList.remove('ok','lock'); startBtn.disabled=false; startBtn.textContent='🟢 START';
+
+    // ดึงคีย์จาก config + อายุ 48 ชั่วโมง
+    const key = normalizeKey(await fetchKeyFromConfig());
+    const until = now() + BASE_HOURS*60*60*1000;
+
+    setMyKey({key, until, createdAt: now()});
+    localStorage.setItem(LOCK_KEY,String(until));
+    startLockCountdown(until);
+
+    getKeyBtn.disabled=true; getKeyBtn.textContent='🔒 WAIT';
+    renderKeyRow({key, until});
+  });
+
+  /* ===== Boot ===== */
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setProgress(0);
+    autoCompleteIfReturned();   // ถ้ากลับจาก START → วิ่งหลอด | ถ้ากลับจาก +5H → ต่อเวลาเงียบๆ
+    const mine=getMyKey();
+    if(mine){
+      renderKeyRow(mine);
+      const left = mine.until - now();
+      getKeyBtn.disabled = left>0; getKeyBtn.textContent = left>0 ? '🔒 WAIT' : '+ GET A NEW KEY';
+      localStorage.setItem(LOCK_KEY,String(mine.until));
+      startLockCountdown(mine.until);
+    }else{
+      applyLockUI(0);
+    }
+  });
+
+  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(); });
+
+  /* ===== Preload รูป ===== */
+  new Image().src='https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
+  new Image().src='https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';
+  new Image().src='https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';
+</script>
+</body>
+</html>
+
+]]
+
+-- Optional helper: write the HTML to a file when executed directly with: lua ufo-hub-x.lua
+local function save(path, text)
+  local f = assert(io.open(path, "w"))
+  f:write(text)
+  f:close()
+end
+
+if arg and arg[0] and (arg[0]:match("ufo%-hub%-x%.lua") or arg[0]:match("ufo_hub_x%.lua")) then
+  save("ufo-hub-x.html", html)
+  print("Saved ufo-hub-x.html")
+end
+
+return html
