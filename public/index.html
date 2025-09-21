@@ -567,27 +567,8 @@
      ========================================================= */
   (function enforceServerKeyOnly(){
     const API_BASE = "https://ufo-hub-x-server-key-777.onrender.com";
-    
-    // ลิสต์ PlaceId ที่อนุญาต
-const ALLOWED_PLACES = [
-  "126884695634066", // Grow a Garden
-  "9876543210",      // เกมอื่น
-  "1234567890"       // อีกเกม
-];
+    const DEFAULT_PLACE = "6252985844"; // แก้ได้ตามเกมคุณ
 
-// ฟังก์ชันหาค่า PlaceId ปัจจุบัน
-function currentPlaceId() {
-  // ตัวอย่าง ถ้าอยู่ใน Roblox studio/script
-  return String(game.PlaceId || "");
-}
-
-// เวลาเรียก
-const placeId = currentPlaceId();
-if (ALLOWED_PLACES.includes(placeId)) {
-  const result = await fetchKeyFromServer(uid(), placeId);
-} else {
-  alert("❌ เกมนี้ไม่ได้รับอนุญาต");
-}
     function qs(k){ return new URLSearchParams(location.search).get(k) }
     function getUid(){ return qs("uid") || uid(); }
     function getPlace(){ return qs("place") || DEFAULT_PLACE; }
