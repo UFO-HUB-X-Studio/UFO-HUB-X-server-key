@@ -65,13 +65,96 @@ app.get("/img/bg",       (req, res) => proxyImage(DISCORD_BG, res));
 const CONFIG_PATH = path.join(__dirname, "config.json");
 const ISSUED_PATH = path.join(__dirname, "issued.json");
 
-function loadConfig() {
+// ★★★ เพิ่ม: URL ของ config.json บน GitHub (แก้เป็นของคุณได้/หรือใช้ ENV CONFIG_URL)
+const CONFIG_URL = process.env.CONFIG_URL ||
+  "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
+
+/* ---------- fetch JSON helper (เพิ่มใหม่) ---------- */
+function fetchJSON(url, timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    let timedOut = false;
+    const to = setTimeout(() => { timedOut = true; reject(new Error("fetch_timeout")); }, timeoutMs);
+    try {
+      const u = new URL(url);
+      https.get(u, { headers: { "Cache-Control": "no-cache" } }, (res) => {
+        let raw = "";
+        res.on("data", (d) => raw += d);
+        res.on("end", () => {
+          clearTimeout(to);
+          if (timedOut) return;
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            try { resolve(JSON.parse(raw || "{}")); }
+            catch(e){ reject(new Error("json_parse_error")); }
+          } else if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            // follow redirect
+            fetchJSON(res.headers.location, timeoutMs).then(resolve).catch(reject);
+          } else {
+            reject(new Error("http_"+res.statusCode));
+          }
+        });
+      }).on("error", (err) => { clearTimeout(to); if(!timedOut) reject(err); });
+    } catch (e) {
+      clearTimeout(to); reject(e);
+    }
+  });
+}
+
+/* ---------- Config loaders ---------- */
+// เดิม (คงไว้)
+function loadConfigLocal() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
   } catch {
     return { keys: [], expires_default: 172800 }; // 48h
   }
 }
+
+// ใหม่: โหลดจาก URL
+async function loadConfigRemote() {
+  try {
+    const data = await fetchJSON(CONFIG_URL, 8000);
+    // รองรับทั้งรูปแบบ array ตรง ๆ หรือ { keys: [...] }
+    if (Array.isArray(data)) return { keys: data, expires_default: 172800 };
+    if (data && typeof data === "object") return data;
+    return { keys: [], expires_default: 172800 };
+  } catch {
+    return { keys: [], expires_default: 172800 };
+  }
+}
+
+// ใหม่: smart + caching
+let _configCache = null;
+let _configCacheAt = 0;
+const CONFIG_CACHE_MS = 30 * 1000; // 30 วินาที
+
+async function loadConfigSmart() {
+  const nowMs = Date.now();
+  if (_configCache && (nowMs - _configCacheAt) < CONFIG_CACHE_MS) return _configCache;
+
+  // พยายามโหลดจาก URL ก่อน
+  const remote = await loadConfigRemote();
+  let merged = remote;
+  // ถ้า remote ว่าง ให้ fallback local
+  if (!remote.keys || remote.keys.length === 0) merged = loadConfigLocal();
+
+  // ทำ normalize รายการคีย์ให้เป็น {key, ttl, reusable}
+  merged.keys = (merged.keys || []).map((item) => {
+    if (typeof item === "string") return { key: item, ttl: merged.expires_default || 172800, reusable: false };
+    if (item && typeof item === "object") {
+      return {
+        key: String(item.key || "").trim(),
+        ttl: Number(item.ttl || merged.expires_default || 172800),
+        reusable: !!item.reusable
+      };
+    }
+    return null;
+  }).filter(Boolean);
+
+  _configCache = merged; _configCacheAt = nowMs;
+  return merged;
+}
+
+/* ---------- Issued state ---------- */
 function loadIssued() {
   if (!fs.existsSync(ISSUED_PATH)) return {};
   try { return JSON.parse(fs.readFileSync(ISSUED_PATH, "utf8") || "{}"); }
@@ -137,8 +220,8 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* ---------- API: GETKEY ---------- */
-app.get("/getkey", (req, res) => {
+/* ---------- API: GETKEY (ปรับเป็น async เพื่ออ่าน config URL) ---------- */
+app.get("/getkey", async (req, res) => {
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
   const forceNew   = String(req.query.force_new || "") === "1";
@@ -146,7 +229,7 @@ app.get("/getkey", (req, res) => {
   if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
 
   try {
-    const config = loadConfig();
+    const config = await loadConfigSmart(); // ★ ใช้ตัวใหม่ (remote-first)
     const issued = loadIssued();
     const now    = Math.floor(Date.now()/1000);
     const id     = `${uid}:${place}`;
