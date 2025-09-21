@@ -96,7 +96,7 @@
     .bar-ufo{width:46px;height:46px}
   }
 
-  /* ============ Splash (โปรไฟล์ + ชื่อ + วงกลมเล็ก + ตัวเลขกลางวง) ============ */
+  /* ============ Splash (โปรไฟล์ + 2 บรรทัด + วงกลมเล็ก + เลขกึ่งกลาง) ============ */
   .splash{
     position:fixed; inset:0; background:rgba(0,0,0,.78);
     display:none; align-items:center; justify-content:center;
@@ -104,7 +104,7 @@
   }
   .splash.show{display:flex;}
   .splash-card{
-    width:220px; border-radius:22px; padding:16px 16px 22px;
+    width:240px; border-radius:22px; padding:16px 16px 22px;
     background:linear-gradient(180deg, rgba(8,13,19,.96), rgba(9,16,23,.96));
     box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 12px 40px rgba(0,0,0,.6), 0 0 34px var(--glow);
     display:flex; flex-direction:column; align-items:center; gap:12px; position:relative;
@@ -118,16 +118,19 @@
     display:flex; flex-direction:column; align-items:center; line-height:1.15; font-weight:900;
     text-shadow:0 0 12px rgba(0,255,170,.25);
   }
-  /* ✅ ชื่อบน Splash: UFO เขียว, HUB X Download ขาว */
-  .splash-title .ufo{color:var(--ufo); font-size:18px; letter-spacing:.6px;}
-  .splash-title .hubx{color:#fff; font-size:20px; letter-spacing:.8px;}
-  .splash-svg{width:150px; height:150px; transform:rotate(-90deg);}
+  /* ✅ เหลือ 2 บรรทัด และขนาดเท่ากัน */
+  .splash-title .ufo{  color:var(--ufo); font-size:20px; letter-spacing:.6px;}
+  .splash-title .hubx{ color:#fff;      font-size:20px; letter-spacing:.8px;}
+
+  /* กล่องห่อมิเตอร์ เพื่อจัดซ้อน SVG + ตัวเลข */
+  .splash-meter{ position:relative; width:150px; height:150px; }
+  .splash-svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
   .splash-circle-bg{stroke:rgba(255,255,255,.12); stroke-width:10; fill:none;}
   .splash-circle{stroke:var(--ufo); stroke-width:10; fill:none; filter:drop-shadow(0 0 10px rgba(0,255,170,.6)); stroke-linecap:round;}
+  /* ✅ ตัวเลขกึ่งกลางจริง ๆ */
   .splash-num{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text);
-    pointer-events:none;
+    font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text); pointer-events:none;
   }
 </style>
 </head>
@@ -140,11 +143,15 @@
         <div class="ufo">UFO</div>
         <div class="hubx">HUB X Download</div>
       </div>
-      <svg class="splash-svg" viewBox="0 0 200 200" aria-hidden="true">
-        <circle class="splash-circle-bg" cx="100" cy="100" r="65"></circle>
-        <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="65" stroke-dasharray="0 999"></circle>
-      </svg>
-      <div class="splash-num" id="splashNum">0%</div>
+
+      <!-- มิเตอร์โหลด (SVG + เลขอยู่กลาง) -->
+      <div class="splash-meter">
+        <svg class="splash-svg" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="splash-circle-bg" cx="100" cy="100" r="65"></circle>
+          <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="65" stroke-dasharray="0 999"></circle>
+        </svg>
+        <div class="splash-num" id="splashNum">0%</div>
+      </div>
     </div>
   </div>
 
@@ -194,7 +201,7 @@
 <script>
   /* ===== CONFIG ===== */
   const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
-  const DOMAIN_OK    = location.hostname; // ใช้โดเมนปัจจุบัน
+  const DOMAIN_OK    = location.hostname;
   const RETURN_KEY   = "ufo_return_ts";
   const LAST_ACTION  = "ufo_last_action";        // 'start' | 'extend'
   const EXTEND_PENDING = "ufo_extend_pending";
@@ -300,7 +307,7 @@
     const action = localStorage.getItem(LAST_ACTION)||'';
     if (action === 'extend'){
       localStorage.removeItem(LAST_ACTION);
-      autoExtend5h();      // เงียบ ๆ (ไม่โชว์ splash อยู่แล้ว)
+      autoExtend5h();      // เงียบ ๆ (ไม่โชว์ splash)
       return true;
     }
     if (action === 'start'){
@@ -369,7 +376,7 @@
       if(!mine || now()>=mine.until) return;
       try{
         sessionStorage.setItem(SPLASH_SKIP,'1');
-        localStorage.setItem(SPLASH_SKIP_LS,'1');      // กันไว้เผื่อ session ไม่มา
+        localStorage.setItem(SPLASH_SKIP_LS,'1');
         localStorage.setItem(RETURN_KEY, String(now()));
         localStorage.setItem(EXTEND_PENDING,'1');
         localStorage.setItem(LAST_ACTION,'extend');
@@ -465,17 +472,16 @@
   startBtn.addEventListener('click', ()=>{
     if (startBtn.disabled) return;
     try {
-      sessionStorage.setItem(SPLASH_SKIP,'1');    // กลับมาครั้งนี้ไม่ต้องโชว์ splash
-      localStorage.setItem(SPLASH_SKIP_LS,'1');   // กันบางเครื่อง
+      sessionStorage.setItem(SPLASH_SKIP,'1');
+      localStorage.setItem(SPLASH_SKIP_LS,'1');
       localStorage.setItem(RETURN_KEY, String(now()));
-      localStorage.setItem(LAST_ACTION,'start');  // จำว่าไปจากปุ่ม START
+      localStorage.setItem(LAST_ACTION,'start');
     } catch(e){}
     window.location.href = START_URL;
   });
 
   // + GET A NEW KEY
   getKeyBtn.addEventListener('click', async ()=>{
-    // ต้องเคยกด START อย่างน้อย 1 ครั้งก่อน
     if (localStorage.getItem(MUST_START) !== '1') {
       getKeyBtn.disabled = true;
       getKeyBtn.textContent = '🔒 START first';
@@ -484,54 +490,57 @@
     }
 
     const existing = getMyKey();
-    // ถ้ามีคีย์และยังไม่หมดอายุ → ไม่สร้างซ้ำ
     if (existing && now() < existing.until) {
       updateGetKeyButtonState();
       return;
     }
 
-    // รีเซ็ต Progress bar
+    // รีเซ็ต progress/UI
     isCompleted = false;
     bar.style.width = '0%';
     percentEl.textContent = '0%';
     pText.textContent = 'Progress: 0/1';
     barUfo.classList.remove('on');
-    startBtn.classList.remove('ok','lock');
+    startBtn.classList.remove('ok', 'lock');
     startBtn.disabled = false;
     startBtn.textContent = '🟢 START';
 
-    // สร้างคีย์ใหม่ 48 ชั่วโมง
-    const key = normalizeKey(await fetchKeyFromConfig());
-    const until = now() + BASE_HOURS*60*60*1000;
+    // สร้างคีย์ใหม่ อายุ 48 ชั่วโมง
+    const key   = normalizeKey(await fetchKeyFromConfig());
+    const until = now() + BASE_HOURS * 60 * 60 * 1000;
 
-    setMyKey({key, until, createdAt: now()});
+    setMyKey({ key, until, createdAt: now() });
     localStorage.setItem(LOCK_KEY, String(until));
     startLockCountdown(until);
 
-    renderKeyRow({key, until});
+    renderKeyRow({ key, until });
     updateGetKeyButtonState();
   });
 
   /* ===== Boot ===== */
-  document.addEventListener('DOMContentLoaded', ()=>{
-    if (shouldShowSplash()) showSplash();     // Splash ครั้งแรก
-    onReturnedFromLink();                     // เช็คถ้ากลับมาจากลิงก์
+  document.addEventListener('DOMContentLoaded', () => {
+    // Splash ครั้งแรกเท่านั้น
+    if (shouldShowSplash()) showSplash();
 
-    const mine = getMyKey();                  // กู้คีย์เดิม
+    setProgress(0);
+    onReturnedFromLink();   // กลับจาก START → ปลดล็อก; กลับจาก +5H → ต่อเวลาเงียบ ๆ
+
+    const mine = getMyKey();
     if (mine) {
       renderKeyRow(mine);
-      localStorage.setItem(LOCK_KEY,String(mine.until));
+      localStorage.setItem(LOCK_KEY, String(mine.until));
       startLockCountdown(mine.until);
     }
     updateGetKeyButtonState();
   });
 
-  window.addEventListener('pageshow', ()=>{ onReturnedFromLink(); });
+  // เผื่อบางเบราว์เซอร์กลับมาจากลิงก์แบบ bfcache
+  window.addEventListener('pageshow', () => { onReturnedFromLink(); });
 
   /* ===== Preload รูป ===== */
-  new Image().src='https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
-  new Image().src='https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';
-  new Image().src='https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';
+  new Image().src = 'https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
+  new Image().src = 'https://i.postimg.cc/KcdBP7Fn/20250916-152130.png';
+  new Image().src = 'https://i.postimg.cc/hG6Pkr2s/Background-Eraser-20250916-190732755.png';
 </script>
 </body>
 </html>
