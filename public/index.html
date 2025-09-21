@@ -79,6 +79,7 @@
   .key-head{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
   .key-title{font-size:18px;color:#ffea63;display:flex;align-items:center;gap:8px}
   .new-btn{appearance:none;border:0;cursor:pointer;font-weight:800;padding:10px 14px;border-radius:12px;background:var(--ufo);color:#071a14;box-shadow:0 6px 18px rgba(0,255,140,.25),0 0 0 1px rgba(0,0,0,.25) inset}
+  .new-btn[disabled]{opacity:.6; cursor:not-allowed;}
   table{width:100%;border-collapse:collapse;color:var(--text);font-size:14px}
   th,td{padding:10px 8px;text-align:center}
   th{color:#77ffc8;font-weight:600}
@@ -93,33 +94,47 @@
     .bar-ufo{width:46px;height:46px}
   }
 
-  /* ============ NEW: Splash Overlay (วงกลม 0-100) ============ */
+  /* ============ Splash (วงกลม + โปรไฟล์ + ข้อความ) ============ */
   .splash{
     position:fixed; inset:0; background:rgba(0,0,0,.78);
     display:none; align-items:center; justify-content:center;
-    z-index:9999; /* สูงสุด บล็อกทุกคลิก */
-    backdrop-filter: blur(2px);
+    z-index:9999; backdrop-filter: blur(2px);
   }
   .splash.show{display:flex;}
   .splash-card{
-    width:180px; height:180px; border-radius:20px;
-    background:linear-gradient(180deg, rgba(8,13,19,.95), rgba(9,16,23,.95));
+    width:240px; border-radius:22px; padding:18px 16px 22px;
+    background:linear-gradient(180deg, rgba(8,13,19,.96), rgba(9,16,23,.96));
     box-shadow:0 0 0 1px rgba(34,255,200,.12) inset, 0 12px 40px rgba(0,0,0,.6), 0 0 34px var(--glow);
-    display:flex; align-items:center; justify-content:center; position:relative;
+    display:flex; flex-direction:column; align-items:center; gap:12px; position:relative;
   }
-  .splash-svg{position:absolute; inset:0; transform:rotate(-90deg);}
+  .splash-avatar{
+    width:74px; height:74px; border-radius:50%;
+    background:url('https://i.postimg.cc/KcdBP7Fn/20250916-152130.png') center/cover no-repeat;
+    box-shadow:0 0 0 2px rgba(255,255,255,.1), 0 0 18px rgba(0,255,160,.3);
+  }
+  .splash-title{
+    display:flex; flex-direction:column; align-items:center; line-height:1.15; font-weight:900;
+    text-shadow:0 0 12px rgba(0,255,170,.25);
+  }
+  .splash-title .ufo{color:#fff; font-size:18px; letter-spacing:.6px;}
+  .splash-title .hubx{color:var(--ufo); font-size:22px; letter-spacing:.8px;}
+  .splash-title .dl{color:var(--ufo); font-size:14px; opacity:.9; letter-spacing:.4px;}
+  .splash-svg{width:180px; height:180px; transform:rotate(-90deg);}
   .splash-circle-bg{stroke:rgba(255,255,255,.12); stroke-width:10; fill:none;}
   .splash-circle{stroke:var(--ufo); stroke-width:10; fill:none; filter:drop-shadow(0 0 10px rgba(0,255,170,.6)); stroke-linecap:round;}
-  .splash-num{
-    font-weight:900; font-size:34px; letter-spacing:1px;
-    text-shadow:0 0 12px rgba(0,255,170,.25); color:var(--text);
-  }
+  .splash-num{position:absolute; bottom:20px; font-weight:900; font-size:28px; letter-spacing:1px; color:var(--text);}
 </style>
 </head>
 <body>
-  <!-- ============ NEW: Splash Overlay ============ -->
+  <!-- Splash -->
   <div class="splash" id="splash">
     <div class="splash-card">
+      <div class="splash-avatar" aria-hidden="true"></div>
+      <div class="splash-title">
+        <div class="ufo">UFO</div>
+        <div class="hubx">HUB X Download</div>
+        <div class="dl">Download</div>
+      </div>
       <svg class="splash-svg" viewBox="0 0 200 200">
         <circle class="splash-circle-bg" cx="100" cy="100" r="80"></circle>
         <circle class="splash-circle" id="splashCircle" cx="100" cy="100" r="80" stroke-dasharray="0 999"></circle>
@@ -176,8 +191,8 @@
   const START_URL    = "https://direct-link.net/1398143/IGoZdaaTcIHW";
   const DOMAIN_OK    = "ufo-hub-x-key-umoq.onrender.com";
   const RETURN_KEY   = "ufo_return_ts";
-  const VISIT_FLAG   = "ufo_visit_inflight";     // (สำรอง) กัน back
-  const EXTEND_PENDING = "ufo_extend_pending";   // ตั้งไว้ตอนกด +5H
+  const LAST_ACTION  = "ufo_last_action";        // 'start' | 'extend'
+  const EXTEND_PENDING = "ufo_extend_pending";
 
   const MIN_VISIT    = 5000;                     // ต้องอยู่อย่างน้อย 5 วิ
   const UFO_MS       = 4000;                     // หลอดเขียววิ่ง 4 วิ
@@ -189,10 +204,11 @@
   const KEY_STORE    = "ufo_key_store_v1";
   const CONFIG_URL   = "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
 
-  /* ===== NEW: Splash config ===== */
-  const SPLASH_MS    = 10000;                    // ~10 วินาที
-  const SPLASH_FLAG  = "ufo_splash_shown";       // แสดงครั้งเดียวต่อ session
-  const SPLASH_SKIP  = "ufo_skip_splash_once";   // ข้ามเมื่อลิงก์กลับมา
+  /* Splash */
+  const SPLASH_MS    = 10000;                    // ~10 วิ
+  const SPLASH_FLAG  = "ufo_splash_shown";       // ครั้งแรกของ session เท่านั้น
+  const SPLASH_SKIP  = "ufo_skip_splash_once";   // ข้ามเมื่อกลับจากลิงก์
+  const MUST_START   = "ufo_must_start_once";    // ต้องเคย START อย่างน้อย 1 ครั้งก่อนสร้างคีย์
 
   /* ===== Elements ===== */
   const bar       = document.getElementById('bar');
@@ -245,10 +261,10 @@
       isCompleted = true;
       startBtn.classList.add('ok');
       startBtn.disabled = true;
-      startBtn.textContent = '✅'; // อิโมจิอย่างเดียว
-      // ยานค้างไว้
+      startBtn.textContent = '✅';
       enableOnlyGetKey();
-      // ถ้ามี EXTEND_PENDING ระหว่างวิ่ง progress — (กรณี START) จะต่อเวลาอัตโนมัติ
+
+      // ถ้ากลับจาก +5H → ต่อเวลาเงียบ ๆ
       if (localStorage.getItem(EXTEND_PENDING)==='1'){
         localStorage.removeItem(EXTEND_PENDING);
         autoExtend5h();
@@ -257,13 +273,13 @@
   }
   function runProgress(pTarget=100, duration=UFO_MS){
     cancelAnimationFrame(raf);
-    barUfo.classList.add('on'); // โชว์ตอนวิ่ง
+    barUfo.classList.add('on');
     const pStart=parseFloat(bar.style.width)||0, t0=performance.now();
     function tick(ts){ const t=Math.min(1,(ts-t0)/duration); setProgress(pStart+(pTarget-pStart)*t); if(t<1){ raf=requestAnimationFrame(tick);} }
     raf=requestAnimationFrame(tick);
   }
 
-  /* ===== กลับมาจริงจากลิงก์ ===== */
+  /* ===== Return & gating ===== */
   function isValidReturn(){
     try{
       const ts = parseInt(localStorage.getItem(RETURN_KEY)||"0",10);
@@ -272,19 +288,27 @@
   }
   function clearReturnMark(){ try{ localStorage.removeItem(RETURN_KEY); }catch(e){} }
 
-  // ถ้ากลับจาก +5H ให้ "ไม่" วิ่งหลอดเขียว (อัปเดตเวลาเงียบๆ)
-  function autoCompleteIfReturned(){
-    if(location.hostname!==DOMAIN_OK) return;
-    if(!isValidReturn()) return;
+  function onReturnedFromLink(){
+    if(!isValidReturn()) return false;
     clearReturnMark();
 
-    if (localStorage.getItem(EXTEND_PENDING)==='1'){
-      localStorage.removeItem(EXTEND_PENDING);
-      autoExtend5h();           // ต่อเวลาเงียบ ๆ
-      return;
+    const action = localStorage.getItem(LAST_ACTION)||'';
+    if (action === 'extend'){
+      // ไม่วิ่ง progress
+      localStorage.removeItem(LAST_ACTION);
+      autoExtend5h();
+      return true;
     }
-    // กรณี START ปกติ → ค่อยวิ่ง progress
+    if (action === 'start'){
+      // นับว่าเคย START แล้ว → ปลดล็อกปุ่ม GET KEY
+      localStorage.setItem(MUST_START,'1');
+      localStorage.removeItem(LAST_ACTION);
+      runProgress(100, UFO_MS);
+      return true;
+    }
+    // กรณีเดิม ๆ
     runProgress(100, UFO_MS);
+    return true;
   }
 
   /* ===== START lock (ตามเวลา key) ===== */
@@ -324,7 +348,7 @@
       if(left<=0){
         clearInterval(keyTimer);
         clearMyKey();
-        getKeyBtn.disabled=false; getKeyBtn.textContent='+ GET A NEW KEY';
+        updateGetKeyButtonState();  // อัปเดตสถานะตาม MUST_START
         applyLockUI(0);
       }
     }
@@ -332,19 +356,19 @@
     if(keyTimer) clearInterval(keyTimer);
     keyTimer=setInterval(tickLeft,1000);
 
-    // Copy
     btnCopy.addEventListener('click', async ()=>{
       try{ await navigator.clipboard.writeText(data.key); btnCopy.textContent='✅ Copied'; setTimeout(()=>btnCopy.innerHTML='📋 Copy',1200);}catch(e){ alert('Copy failed'); }
     });
 
-    // +5H → ออกลิงก์ก่อน แล้วกลับมาจะต่อเวลาให้อัตโนมัติ "แบบไม่วิ่งหลอด"
+    // +5H → ต้องออกลิงก์ก่อน
     btnAdd5.addEventListener('click', ()=>{
       const mine=getMyKey();
       if(!mine || now()>=mine.until) return;
       try{
-        sessionStorage.setItem(SPLASH_SKIP,'1');           // ข้าม splash ตอนกลับ
+        sessionStorage.setItem(SPLASH_SKIP,'1');           // กลับมาไม่ต้องขึ้น splash
         localStorage.setItem(RETURN_KEY, String(now()));
         localStorage.setItem(EXTEND_PENDING,'1');
+        localStorage.setItem(LAST_ACTION,'extend');
       }catch(e){}
       window.location.href = START_URL;
     });
@@ -353,7 +377,7 @@
     keyRows.prepend(tr);
   }
 
-  // ต่อเวลา +5H
+  // ต่อเวลา +5H (แบบเงียบ)
   function autoExtend5h(){
     const mine=getMyKey();
     if(!mine || now()>=mine.until) return;
@@ -361,7 +385,7 @@
     setMyKey(mine);
     localStorage.setItem(LOCK_KEY,String(mine.until));
     startLockCountdown(mine.until);
-    renderKeyRow(mine); // อัปเดตตารางทันที
+    renderKeyRow(mine);
   }
 
   function enableOnlyGetKey(){
@@ -369,7 +393,7 @@
     getKeyBtn.disabled=false;
   }
 
-  /* ===== คีย์จาก config.json + เติมรูปแบบ UFO-...-48H ===== */
+  /* ===== คีย์จาก config.json + รูปแบบ UFO-...-48H ===== */
   function normalizeKey(k){
     let s = String(k||'').trim();
     if(!s) return '';
@@ -392,25 +416,17 @@
     return s+'-48H';
   }
 
-  /* ===== NEW: Splash logic ===== */
+  /* ===== Splash logic (ครั้งแรก 10 วิ + โปรไฟล์ + ข้อความ) ===== */
   function shouldShowSplash(){
-    // แสดงครั้งแรกของ session เท่านั้น และไม่แสดงถ้ากลับจากลิงก์
-    if (sessionStorage.getItem(SPLASH_SKIP) === '1') {
-      // ใช้แล้วลบ เพื่อครั้งถัดไปแสดงได้ถ้าต้องการ (ตาม session ใหม่)
-      sessionStorage.removeItem(SPLASH_SKIP);
-      return false;
-    }
+    if (sessionStorage.getItem(SPLASH_SKIP) === '1'){ sessionStorage.removeItem(SPLASH_SKIP); return false; }
     if (sessionStorage.getItem(SPLASH_FLAG) === '1') return false;
     return true;
   }
-
   function showSplash(){
     splash.classList.add('show');
-    const R = 80;                         // r ของวงกลม
-    const C = 2*Math.PI*R;                // เส้นรอบวง
-    splashCircle.setAttribute('stroke-dasharray', `${0} ${C}`);
+    const R = 80, C = 2*Math.PI*R;
+    splashCircle.setAttribute('stroke-dasharray', `0 ${C}`);
     splashNum.textContent = '0%';
-
     const t0 = performance.now();
     function tick(ts){
       const t = Math.min(1, (ts - t0)/SPLASH_MS);
@@ -418,15 +434,27 @@
       splashNum.textContent = pct + '%';
       const dash = C * t;
       splashCircle.setAttribute('stroke-dasharray', `${dash} ${C}`);
-      if (t < 1) requestAnimationFrame(tick);
-      else hideSplash();
+      if (t < 1) requestAnimationFrame(tick); else hideSplash();
     }
     requestAnimationFrame(tick);
   }
-
   function hideSplash(){
     splash.classList.remove('show');
-    sessionStorage.setItem(SPLASH_FLAG,'1'); // ทำให้หน้าโหลดรอบนี้ไม่ขึ้นอีก
+    sessionStorage.setItem(SPLASH_FLAG,'1');
+  }
+
+  /* ===== UI gating: ต้องเคย START ก่อนถึงจะสร้างคีย์ได้ ===== */
+  function updateGetKeyButtonState(){
+    const haveStartedOnce = localStorage.getItem(MUST_START)==='1';
+    const mine = getMyKey();
+    const active = !!(mine && now()<mine.until);
+    if (!haveStartedOnce && !active){
+      getKeyBtn.disabled = true;
+      getKeyBtn.textContent = '🔒 START first';
+    }else{
+      getKeyBtn.disabled = active ? true : false;
+      getKeyBtn.textContent = active ? '🔒 WAIT' : '+ GET A NEW KEY';
+    }
   }
 
   /* ===== Events ===== */
@@ -435,19 +463,35 @@
     try{
       sessionStorage.setItem(SPLASH_SKIP,'1');      // กลับมาจาก START → ไม่โชว์ splash
       localStorage.setItem(RETURN_KEY,String(now()));
+      localStorage.setItem(LAST_ACTION,'start');
     }catch(e){}
     window.location.href = START_URL;
   });
 
   getKeyBtn.addEventListener('click', async ()=>{
+    // ต้องเคย START อย่างน้อยครั้งนึง
+    if(localStorage.getItem(MUST_START)!=='1'){
+      getKeyBtn.disabled = true;
+      getKeyBtn.textContent = '🔒 START first';
+      setTimeout(updateGetKeyButtonState, 1200);
+      return;
+    }
+
     const existing = getMyKey();
-    if(existing && now()<existing.until){ getKeyBtn.disabled=true; getKeyBtn.textContent='🔒 WAIT'; return; }
+    if(existing && now()<existing.until){
+      updateGetKeyButtonState();
+      return;
+    }
 
     // รีเซ็ต progress/UI
     isCompleted=false;
-    bar.style.width='0%'; percentEl.textContent='0%'; pText.textContent='Progress: 0/1';
+    bar.style.width='0%';
+    percentEl.textContent='0%';
+    pText.textContent='Progress: 0/1';
     barUfo.classList.remove('on');
-    startBtn.classList.remove('ok','lock'); startBtn.disabled=false; startBtn.textContent='🟢 START';
+    startBtn.classList.remove('ok','lock');
+    startBtn.disabled=false;
+    startBtn.textContent='🟢 START';
 
     // ดึงคีย์จาก config + อายุ 48 ชั่วโมง
     const key = normalizeKey(await fetchKeyFromConfig());
@@ -457,31 +501,34 @@
     localStorage.setItem(LOCK_KEY,String(until));
     startLockCountdown(until);
 
-    getKeyBtn.disabled=true; getKeyBtn.textContent='🔒 WAIT';
     renderKeyRow({key, until});
+    updateGetKeyButtonState();
   });
 
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Splash ก่อน (ถ้าควรแสดง)
+    // Splash ครั้งแรก
     if (shouldShowSplash()) showSplash();
 
     setProgress(0);
-    autoCompleteIfReturned();   // กลับจาก START → วิ่งหลอด | กลับจาก +5H → ต่อเวลาเงียบๆ
 
-    const mine=getMyKey();
+    // จัดการกรณีกลับมาจากลิงก์ (START / +5H)
+    onReturnedFromLink();
+
+    const mine = getMyKey();
     if(mine){
       renderKeyRow(mine);
-      const left = mine.until - now();
-      getKeyBtn.disabled = left>0; getKeyBtn.textContent = left>0 ? '🔒 WAIT' : '+ GET A NEW KEY';
       localStorage.setItem(LOCK_KEY,String(mine.until));
       startLockCountdown(mine.until);
     }else{
-      applyLockUI(0);
+      const until = parseInt(localStorage.getItem(LOCK_KEY)||"0",10);
+      if (until) startLockCountdown(until);
     }
+
+    updateGetKeyButtonState();
   });
 
-  window.addEventListener('pageshow', ()=>{ autoCompleteIfReturned(); });
+  window.addEventListener('pageshow', ()=>{ onReturnedFromLink(); });
 
   /* ===== Preload รูป ===== */
   new Image().src='https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png';
