@@ -1,388 +1,182 @@
-// UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Extended Version (unique keys)
+// server.js
+// UFO-HUB-X Key Server (HMAC-signed tokens + minimal state)
 // Endpoints:
-//   GET /                               -> index.html (simple page to fetch key)
-//   GET /getkey?uid=&place=[&force_new=1][&extend=SECONDS]
-//   GET /verify?key=&uid=&place=
-//   GET /extend?uid=&place=[&sec=SECONDS] (default +5h)
-//   GET /status?uid=&place=
-//   GET /img/profile, /img/bg           -> proxy Discord images
-//
-// NOTE:
-// - ใช้ config.json (local) +/หรือ CONFIG_URL (remote) เพื่อ list คีย์ที่แจก
-// - ฝั่ง Roblox UI: ปุ่ม Submit จะยิง /verify และคาดหวัง field: {ok:true, valid:true, expires_at:...}
+//   GET /                       -> index.html (simple key-get page)
+//   GET /getkey?uid=&place=     -> issue a signed key (and record latest to issued.json)
+//   GET /verify?key=&uid=&place=-> stateless verify via HMAC (+ expiry)
+//   GET /extend?uid=&place=[&sec=SECONDS]  -> extend latest key (returns new key)
+//   GET /status?uid=&place=     -> read latest key status from issued.json
 
 const express = require("express");
-const fs      = require("fs");
-const path    = require("path");
-const https   = require("https");
-const { URL } = require("url");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* ---------- Static site ---------- */
+// ====== Settings ======
+const DEFAULT_TTL = Number(process.env.DEFAULT_TTL || 48*3600); // 48h
+const SECRET = process.env.SECRET || "CHANGE_ME_TO_A_RANDOM_SECRET_64B"; // !!! เปลี่ยนจริงจัง
+const STORE_FILE = path.join(__dirname, "issued.json");
 const PUBLIC_DIR = path.join(__dirname, "public");
-if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-app.use(express.static(PUBLIC_DIR));
 
-/* ---------- Global headers ---------- */
-app.use((req, res, next) => {
-  // ถ้าจะล็อกโดเมนเว็บเพื่อรายได้ ให้เปลี่ยน "*" เป็นโดเมนของคุณได้
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "no-store");
-  next();
-});
-app.use((req, res, next) => {
-  const api = ["/getkey", "/verify", "/extend", "/status"].some(p => req.path.startsWith(p));
-  if (api) res.type("application/json; charset=utf-8");
-  next();
-});
-
-/* ---------- Discord image URLs (ใส่ของจริงของคุณเองได้) ---------- */
-const DISCORD_PROFILE = process.env.D_PROFILE || "https://i.postimg.cc/KcdBP7Fn/20250916-152130.png";
-const DISCORD_BG      = process.env.D_BG      || "https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png";
-
-/* ---------- Proxy helper ---------- */
-function proxyImage(targetUrl, res) {
-  try {
-    const u = new URL(targetUrl);
-    const req = https.get(u, (r) => {
-      if (r.statusCode >= 300 && r.statusCode < 400 && r.headers.location) {
-        return proxyImage(r.headers.location, res);
-      }
-      if (r.statusCode !== 200) {
-        res.status(502).type("text/plain").send("bad_gateway_image"); r.resume(); return;
-      }
-      res.setHeader("Content-Type", r.headers["content-type"] || "image/png");
-      r.pipe(res);
-    });
-    req.on("error", () => res.status(502).type("text/plain").send("image_proxy_error"));
-  } catch {
-    res.status(500).type("text/plain").send("image_proxy_error");
-  }
-}
-
-/* ---------- Image proxy routes ---------- */
-app.get("/img/profile", (req, res) => proxyImage(DISCORD_PROFILE, res));
-app.get("/img/bg",       (req, res) => proxyImage(DISCORD_BG, res));
-
-/* ---------- Files & state ---------- */
-const CONFIG_PATH = path.join(__dirname, "config.json");
-const ISSUED_PATH = path.join(__dirname, "issued.json");
-
-// ★★★ เพิ่ม: URL ของ config.json บน GitHub (แก้เป็นของคุณได้/หรือใช้ ENV CONFIG_URL)
-const CONFIG_URL = process.env.CONFIG_URL ||
-  "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
-
-/* ---------- fetch JSON helper ---------- */
-function fetchJSON(url, timeoutMs = 8000) {
-  return new Promise((resolve, reject) => {
-    let timedOut = false;
-    const to = setTimeout(() => { timedOut = true; reject(new Error("fetch_timeout")); }, timeoutMs);
-    try {
-      const u = new URL(url);
-      https.get(u, { headers: { "Cache-Control": "no-cache" } }, (res) => {
-        let raw = "";
-        res.on("data", (d) => raw += d);
-        res.on("end", () => {
-          clearTimeout(to);
-          if (timedOut) return;
-          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-            try { resolve(JSON.parse(raw || "{}")); }
-            catch(e){ reject(new Error("json_parse_error")); }
-          } else if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            fetchJSON(res.headers.location, timeoutMs).then(resolve).catch(reject);
-          } else {
-            reject(new Error("http_"+res.statusCode));
-          }
-        });
-      }).on("error", (err) => { clearTimeout(to); if(!timedOut) reject(err); });
-    } catch (e) {
-      clearTimeout(to); reject(e);
-    }
-  });
-}
-
-/* ---------- Config loaders ---------- */
-function loadConfigLocal() {
-  try {
-    return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-  } catch {
-    return { keys: [], expires_default: 172800 }; // 48h
-  }
-}
-async function loadConfigRemote() {
-  try {
-    const data = await fetchJSON(CONFIG_URL, 8000);
-    if (Array.isArray(data)) return { keys: data, expires_default: 172800 };
-    if (data && typeof data === "object") return data;
-    return { keys: [], expires_default: 172800 };
-  } catch {
-    return { keys: [], expires_default: 172800 };
-  }
-}
-
-// remote-first + cache 30s
-let _configCache = null;
-let _configCacheAt = 0;
-const CONFIG_CACHE_MS = 30 * 1000;
-
-async function loadConfigSmart() {
-  const nowMs = Date.now();
-  if (_configCache && (nowMs - _configCacheAt) < CONFIG_CACHE_MS) return _configCache;
-
-  const remote = await loadConfigRemote();
-  let merged = remote;
-  if (!remote.keys || remote.keys.length === 0) merged = loadConfigLocal();
-
-  merged.keys = (merged.keys || []).map((item) => {
-    if (typeof item === "string") return { key: item, ttl: merged.expires_default || 172800, reusable: false };
-    if (item && typeof item === "object") {
-      return {
-        key: String(item.key || "").trim(),
-        ttl: Number(item.ttl || merged.expires_default || 172800),
-        reusable: !!item.reusable
-      };
-    }
-    return null;
-  }).filter(Boolean);
-
-  _configCache = merged; _configCacheAt = nowMs;
-  return merged;
-}
-
-/* ---------- Issued state ---------- */
-function loadIssued() {
-  if (!fs.existsSync(ISSUED_PATH)) {
-    fs.writeFileSync(ISSUED_PATH, "{}", "utf8");
-    return {};
-  }
-  try { return JSON.parse(fs.readFileSync(ISSUED_PATH, "utf8") || "{}"); }
+// ====== helpers ======
+function loadStore(){
+  try { return JSON.parse(fs.readFileSync(STORE_FILE,"utf8")||"{}"); }
   catch { return {}; }
 }
-function saveIssued(obj) {
-  fs.writeFileSync(ISSUED_PATH, JSON.stringify(obj, null, 2), "utf8");
+function saveStore(obj){
+  fs.writeFileSync(STORE_FILE, JSON.stringify(obj,null,2), "utf8");
+}
+function b64url(buf){
+  return Buffer.from(buf).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function b64urlDecode(s){
+  s = String(s).replace(/-/g,"+").replace(/_/g,"/");
+  while(s.length % 4) s += "=";
+  return Buffer.from(s, "base64");
+}
+function sign(payloadStr){
+  return crypto.createHmac("sha256", SECRET).update(payloadStr).digest();
+}
+function now(){ return Math.floor(Date.now()/1000); }
+
+// Key format: UFO-<payload>.<sig>-48H
+// payload = b64url(JSON {uid,place,exp,i})
+// sig = b64url(HMAC_SHA256(payload))
+// Note: ความยาวจะมากกว่า 8 ตัวอักษร แต่แลกกับการยืนยันที่เสถียรแบบไม่ต้องอ่านไฟล์
+function makeKey(uid, place, exp, i){
+  const payloadObj = { uid, place, exp, i };
+  const payload = b64url(JSON.stringify(payloadObj));
+  const sig = b64url(sign(payload));
+  return `UFO-${payload}.${sig}-48H`;
+}
+function parseKey(k){
+  if(!k) return null;
+  let s = String(k).trim().toUpperCase();
+  // รับทั้งใส่/ไม่ใส่ prefix/suffix
+  s = s.replace(/^UFO-/, "").replace(/-48H$/, "");
+  const parts = s.split(".");
+  if(parts.length !== 2) return null;
+  try{
+    const payloadBuf = b64urlDecode(parts[0]);
+    const payload = JSON.parse(payloadBuf.toString("utf8"));
+    const sig = parts[1];
+    return { payloadRaw: parts[0], payload, sig };
+  }catch{ return null; }
+}
+function verifyKeyFor(uid, place, key){
+  const parsed = parseKey(key);
+  if(!parsed) return { ok:false, reason:"format" };
+  const { payloadRaw, payload, sig } = parsed;
+  if(!payload || payload.uid!==String(uid) || payload.place!==String(place)) {
+    return { ok:false, reason:"mismatch" };
+  }
+  const sigCheck = b64url(sign(payloadRaw));
+  if(sig !== sigCheck) return { ok:false, reason:"signature" };
+  const t = now();
+  if(t > Number(payload.exp||0)) return { ok:false, reason:"expired", exp: payload.exp };
+  return { ok:true, exp: Number(payload.exp), i: payload.i };
 }
 
-/* ---------- Utils ---------- */
-// ทำให้คีย์อยู่ในรูปแบบมาตรฐาน: UFO-XXXXXXXX-48H (ตัวพิมพ์ใหญ่เสมอ)
-function normalizeKey(s) {
-  let v = String(s || "").trim().toUpperCase();
-  if (!v) return "";
-  if (!/^UFO-/.test(v)) v = "UFO-" + v.replace(/^-+/, "");
-  if (!/-48H$/.test(v)) v = v.replace(/-48H$/, "") + "-48H";
-  return v;
-}
-function sweepExpired(issued, now) {
-  let changed = false;
-  for (const k of Object.keys(issued)) {
-    const t = issued[k];
-    if (!t || !t.expires_at || now > Number(t.expires_at)) {
-      delete issued[k]; changed = true;
-    }
-  }
-  if (changed) saveIssued(issued);
-}
-function activeKeyOwners(issued, now) {
-  const map = new Map(); // keyString -> id(uid:place)
-  for (const id of Object.keys(issued)) {
-    const t = issued[id];
-    if (t && t.key && t.expires_at && now < Number(t.expires_at)) {
-      map.set(String(t.key), id);
-    }
-  }
-  return map;
-}
-function chooseFreeKey(configKeys, issuedMap, now, selfId, preferCurrentKey) {
-  if (preferCurrentKey) {
-    const ownerId = issuedMap.get(preferCurrentKey);
-    if (!ownerId || ownerId === selfId) return preferCurrentKey;
-  }
-  const pool = (configKeys || []).filter(k => k && k.key);
-  const free = pool
-    .map(o => o.key)
-    .filter(k => {
-      const ownerId = issuedMap.get(k);
-      return !ownerId || ownerId === selfId;
-    });
-  if (!free.length) return null;
-  return free[Math.floor(Math.random() * free.length)];
-}
+// ========== Static ==========
+app.use(express.static(PUBLIC_DIR));
+app.use((req,res,next)=>{
+  const api = ["/getkey","/verify","/extend","/status"].some(p=>req.path.startsWith(p));
+  if(api) res.type("application/json; charset=utf-8");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  next();
+});
 
-/* ---------- Web ---------- */
-app.get("/", (req, res) => {
+// ========== GET / (simple page) ==========
+app.get("/", (req,res)=>{
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-/* ---------- API: GETKEY ---------- */
-app.get("/getkey", async (req, res) => {
-  const uid   = String(req.query.uid   || "").trim();
-  const place = String(req.query.place || "").trim();
-  const forceNew   = String(req.query.force_new || "") === "1";
-  const extendSecQ = Number(req.query.extend || 0) || 0;
-  if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
+// ========== GET /getkey ==========
+app.get("/getkey", (req,res)=>{
+  const uid = String(req.query.uid||"").trim();
+  const place = String(req.query.place||"").trim();
+  const ttl = Number(req.query.ttl||DEFAULT_TTL) || DEFAULT_TTL;
+  if(!uid || !place) return res.status(400).json({ok:false, reason:"missing_uid_or_place"});
 
-  try {
-    const config = await loadConfigSmart();
-    const issued = loadIssued();
-    const now    = Math.floor(Date.now()/1000);
-    const id     = `${uid}:${place}`;
+  const store = loadStore();
+  const id = `${uid}:${place}`;
+  const t = now();
+  const exp = t + ttl;
 
-    sweepExpired(issued, now);
+  // เพิ่มตัวเลข i (issue counter) กัน key เก่าซ้ำกันเวลา extend หลายครั้ง
+  const prev = store[id];
+  const i = (prev && typeof prev.i === "number") ? (prev.i+1) : 1;
 
-    const current = issued[id];
-    if (current && now < Number(current.expires_at) && !forceNew) {
-      if (extendSecQ > 0) {
-        current.expires_at = Number(current.expires_at) + Math.max(0, extendSecQ);
-        saveIssued(issued);
-      }
-      return res.json({
-        ok:true, reused:true, key:current.key, uid, place,
-        issued_at: current.issued_at, expires_at: current.expires_at,
-        extended_by: extendSecQ > 0 ? Math.max(0, extendSecQ) : 0
-      });
-    }
+  const key = makeKey(uid, place, exp, i);
 
-    const keys  = (config.keys || []).filter(k => k && k.key);
-    if (!keys.length) return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
+  store[id] = { uid, place, key, exp, issued_at: t, i };
+  saveStore(store);
 
-    const issuedMap = activeKeyOwners(issued, now);
-    const preferKey = current && current.key;
-    const pickedKey = chooseFreeKey(keys, issuedMap, now, id, preferKey);
-    if (!pickedKey) {
-      return res.status(503).json({ ok:false, reason:"no_free_key" });
-    }
-
-    const meta = keys.find(k => k.key === pickedKey) || {};
-    const ttl  = Number(meta.ttl || config.expires_default || 172800); // 48h
-    let exp    = now + ttl + Math.max(0, extendSecQ);
-
-    issued[id] = {
-      key: pickedKey,
-      uid, place,
-      issued_at: now,
-      expires_at: exp,
-      reusable: !!meta.reusable
-    };
-    saveIssued(issued);
-
-    return res.json({
-      ok:true, reused:false, rotated: !!(current && now < Number(current?.expires_at)),
-      key: pickedKey, uid, place, issued_at: now, expires_at: exp,
-      extended_by: Math.max(0, extendSecQ)
-    });
-  } catch (e) {
-    console.error("getkey error:", e);
-    res.status(500).json({ ok:false, error:"server_error" });
-  }
+  return res.json({ ok:true, key, uid, place, expires_at: exp, issued_at: t, i });
 });
 
-/* ---------- API: VERIFY ---------- */
-app.get("/verify", (req, res) => {
-  const uid   = String(req.query.uid   || "").trim();
-  const place = String(req.query.place || "").trim();
-  const keyIn = String(req.query.key   || "").trim();
-  if (!uid || !place || !keyIn) return res.status(400).json({ ok:false, valid:false, reason:"missing_uid_place_or_key" });
+// ========== GET /verify ==========
+app.get("/verify", (req,res)=>{
+  const uid = String(req.query.uid||"").trim();
+  const place = String(req.query.place||"").trim();
+  const key = String(req.query.key||"").trim();
+  if(!uid || !place || !key) return res.status(400).json({ok:false, valid:false, reason:"missing_params"});
 
-  try {
-    const now    = Math.floor(Date.now()/1000);
-    const issued = loadIssued();
-    const id     = `${uid}:${place}`;
-    const ticket = issued[id];
-
-    const key = normalizeKey(keyIn);
-
-    if (ticket && normalizeKey(ticket.key) === key) {
-      if (now > Number(ticket.expires_at)) {
-        return res.json({
-          ok:true, valid:false, reason:"expired",
-          uid, place, key: ticket.key, expired_at: ticket.expires_at
-        });
-      }
-      return res.json({
-        ok:true, valid:true,
-        uid, place,
-        key: ticket.key,
-        issued_at: ticket.issued_at,
-        expires_at: ticket.expires_at,
-        reusable: !!ticket.reusable
-      });
-    }
-    return res.json({ ok:true, valid:false, reason:"invalid_or_mismatch", uid, place });
-  } catch (e) {
-    console.error("verify error:", e);
-    res.status(500).json({ ok:false, valid:false, reason:"server_error" });
+  const vr = verifyKeyFor(uid, place, key);
+  if(!vr.ok){
+    return res.json({ ok:true, valid:false, reason:vr.reason, expires_at: vr.exp||null });
   }
+  return res.json({ ok:true, valid:true, expires_at: vr.exp, i: vr.i });
 });
 
-/* ---------- API: EXTEND (ต่อเวลา) ---------- */
-// /extend?uid=&place=[&sec=SECONDS]  (default = 5h)
-app.get("/extend", (req, res) => {
-  const uid   = String(req.query.uid   || "").trim();
-  const place = String(req.query.place || "").trim();
-  const secQ  = Number(req.query.sec || 0) || 0;
-  const add   = secQ > 0 ? secQ : (5*60*60);
-  if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
+// ========== GET /extend ==========
+app.get("/extend", (req,res)=>{
+  const uid = String(req.query.uid||"").trim();
+  const place = String(req.query.place||"").trim();
+  const add = Number(req.query.sec||0) || (5*60*60); // +5h by default
+  if(!uid || !place) return res.status(400).json({ok:false, reason:"missing_uid_or_place"});
 
-  try {
-    const issued = loadIssued();
-    const id     = `${uid}:${place}`;
-    const now    = Math.floor(Date.now()/1000);
-    const ticket = issued[id];
-    if (!ticket) return res.status(404).json({ ok:false, reason:"no_ticket" });
-    if (now > Number(ticket.expires_at)) {
-      return res.json({ ok:false, reason:"already_expired", expired_at:ticket.expires_at, uid, place });
-    }
+  const store = loadStore();
+  const id = `${uid}:${place}`;
+  const rec = store[id];
+  if(!rec) return res.status(404).json({ok:false, reason:"no_ticket"});
 
-    ticket.expires_at = Number(ticket.expires_at) + add;
-    ticket.extended_by = (ticket.extended_by || 0) + add;
-    saveIssued(issued);
+  const t = now();
+  let baseExp = rec.exp;
+  if(t > baseExp) return res.json({ok:false, reason:"already_expired", expired_at: baseExp});
 
-    return res.json({
-      ok:true, uid, place,
-      key:ticket.key,
-      new_expires_at:ticket.expires_at,
-      added:add,
-      extended_by: ticket.extended_by
-    });
-  } catch (e) {
-    console.error("extend error:", e);
-    res.status(500).json({ ok:false, error:"server_error" });
-  }
+  const newExp = baseExp + add;
+  const i = (typeof rec.i==="number") ? (rec.i+1) : 1;
+  const key = makeKey(uid, place, newExp, i);
+
+  store[id] = { uid, place, key, exp: newExp, issued_at: rec.issued_at || t, i };
+  saveStore(store);
+
+  return res.json({ ok:true, key, uid, place, new_expires_at: newExp, added: add, i });
 });
 
-/* ---------- API: STATUS (ดูเวลาจริง) ---------- */
-app.get("/status", (req, res) => {
-  const uid   = String(req.query.uid   || "").trim();
-  const place = String(req.query.place || "").trim();
-  if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
+// ========== GET /status ==========
+app.get("/status", (req,res)=>{
+  const uid = String(req.query.uid||"").trim();
+  const place = String(req.query.place||"").trim();
+  if(!uid || !place) return res.status(400).json({ok:false, reason:"missing_uid_or_place"});
 
-  try {
-    const issued = loadIssued();
-    const id     = `${uid}:${place}`;
-    const now    = Math.floor(Date.now()/1000);
-    const ticket = issued[id];
-    if (!ticket) return res.json({ ok:false, reason:"no_ticket", uid, place });
+  const store = loadStore();
+  const id = `${uid}:${place}`;
+  const rec = store[id];
+  if(!rec) return res.json({ok:false, reason:"no_ticket"});
 
-    const left = Math.max(0, Number(ticket.expires_at) - now);
-    return res.json({
-      ok:true, uid, place,
-      key:ticket.key,
-      issued_at:ticket.issued_at,
-      expires_at:ticket.expires_at,
-      remaining:left,
-      reusable: !!ticket.reusable
-    });
-  } catch (e) {
-    console.error("status error:", e);
-    res.status(500).json({ ok:false, error:"server_error" });
-  }
+  const t = now();
+  const left = Math.max(0, Number(rec.exp) - t);
+  return res.json({
+    ok:true, uid, place, key: rec.key, issued_at: rec.issued_at, expires_at: rec.exp, remaining: left, i: rec.i
+  });
 });
 
-/* ---------- Health ---------- */
-app.get("/health", (req, res) => res.json({ ok:true, ts:Date.now() }));
-
-/* ---------- START ---------- */
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`UFO-HUB-X key server running on :${PORT}`);
+// ===== start =====
+app.listen(PORT, "0.0.0.0", ()=> {
+  console.log("UFO-HUB-X key server running on :"+PORT);
 });
