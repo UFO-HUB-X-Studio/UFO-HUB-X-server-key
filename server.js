@@ -1,11 +1,15 @@
 // UFO-HUB-X Key Server + Image Proxy (Discord CDN) — Extended Version (unique keys)
 // Endpoints:
-//   GET /                               -> index.html
+//   GET /                               -> index.html (simple page to fetch key)
 //   GET /getkey?uid=&place=[&force_new=1][&extend=SECONDS]
 //   GET /verify?key=&uid=&place=
 //   GET /extend?uid=&place=[&sec=SECONDS] (default +5h)
 //   GET /status?uid=&place=
 //   GET /img/profile, /img/bg           -> proxy Discord images
+//
+// NOTE:
+// - ใช้ config.json (local) +/หรือ CONFIG_URL (remote) เพื่อ list คีย์ที่แจก
+// - ฝั่ง Roblox UI: ปุ่ม Submit จะยิง /verify และคาดหวัง field: {ok:true, valid:true, expires_at:...}
 
 const express = require("express");
 const fs      = require("fs");
@@ -17,12 +21,15 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 /* ---------- Static site ---------- */
-app.use(express.static(path.join(__dirname, "public")));
+const PUBLIC_DIR = path.join(__dirname, "public");
+if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+app.use(express.static(PUBLIC_DIR));
 
 /* ---------- Global headers ---------- */
 app.use((req, res, next) => {
   // ถ้าจะล็อกโดเมนเว็บเพื่อรายได้ ให้เปลี่ยน "*" เป็นโดเมนของคุณได้
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "no-store");
   next();
 });
 app.use((req, res, next) => {
@@ -32,8 +39,8 @@ app.use((req, res, next) => {
 });
 
 /* ---------- Discord image URLs (ใส่ของจริงของคุณเองได้) ---------- */
-const DISCORD_PROFILE = "https://cdn.discordapp.com/.../20250916_152130.png";
-const DISCORD_BG      = "https://cdn.discordapp.com/.../file_00000000385861fab9ee0612cc0dca89.png";
+const DISCORD_PROFILE = process.env.D_PROFILE || "https://i.postimg.cc/KcdBP7Fn/20250916-152130.png";
+const DISCORD_BG      = process.env.D_BG      || "https://i.postimg.cc/26L3yJ1g/file-00000000385861fab9ee0612cc0dca89.png";
 
 /* ---------- Proxy helper ---------- */
 function proxyImage(targetUrl, res) {
@@ -44,10 +51,8 @@ function proxyImage(targetUrl, res) {
         return proxyImage(r.headers.location, res);
       }
       if (r.statusCode !== 200) {
-        res.status(502).type("text/plain").send("bad_gateway_image");
-        r.resume(); return;
+        res.status(502).type("text/plain").send("bad_gateway_image"); r.resume(); return;
       }
-      res.setHeader("Cache-Control", "no-store");
       res.setHeader("Content-Type", r.headers["content-type"] || "image/png");
       r.pipe(res);
     });
@@ -69,7 +74,7 @@ const ISSUED_PATH = path.join(__dirname, "issued.json");
 const CONFIG_URL = process.env.CONFIG_URL ||
   "https://raw.githubusercontent.com/UFO-HUB-X-Studio/UFO-HUB-X-server-key/refs/heads/main/config.json";
 
-/* ---------- fetch JSON helper (เพิ่มใหม่) ---------- */
+/* ---------- fetch JSON helper ---------- */
 function fetchJSON(url, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     let timedOut = false;
@@ -86,7 +91,6 @@ function fetchJSON(url, timeoutMs = 8000) {
             try { resolve(JSON.parse(raw || "{}")); }
             catch(e){ reject(new Error("json_parse_error")); }
           } else if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            // follow redirect
             fetchJSON(res.headers.location, timeoutMs).then(resolve).catch(reject);
           } else {
             reject(new Error("http_"+res.statusCode));
@@ -100,7 +104,6 @@ function fetchJSON(url, timeoutMs = 8000) {
 }
 
 /* ---------- Config loaders ---------- */
-// เดิม (คงไว้)
 function loadConfigLocal() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
@@ -108,12 +111,9 @@ function loadConfigLocal() {
     return { keys: [], expires_default: 172800 }; // 48h
   }
 }
-
-// ใหม่: โหลดจาก URL
 async function loadConfigRemote() {
   try {
     const data = await fetchJSON(CONFIG_URL, 8000);
-    // รองรับทั้งรูปแบบ array ตรง ๆ หรือ { keys: [...] }
     if (Array.isArray(data)) return { keys: data, expires_default: 172800 };
     if (data && typeof data === "object") return data;
     return { keys: [], expires_default: 172800 };
@@ -122,22 +122,19 @@ async function loadConfigRemote() {
   }
 }
 
-// ใหม่: smart + caching
+// remote-first + cache 30s
 let _configCache = null;
 let _configCacheAt = 0;
-const CONFIG_CACHE_MS = 30 * 1000; // 30 วินาที
+const CONFIG_CACHE_MS = 30 * 1000;
 
 async function loadConfigSmart() {
   const nowMs = Date.now();
   if (_configCache && (nowMs - _configCacheAt) < CONFIG_CACHE_MS) return _configCache;
 
-  // พยายามโหลดจาก URL ก่อน
   const remote = await loadConfigRemote();
   let merged = remote;
-  // ถ้า remote ว่าง ให้ fallback local
   if (!remote.keys || remote.keys.length === 0) merged = loadConfigLocal();
 
-  // ทำ normalize รายการคีย์ให้เป็น {key, ttl, reusable}
   merged.keys = (merged.keys || []).map((item) => {
     if (typeof item === "string") return { key: item, ttl: merged.expires_default || 172800, reusable: false };
     if (item && typeof item === "object") {
@@ -156,7 +153,10 @@ async function loadConfigSmart() {
 
 /* ---------- Issued state ---------- */
 function loadIssued() {
-  if (!fs.existsSync(ISSUED_PATH)) return {};
+  if (!fs.existsSync(ISSUED_PATH)) {
+    fs.writeFileSync(ISSUED_PATH, "{}", "utf8");
+    return {};
+  }
   try { return JSON.parse(fs.readFileSync(ISSUED_PATH, "utf8") || "{}"); }
   catch { return {}; }
 }
@@ -173,19 +173,16 @@ function normalizeKey(s) {
   if (!/-48H$/.test(v)) v = v.replace(/-48H$/, "") + "-48H";
   return v;
 }
-
 function sweepExpired(issued, now) {
   let changed = false;
   for (const k of Object.keys(issued)) {
     const t = issued[k];
     if (!t || !t.expires_at || now > Number(t.expires_at)) {
-      delete issued[k];
-      changed = true;
+      delete issued[k]; changed = true;
     }
   }
   if (changed) saveIssued(issued);
 }
-
 function activeKeyOwners(issued, now) {
   const map = new Map(); // keyString -> id(uid:place)
   for (const id of Object.keys(issued)) {
@@ -196,14 +193,11 @@ function activeKeyOwners(issued, now) {
   }
   return map;
 }
-
 function chooseFreeKey(configKeys, issuedMap, now, selfId, preferCurrentKey) {
-  // อนุญาตให้ใช้ “คีย์เดิมของตัวเอง” (ถ้ายังไม่หมดและไม่ติดเจ้าของอื่น)
   if (preferCurrentKey) {
     const ownerId = issuedMap.get(preferCurrentKey);
     if (!ownerId || ownerId === selfId) return preferCurrentKey;
   }
-  // เลือกคีย์ที่ยังไม่มีเจ้าของ หรือเจ้าของคือเราเอง
   const pool = (configKeys || []).filter(k => k && k.key);
   const free = pool
     .map(o => o.key)
@@ -217,29 +211,26 @@ function chooseFreeKey(configKeys, issuedMap, now, selfId, preferCurrentKey) {
 
 /* ---------- Web ---------- */
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-/* ---------- API: GETKEY (ปรับเป็น async เพื่ออ่าน config URL) ---------- */
+/* ---------- API: GETKEY ---------- */
 app.get("/getkey", async (req, res) => {
   const uid   = String(req.query.uid   || "").trim();
   const place = String(req.query.place || "").trim();
   const forceNew   = String(req.query.force_new || "") === "1";
-  const extendSecQ = Number(req.query.extend || 0) || 0; // ต่อเวลาพิเศษ (ตอนออกคีย์)
+  const extendSecQ = Number(req.query.extend || 0) || 0;
   if (!uid || !place) return res.status(400).json({ ok:false, reason:"missing_uid_or_place" });
 
   try {
-    const config = await loadConfigSmart(); // ★ ใช้ตัวใหม่ (remote-first)
+    const config = await loadConfigSmart();
     const issued = loadIssued();
     const now    = Math.floor(Date.now()/1000);
     const id     = `${uid}:${place}`;
 
-    // ปัดกวาดหมดอายุ
     sweepExpired(issued, now);
 
     const current = issued[id];
-
-    // ถ้ายังมีคีย์เดิมและไม่บังคับออกใหม่ → คืนเดิม
     if (current && now < Number(current.expires_at) && !forceNew) {
       if (extendSecQ > 0) {
         current.expires_at = Number(current.expires_at) + Math.max(0, extendSecQ);
@@ -252,19 +243,16 @@ app.get("/getkey", async (req, res) => {
       });
     }
 
-    // ต้องออกใหม่ หรือของเดิมหมดอายุ
     const keys  = (config.keys || []).filter(k => k && k.key);
     if (!keys.length) return res.status(500).json({ ok:false, reason:"no_keys_in_config" });
 
     const issuedMap = activeKeyOwners(issued, now);
-    const preferKey = current && current.key; // ถ้าเดิมยังว่าง ให้สิทธิก่อน
+    const preferKey = current && current.key;
     const pickedKey = chooseFreeKey(keys, issuedMap, now, id, preferKey);
-
     if (!pickedKey) {
       return res.status(503).json({ ok:false, reason:"no_free_key" });
     }
 
-    // meta/ttl
     const meta = keys.find(k => k.key === pickedKey) || {};
     const ttl  = Number(meta.ttl || config.expires_default || 172800); // 48h
     let exp    = now + ttl + Math.max(0, extendSecQ);
@@ -302,7 +290,6 @@ app.get("/verify", (req, res) => {
     const id     = `${uid}:${place}`;
     const ticket = issued[id];
 
-    // ป้องกันกรณีผู้ใช้กรอกคีย์เล็ก/ใหญ่ หรือขาด suffix/prefix
     const key = normalizeKey(keyIn);
 
     if (ticket && normalizeKey(ticket.key) === key) {
@@ -391,6 +378,9 @@ app.get("/status", (req, res) => {
     res.status(500).json({ ok:false, error:"server_error" });
   }
 });
+
+/* ---------- Health ---------- */
+app.get("/health", (req, res) => res.json({ ok:true, ts:Date.now() }));
 
 /* ---------- START ---------- */
 app.listen(PORT, "0.0.0.0", () => {
